@@ -183,6 +183,22 @@ class SupportPage extends StatelessWidget {
             value: d.reminderEvening,
             onChanged: controller.setEveningReminder,
           ),
+          const SizedBox(height: 8),
+          FilledButton.icon(
+            onPressed: controller.syncing
+                ? null
+                : () async {
+                    await controller.syncNow();
+                    if (context.mounted && controller.lastSyncMessage != null) {
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(content: Text(controller.lastSyncMessage!)));
+                    }
+                  },
+            icon: controller.syncing
+                ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.sync),
+            label: Text(controller.syncing ? 'Syncing...' : 'Sync now'),
+          ),
         ])),
       ],
     );

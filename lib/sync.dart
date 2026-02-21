@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 
 import 'models.dart';
 
@@ -21,20 +21,39 @@ abstract class RecoveryRepository {
 }
 
 class RecoveryApiClient {
-  RecoveryApiClient({required this.baseUrl, this.authToken});
+  RecoveryApiClient({required this.baseUrl, this.authToken, http.Client? client}) : _client = client ?? http.Client();
 
   final String baseUrl;
   final String? authToken;
+  final http.Client _client;
+
+  Map<String, String> get _headers => {
+        'Content-Type': 'application/json',
+        if (authToken != null && authToken!.isNotEmpty) 'Authorization': 'Bearer $authToken',
+      };
 
   Future<void> putRecovery(RecoveryDto dto) async {
-    debugPrint('[sync] PUT $baseUrl/recovery payload=${dto.toRawJson()}');
-    // TODO: implement real HTTP client + auth headers.
+    final res = await _client.put(
+      Uri.parse('$baseUrl/recovery'),
+      headers: _headers,
+      body: dto.toRawJson(),
+    );
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Failed to push recovery data: ${res.statusCode} ${res.body}');
+    }
   }
 
   Future<RecoveryDto?> getRecovery() async {
-    debugPrint('[sync] GET $baseUrl/recovery');
-    // TODO: implement real HTTP client + DTO decoding.
-    return null;
+    final res = await _client.get(Uri.parse('$baseUrl/recovery'), headers: _headers);
+
+    if (res.statusCode == 404) return null;
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Failed to pull recovery data: ${res.statusCode} ${res.body}');
+    }
+
+    if (res.body.isEmpty) return null;
+    return RecoveryDto.fromRawJson(res.body);
   }
 }
 

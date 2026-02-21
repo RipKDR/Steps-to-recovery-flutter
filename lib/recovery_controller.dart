@@ -3,20 +3,30 @@ import 'package:flutter/foundation.dart';
 import 'local_store.dart';
 import 'models.dart';
 import 'notification_service.dart';
+import 'sync.dart';
 
 class RecoveryController extends ChangeNotifier {
-  RecoveryController({required LocalStore store, required NotificationService notifications})
-      : _store = store,
-        _notifications = notifications;
+  RecoveryController({
+    required LocalStore store,
+    required NotificationService notifications,
+    RecoveryRepository? remote,
+  })  : _store = store,
+        _notifications = notifications,
+        _remote = remote;
 
   final LocalStore _store;
   final NotificationService _notifications;
+  final RecoveryRepository? _remote;
 
   RecoveryData _data = RecoveryData.initial();
   bool _loading = true;
+  bool _syncing = false;
+  String? _lastSyncMessage;
 
   RecoveryData get data => _data;
   bool get loading => _loading;
+  bool get syncing => _syncing;
+  String? get lastSyncMessage => _lastSyncMessage;
 
   Future<void> init() async {
     _loading = true;
@@ -56,5 +66,28 @@ class RecoveryController extends ChangeNotifier {
     await _set(_data.copyWith(reminderEvening: v));
     await _notifications.requestPermissions();
     await _notifications.scheduleReminders(morningEnabled: _data.reminderMorning, eveningEnabled: _data.reminderEvening);
+  }
+
+  Future<void> syncNow() async {
+    if (_remote == null || _syncing) return;
+    _syncing = true;
+    _lastSyncMessage = null;
+    notifyListeners();
+
+    try {
+      final remote = await _remote.pull();
+      if (remote != null) {
+        _data = remote;
+        await _store.save(_data);
+      }
+
+      await _remote.push(_data);
+      _lastSyncMessage = 'Sync successful';
+    } catch (e) {
+      _lastSyncMessage = 'Sync failed: $e';
+    } finally {
+      _syncing = false;
+      notifyListeners();
+    }
   }
 }

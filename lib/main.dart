@@ -4,6 +4,7 @@ import 'app_router.dart';
 import 'local_store.dart';
 import 'notification_service.dart';
 import 'recovery_controller.dart';
+import 'sync.dart';
 
 void main() {
   runApp(const StepsRecoveryApp());
@@ -25,6 +26,10 @@ class _StepsRecoveryAppState extends State<StepsRecoveryApp> {
     _controller = RecoveryController(
       store: LocalStore(),
       notifications: NotificationService(),
+      // Scaffolded remote sync target (replace with your backend URL + token flow).
+      remote: RemoteRecoveryRepository(
+        RecoveryApiClient(baseUrl: 'https://example.com/api', authToken: null),
+      ),
     );
     _controller.init();
   }
