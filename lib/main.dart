@@ -28,7 +28,9 @@ class _StepsRecoveryAppState extends State<StepsRecoveryApp> {
         ? RemoteRecoveryRepository(
             RecoveryApiClient(
               baseUrl: AppConfig.apiBaseUrl,
-              authToken: AppConfig.apiAuthToken.isEmpty ? null : AppConfig.apiAuthToken,
+              authToken: AppConfig.apiAuthToken.isEmpty
+                  ? null
+                  : AppConfig.apiAuthToken,
             ),
           )
         : null;
@@ -49,7 +51,9 @@ class _StepsRecoveryAppState extends State<StepsRecoveryApp> {
         if (_controller.loading) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
-            home: const Scaffold(body: Center(child: CircularProgressIndicator())),
+            home: const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            ),
             theme: _theme(),
           );
         }
@@ -67,7 +71,10 @@ class _StepsRecoveryAppState extends State<StepsRecoveryApp> {
   ThemeData _theme() {
     return ThemeData(
       brightness: Brightness.dark,
-      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2B8CC4), brightness: Brightness.dark),
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: const Color(0xFF2B8CC4),
+        brightness: Brightness.dark,
+      ),
       scaffoldBackgroundColor: const Color(0xFF0B1B24),
       useMaterial3: true,
     );

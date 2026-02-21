@@ -9,11 +9,24 @@ class RecoveryDto {
   RecoveryDto({required this.payload});
   final Map<String, dynamic> payload;
 
-  factory RecoveryDto.fromModel(RecoveryData data) => RecoveryDto(payload: data.toJson());
+  factory RecoveryDto.fromModel(RecoveryData data) =>
+      RecoveryDto(payload: data.toJson());
   RecoveryData toModel() => RecoveryData.fromJson(payload);
 
   String toRawJson() => jsonEncode(payload);
-  factory RecoveryDto.fromRawJson(String raw) => RecoveryDto(payload: jsonDecode(raw) as Map<String, dynamic>);
+  factory RecoveryDto.fromRawJson(String raw) =>
+      RecoveryDto(payload: jsonDecode(raw) as Map<String, dynamic>);
+}
+
+enum SyncErrorCode { unauthorized, server, network, unknown }
+
+class SyncException implements Exception {
+  SyncException(this.code, this.message);
+  final SyncErrorCode code;
+  final String message;
+
+  @override
+  String toString() => 'SyncException($code): $message';
 }
 
 abstract class RecoveryRepository {
@@ -22,39 +35,73 @@ abstract class RecoveryRepository {
 }
 
 class RecoveryApiClient {
-  RecoveryApiClient({required this.baseUrl, this.authToken, http.Client? client}) : _client = client ?? http.Client();
+  RecoveryApiClient({
+    required this.baseUrl,
+    this.authToken,
+    http.Client? client,
+  }) : _client = client ?? http.Client();
 
   final String baseUrl;
   final String? authToken;
   final http.Client _client;
 
   Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        if (authToken != null && authToken!.isNotEmpty) 'Authorization': 'Bearer $authToken',
-      };
+    'Content-Type': 'application/json',
+    if (authToken != null && authToken!.isNotEmpty)
+      'Authorization': 'Bearer $authToken',
+  };
 
   Future<void> putRecovery(RecoveryDto dto) async {
-    final res = await _client.put(
-      Uri.parse('$baseUrl/recovery'),
-      headers: _headers,
-      body: dto.toRawJson(),
-    );
+    try {
+      final res = await _client.put(
+        Uri.parse('$baseUrl/recovery'),
+        headers: _headers,
+        body: dto.toRawJson(),
+      );
 
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception('Failed to push recovery data: ${res.statusCode} ${res.body}');
+      if (res.statusCode == 401 || res.statusCode == 403) {
+        throw SyncException(
+          SyncErrorCode.unauthorized,
+          'Auth failed (${res.statusCode})',
+        );
+      }
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        throw SyncException(
+          SyncErrorCode.server,
+          'Push failed: ${res.statusCode} ${res.body}',
+        );
+      }
+    } on http.ClientException catch (e) {
+      throw SyncException(SyncErrorCode.network, e.message);
     }
   }
 
   Future<RecoveryDto?> getRecovery() async {
-    final res = await _client.get(Uri.parse('$baseUrl/recovery'), headers: _headers);
+    try {
+      final res = await _client.get(
+        Uri.parse('$baseUrl/recovery'),
+        headers: _headers,
+      );
 
-    if (res.statusCode == 404) return null;
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception('Failed to pull recovery data: ${res.statusCode} ${res.body}');
+      if (res.statusCode == 404) return null;
+      if (res.statusCode == 401 || res.statusCode == 403) {
+        throw SyncException(
+          SyncErrorCode.unauthorized,
+          'Auth failed (${res.statusCode})',
+        );
+      }
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        throw SyncException(
+          SyncErrorCode.server,
+          'Pull failed: ${res.statusCode} ${res.body}',
+        );
+      }
+
+      if (res.body.isEmpty) return null;
+      return RecoveryDto.fromRawJson(res.body);
+    } on http.ClientException catch (e) {
+      throw SyncException(SyncErrorCode.network, e.message);
     }
-
-    if (res.body.isEmpty) return null;
-    return RecoveryDto.fromRawJson(res.body);
   }
 }
 

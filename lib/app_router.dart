@@ -12,13 +12,29 @@ GoRouter buildRouter(RecoveryController controller) {
     initialLocation: '/home',
     routes: [
       ShellRoute(
-        builder: (context, state, child) => AppScaffold(location: state.uri.path, child: child),
+        builder: (context, state, child) =>
+            AppScaffold(location: state.uri.path, child: child),
         routes: [
-          GoRoute(path: '/home', builder: (context, state) => HomePage(controller: controller)),
-          GoRoute(path: '/checkin', builder: (context, state) => CheckinPage(controller: controller)),
-          GoRoute(path: '/journal', builder: (context, state) => JournalPage(controller: controller)),
-          GoRoute(path: '/progress', builder: (context, state) => ProgressPage(controller: controller)),
-          GoRoute(path: '/support', builder: (context, state) => SupportPage(controller: controller)),
+          GoRoute(
+            path: '/home',
+            builder: (context, state) => HomePage(controller: controller),
+          ),
+          GoRoute(
+            path: '/checkin',
+            builder: (context, state) => CheckinPage(controller: controller),
+          ),
+          GoRoute(
+            path: '/journal',
+            builder: (context, state) => JournalPage(controller: controller),
+          ),
+          GoRoute(
+            path: '/progress',
+            builder: (context, state) => ProgressPage(controller: controller),
+          ),
+          GoRoute(
+            path: '/support',
+            builder: (context, state) => SupportPage(controller: controller),
+          ),
         ],
       ),
     ],
@@ -60,11 +76,31 @@ class AppScaffold extends StatelessWidget {
           }
         },
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.check_circle_outline), selectedIcon: Icon(Icons.check_circle), label: 'Check-in'),
-          NavigationDestination(icon: Icon(Icons.menu_book_outlined), selectedIcon: Icon(Icons.menu_book), label: 'Journal'),
-          NavigationDestination(icon: Icon(Icons.insights_outlined), selectedIcon: Icon(Icons.insights), label: 'Progress'),
-          NavigationDestination(icon: Icon(Icons.support_agent_outlined), selectedIcon: Icon(Icons.support_agent), label: 'Support'),
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.check_circle_outline),
+            selectedIcon: Icon(Icons.check_circle),
+            label: 'Check-in',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.menu_book_outlined),
+            selectedIcon: Icon(Icons.menu_book),
+            label: 'Journal',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.insights_outlined),
+            selectedIcon: Icon(Icons.insights),
+            label: 'Progress',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.support_agent_outlined),
+            selectedIcon: Icon(Icons.support_agent),
+            label: 'Support',
+          ),
         ],
       ),
     );

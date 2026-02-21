@@ -58,15 +58,15 @@ class RecoveryData {
   }
 
   Map<String, dynamic> toJson() => {
-        'streakDays': streakDays,
-        'morningDone': morningDone,
-        'eveningDone': eveningDone,
-        'journal': journal,
-        'contacts': contacts.map((e) => e.toJson()).toList(),
-        'reminderMorning': reminderMorning,
-        'reminderEvening': reminderEvening,
-        'updatedAtIso': updatedAtIso,
-      };
+    'streakDays': streakDays,
+    'morningDone': morningDone,
+    'eveningDone': eveningDone,
+    'journal': journal,
+    'contacts': contacts.map((e) => e.toJson()).toList(),
+    'reminderMorning': reminderMorning,
+    'reminderEvening': reminderEvening,
+    'updatedAtIso': updatedAtIso,
+  };
 
   factory RecoveryData.fromJson(Map<String, dynamic> json) {
     final contactsRaw = (json['contacts'] as List<dynamic>? ?? []);
@@ -81,22 +81,26 @@ class RecoveryData {
           .toList(),
       reminderMorning: json['reminderMorning'] as bool? ?? true,
       reminderEvening: json['reminderEvening'] as bool? ?? true,
-      updatedAtIso: json['updatedAtIso'] as String? ?? DateTime.now().toUtc().toIso8601String(),
+      updatedAtIso:
+          json['updatedAtIso'] as String? ??
+          DateTime.now().toUtc().toIso8601String(),
     );
   }
 
-  DateTime get updatedAt => DateTime.tryParse(updatedAtIso)?.toUtc() ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+  DateTime get updatedAt =>
+      DateTime.tryParse(updatedAtIso)?.toUtc() ??
+      DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
 
   bool isNewerThan(RecoveryData other) => updatedAt.isAfter(other.updatedAt);
 
   static RecoveryData initial() => RecoveryData(
-        streakDays: 12,
-        morningDone: false,
-        eveningDone: false,
-        journal: '',
-        contacts: [],
-        reminderMorning: true,
-        reminderEvening: true,
-        updatedAtIso: DateTime.now().toUtc().toIso8601String(),
-      );
+    streakDays: 12,
+    morningDone: false,
+    eveningDone: false,
+    journal: '',
+    contacts: [],
+    reminderMorning: true,
+    reminderEvening: true,
+    updatedAtIso: DateTime.now().toUtc().toIso8601String(),
+  );
 }

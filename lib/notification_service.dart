@@ -3,7 +3,8 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
-  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
   Future<void> initialize() async {
@@ -21,11 +22,16 @@ class NotificationService {
   Future<void> requestPermissions() async {
     await initialize();
     await _plugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.requestNotificationsPermission();
   }
 
-  Future<void> scheduleReminders({required bool morningEnabled, required bool eveningEnabled}) async {
+  Future<void> scheduleReminders({
+    required bool morningEnabled,
+    required bool eveningEnabled,
+  }) async {
     await initialize();
     await cancelReminderNotifications();
 
@@ -63,7 +69,14 @@ class NotificationService {
     required int minute,
   }) async {
     final now = tz.TZDateTime.now(tz.local);
-    var next = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    var next = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
     if (next.isBefore(now)) next = next.add(const Duration(days: 1));
 
     await _plugin.zonedSchedule(
@@ -82,7 +95,8 @@ class NotificationService {
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 }
