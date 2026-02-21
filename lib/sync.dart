@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'models.dart';
 
@@ -72,4 +73,39 @@ class RemoteRecoveryRepository implements RecoveryRepository {
   Future<void> push(RecoveryData data) async {
     await client.putRecovery(RecoveryDto.fromModel(data));
   }
+}
+
+class PendingSyncQueue {
+  static const _queueKey = 'pending_sync_queue_v1';
+
+  Future<List<String>> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_queueKey) ?? <String>[];
+  }
+
+  Future<void> save(List<String> items) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_queueKey, items);
+  }
+
+  Future<void> enqueue(RecoveryData data) async {
+    final list = await load();
+    list.add(jsonEncode(data.toJson()));
+    await save(list);
+  }
+
+  Future<void> clear() => save(<String>[]);
+}
+
+Future<T> withRetry<T>(Future<T> Function() task, {int attempts = 3}) async {
+  Object? lastError;
+  for (var i = 0; i < attempts; i++) {
+    try {
+      return await task();
+    } catch (e) {
+      lastError = e;
+      await Future<void>.delayed(Duration(milliseconds: 250 * (i + 1)));
+    }
+  }
+  throw lastError ?? Exception('Unknown retry failure');
 }

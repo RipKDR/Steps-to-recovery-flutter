@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_config.dart';
 import 'app_router.dart';
 import 'local_store.dart';
 import 'notification_service.dart';
@@ -23,13 +24,19 @@ class _StepsRecoveryAppState extends State<StepsRecoveryApp> {
   @override
   void initState() {
     super.initState();
+    final remote = AppConfig.hasRemoteSync
+        ? RemoteRecoveryRepository(
+            RecoveryApiClient(
+              baseUrl: AppConfig.apiBaseUrl,
+              authToken: AppConfig.apiAuthToken.isEmpty ? null : AppConfig.apiAuthToken,
+            ),
+          )
+        : null;
+
     _controller = RecoveryController(
       store: LocalStore(),
       notifications: NotificationService(),
-      // Scaffolded remote sync target (replace with your backend URL + token flow).
-      remote: RemoteRecoveryRepository(
-        RecoveryApiClient(baseUrl: 'https://example.com/api', authToken: null),
-      ),
+      remote: remote,
     );
     _controller.init();
   }

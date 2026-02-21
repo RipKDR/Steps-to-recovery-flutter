@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 
 import 'local_store.dart';
@@ -17,6 +19,7 @@ class RecoveryController extends ChangeNotifier {
   final LocalStore _store;
   final NotificationService _notifications;
   final RecoveryRepository? _remote;
+  final PendingSyncQueue _queue = PendingSyncQueue();
 
   RecoveryData _data = RecoveryData.initial();
   bool _loading = true;
@@ -44,9 +47,10 @@ class RecoveryController extends ChangeNotifier {
   }
 
   Future<void> _set(RecoveryData next) async {
-    _data = next;
+    _data = next.copyWith(updatedAtIso: DateTime.now().toUtc().toIso8601String());
     notifyListeners();
     await _store.save(_data);
+    await _queue.enqueue(_data);
   }
 
   Future<void> toggleMorning() async => _set(_data.copyWith(morningDone: !_data.morningDone));
@@ -75,13 +79,21 @@ class RecoveryController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final remote = await _remote.pull();
-      if (remote != null) {
+      final remote = await withRetry(() => _remote.pull());
+      if (remote != null && remote.isNewerThan(_data)) {
         _data = remote;
         await _store.save(_data);
       }
 
-      await _remote.push(_data);
+      final pendingRaw = await _queue.load();
+      for (final raw in pendingRaw) {
+        final map = jsonDecode(raw) as Map<String, dynamic>;
+        final pending = RecoveryData.fromJson(map);
+        await withRetry(() => _remote.push(pending));
+      }
+
+      await withRetry(() => _remote.push(_data));
+      await _queue.clear();
       _lastSyncMessage = 'Sync successful';
     } catch (e) {
       _lastSyncMessage = 'Sync failed: $e';

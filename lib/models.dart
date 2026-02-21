@@ -23,6 +23,7 @@ class RecoveryData {
     required this.contacts,
     required this.reminderMorning,
     required this.reminderEvening,
+    required this.updatedAtIso,
   });
 
   final int streakDays;
@@ -32,6 +33,7 @@ class RecoveryData {
   final List<EmergencyContact> contacts;
   final bool reminderMorning;
   final bool reminderEvening;
+  final String updatedAtIso;
 
   RecoveryData copyWith({
     int? streakDays,
@@ -41,6 +43,7 @@ class RecoveryData {
     List<EmergencyContact>? contacts,
     bool? reminderMorning,
     bool? reminderEvening,
+    String? updatedAtIso,
   }) {
     return RecoveryData(
       streakDays: streakDays ?? this.streakDays,
@@ -50,6 +53,7 @@ class RecoveryData {
       contacts: contacts ?? this.contacts,
       reminderMorning: reminderMorning ?? this.reminderMorning,
       reminderEvening: reminderEvening ?? this.reminderEvening,
+      updatedAtIso: updatedAtIso ?? this.updatedAtIso,
     );
   }
 
@@ -61,6 +65,7 @@ class RecoveryData {
         'contacts': contacts.map((e) => e.toJson()).toList(),
         'reminderMorning': reminderMorning,
         'reminderEvening': reminderEvening,
+        'updatedAtIso': updatedAtIso,
       };
 
   factory RecoveryData.fromJson(Map<String, dynamic> json) {
@@ -76,8 +81,13 @@ class RecoveryData {
           .toList(),
       reminderMorning: json['reminderMorning'] as bool? ?? true,
       reminderEvening: json['reminderEvening'] as bool? ?? true,
+      updatedAtIso: json['updatedAtIso'] as String? ?? DateTime.now().toUtc().toIso8601String(),
     );
   }
+
+  DateTime get updatedAt => DateTime.tryParse(updatedAtIso)?.toUtc() ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+
+  bool isNewerThan(RecoveryData other) => updatedAt.isAfter(other.updatedAt);
 
   static RecoveryData initial() => RecoveryData(
         streakDays: 12,
@@ -87,5 +97,6 @@ class RecoveryData {
         contacts: [],
         reminderMorning: true,
         reminderEvening: true,
+        updatedAtIso: DateTime.now().toUtc().toIso8601String(),
       );
 }
