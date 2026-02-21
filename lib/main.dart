@@ -1,11 +1,39 @@
 import 'package:flutter/material.dart';
 
+import 'local_store.dart';
+import 'models.dart';
+
 void main() {
   runApp(const StepsRecoveryApp());
 }
 
-class StepsRecoveryApp extends StatelessWidget {
+class StepsRecoveryApp extends StatefulWidget {
   const StepsRecoveryApp({super.key});
+
+  @override
+  State<StepsRecoveryApp> createState() => _StepsRecoveryAppState();
+}
+
+class _StepsRecoveryAppState extends State<StepsRecoveryApp> {
+  final _store = LocalStore();
+  RecoveryData? _data;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final loaded = await _store.load();
+    if (!mounted) return;
+    setState(() => _data = loaded);
+  }
+
+  Future<void> _update(RecoveryData next) async {
+    setState(() => _data = next);
+    await _store.save(next);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,13 +49,18 @@ class StepsRecoveryApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF0B1B24),
         useMaterial3: true,
       ),
-      home: const HomeShell(),
+      home: _data == null
+          ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+          : HomeShell(data: _data!, onChanged: _update),
     );
   }
 }
 
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key});
+  const HomeShell({super.key, required this.data, required this.onChanged});
+
+  final RecoveryData data;
+  final ValueChanged<RecoveryData> onChanged;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -35,18 +68,14 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
-  bool _morningDone = false;
-  bool _eveningDone = false;
-  String _journal = '';
-  int _streakDays = 12;
 
   String get nextAction {
-    if (!_morningDone) return 'Start morning intention';
-    if (!_eveningDone) return 'Close with evening pulse';
+    if (!widget.data.morningDone) return 'Start morning intention';
+    if (!widget.data.eveningDone) return 'Close with evening pulse';
     return 'Write a quick gratitude note';
   }
 
-  int get completedToday => (_morningDone ? 1 : 0) + (_eveningDone ? 1 : 0);
+  int get completedToday => (widget.data.morningDone ? 1 : 0) + (widget.data.eveningDone ? 1 : 0);
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +117,7 @@ class _HomeShellState extends State<HomeShell> {
             children: [
               Text('CURRENT STREAK', style: TextStyle(color: Colors.blueGrey.shade300, fontSize: 12, letterSpacing: 1.1)),
               const SizedBox(height: 6),
-              Text('$_streakDays days', style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w800)),
+              Text('${widget.data.streakDays} days', style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w800)),
               const SizedBox(height: 6),
               Text('Today progress: $completedToday/2 rituals complete', style: TextStyle(color: Colors.blueGrey.shade100)),
             ],
@@ -97,7 +126,7 @@ class _HomeShellState extends State<HomeShell> {
         const SizedBox(height: 12),
         InkWell(
           borderRadius: BorderRadius.circular(14),
-          onTap: () => setState(() => _index = (!_morningDone || !_eveningDone) ? 1 : 2),
+          onTap: () => setState(() => _index = (!widget.data.morningDone || !widget.data.eveningDone) ? 1 : 2),
           child: Ink(
             decoration: BoxDecoration(
               color: const Color(0xFF173F50),
@@ -150,21 +179,21 @@ class _HomeShellState extends State<HomeShell> {
           child: Column(
             children: [
               _filledButton(
-                text: _morningDone ? '✓ Morning done' : 'Mark morning done',
-                onPressed: () => setState(() => _morningDone = !_morningDone),
+                text: widget.data.morningDone ? '✓ Morning done' : 'Mark morning done',
+                onPressed: () => widget.onChanged(widget.data.copyWith(morningDone: !widget.data.morningDone)),
               ),
               const SizedBox(height: 10),
               _filledButton(
-                text: _eveningDone ? '✓ Evening done' : 'Mark evening done',
-                onPressed: () => setState(() => _eveningDone = !_eveningDone),
+                text: widget.data.eveningDone ? '✓ Evening done' : 'Mark evening done',
+                onPressed: () => widget.onChanged(widget.data.copyWith(eveningDone: !widget.data.eveningDone)),
               ),
               const SizedBox(height: 10),
               _filledButton(
                 text: 'Complete today',
                 color: const Color(0xFF1A6B4C),
                 onPressed: () {
-                  if (_morningDone && _eveningDone) {
-                    setState(() => _streakDays += 1);
+                  if (widget.data.morningDone && widget.data.eveningDone) {
+                    widget.onChanged(widget.data.copyWith(streakDays: widget.data.streakDays + 1));
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Great work. Day completed.')));
                   }
                 },
@@ -183,10 +212,11 @@ class _HomeShellState extends State<HomeShell> {
         const Text('Journal', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700)),
         const SizedBox(height: 16),
         _panel(
-          child: TextField(
+          child: TextFormField(
             minLines: 8,
             maxLines: 12,
-            onChanged: (v) => setState(() => _journal = v),
+            initialValue: widget.data.journal,
+            onChanged: (v) => widget.onChanged(widget.data.copyWith(journal: v)),
             decoration: const InputDecoration(
               hintText: 'Write what you are feeling right now...',
               border: OutlineInputBorder(),
@@ -194,7 +224,7 @@ class _HomeShellState extends State<HomeShell> {
           ),
         ),
         const SizedBox(height: 8),
-        Text('Characters: ${_journal.length}', style: TextStyle(color: Colors.blueGrey.shade200)),
+        Text('Characters: ${widget.data.journal.length}', style: TextStyle(color: Colors.blueGrey.shade200)),
       ],
     );
   }
@@ -209,7 +239,7 @@ class _HomeShellState extends State<HomeShell> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Streak: $_streakDays days', style: const TextStyle(fontSize: 18)),
+              Text('Streak: ${widget.data.streakDays} days', style: const TextStyle(fontSize: 18)),
               const SizedBox(height: 8),
               Text('Completed rituals today: $completedToday/2', style: const TextStyle(fontSize: 18)),
             ],
@@ -228,10 +258,37 @@ class _HomeShellState extends State<HomeShell> {
         _panel(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text('Companion: available', style: TextStyle(fontSize: 17)),
-              SizedBox(height: 8),
-              Text('Emergency contacts: configure in v2', style: TextStyle(fontSize: 17)),
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.contacts),
+                title: const Text('Emergency contacts'),
+                subtitle: Text(widget.data.contacts.isEmpty ? 'No contacts configured' : '${widget.data.contacts.length} saved'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () async {
+                  final contacts = await Navigator.of(context).push<List<EmergencyContact>>(
+                    MaterialPageRoute(
+                      builder: (_) => EmergencyContactsPage(initialContacts: widget.data.contacts),
+                    ),
+                  );
+                  if (contacts != null) {
+                    widget.onChanged(widget.data.copyWith(contacts: contacts));
+                  }
+                },
+              ),
+              const Divider(),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Morning reminder'),
+                value: widget.data.reminderMorning,
+                onChanged: (v) => widget.onChanged(widget.data.copyWith(reminderMorning: v)),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Evening reminder'),
+                value: widget.data.reminderEvening,
+                onChanged: (v) => widget.onChanged(widget.data.copyWith(reminderEvening: v)),
+              ),
             ],
           ),
         ),
@@ -279,6 +336,87 @@ class _HomeShellState extends State<HomeShell> {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Text(text),
         ),
+      ),
+    );
+  }
+}
+
+class EmergencyContactsPage extends StatefulWidget {
+  const EmergencyContactsPage({super.key, required this.initialContacts});
+
+  final List<EmergencyContact> initialContacts;
+
+  @override
+  State<EmergencyContactsPage> createState() => _EmergencyContactsPageState();
+}
+
+class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
+  late final List<EmergencyContact> _contacts = [...widget.initialContacts];
+
+  final _nameCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _phoneCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Emergency contacts'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(_contacts),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          TextField(
+            controller: _nameCtrl,
+            decoration: const InputDecoration(labelText: 'Name'),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _phoneCtrl,
+            keyboardType: TextInputType.phone,
+            decoration: const InputDecoration(labelText: 'Phone'),
+          ),
+          const SizedBox(height: 10),
+          FilledButton(
+            onPressed: () {
+              if (_nameCtrl.text.trim().isEmpty || _phoneCtrl.text.trim().isEmpty) return;
+              setState(() {
+                _contacts.add(EmergencyContact(name: _nameCtrl.text.trim(), phone: _phoneCtrl.text.trim()));
+                _nameCtrl.clear();
+                _phoneCtrl.clear();
+              });
+            },
+            child: const Text('Add contact'),
+          ),
+          const SizedBox(height: 16),
+          ..._contacts.asMap().entries.map((entry) {
+            final i = entry.key;
+            final c = entry.value;
+            return Card(
+              child: ListTile(
+                leading: const Icon(Icons.person),
+                title: Text(c.name),
+                subtitle: Text(c.phone),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => setState(() => _contacts.removeAt(i)),
+                ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
