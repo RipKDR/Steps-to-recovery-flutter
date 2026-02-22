@@ -136,9 +136,8 @@ class PendingSyncQueue {
   }
 
   Future<void> enqueue(RecoveryData data) async {
-    final list = await load();
-    list.add(jsonEncode(data.toJson()));
-    await save(list);
+    // Keep only the latest snapshot to avoid unbounded queue growth.
+    await save(<String>[jsonEncode(data.toJson())]);
   }
 
   Future<void> clear() => save(<String>[]);

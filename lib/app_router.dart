@@ -65,14 +65,21 @@ class AppScaffold extends StatelessWidget {
           switch (i) {
             case 0:
               context.go('/home');
+              return;
             case 1:
               context.go('/checkin');
+              return;
             case 2:
               context.go('/journal');
+              return;
             case 3:
               context.go('/progress');
+              return;
             case 4:
               context.go('/support');
+              return;
+            default:
+              return;
           }
         },
         destinations: const [
