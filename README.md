@@ -20,6 +20,7 @@ Fresh rebuild of the app using Flutter + Dart.
 - Reminder toggles + schedule hooks
 - Offline-first with pending sync queue
 - Sync-now action with retry/backoff
+- Background sync scheduler scaffold (`workmanager`, periodic task)
 
 ## Run
 ```bash

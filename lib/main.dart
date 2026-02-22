@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 
 import 'app_config.dart';
+import 'background_sync.dart';
 import 'app_router.dart';
 import 'local_store.dart';
 import 'notification_service.dart';
 import 'recovery_controller.dart';
 import 'sync.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final backgroundSync = BackgroundSyncService();
+  await backgroundSync.initialize();
+  await backgroundSync.registerPeriodicSync();
+
   runApp(const StepsRecoveryApp());
 }
 

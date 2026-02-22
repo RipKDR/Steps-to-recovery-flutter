@@ -391,7 +391,8 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
           const SizedBox(height: 8),
           FilledButton(
             onPressed: () {
-              if (nameCtrl.text.trim().isEmpty || phoneCtrl.text.trim().isEmpty) {
+              if (nameCtrl.text.trim().isEmpty ||
+                  phoneCtrl.text.trim().isEmpty) {
                 return;
               }
               setState(() {
