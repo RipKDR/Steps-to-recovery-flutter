@@ -97,6 +97,11 @@ class RecoveryController extends ChangeNotifier {
     );
   }
 
+  Future<void> sendTestNotification() async {
+    await _notifications.requestPermissions();
+    await _notifications.showTestNotification();
+  }
+
   Future<void> syncNow() async {
     if (_remote == null || _syncing) return;
     _syncing = true;

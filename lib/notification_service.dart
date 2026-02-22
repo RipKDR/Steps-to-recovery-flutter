@@ -61,6 +61,24 @@ class NotificationService {
     await _plugin.cancel(1002);
   }
 
+  Future<void> showTestNotification() async {
+    await initialize();
+    await _plugin.show(
+      1099,
+      'Recovery companion',
+      'This is a test reminder. You are doing better than you think.',
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'recovery_test',
+          'Recovery test notifications',
+          channelDescription: 'Manual test notifications',
+          importance: Importance.defaultImportance,
+          priority: Priority.defaultPriority,
+        ),
+      ),
+    );
+  }
+
   Future<void> _scheduleDaily({
     required int id,
     required String title,

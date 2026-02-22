@@ -104,6 +104,28 @@ class HomePage extends StatelessWidget {
           onTap: () => context.go(nextAction.$2),
         ),
         const SizedBox(height: 12),
+        panel(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SectionTitle('Quick plan'),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _ChecklistPill(label: 'Morning', done: d.morningDone),
+                  _ChecklistPill(label: 'Evening', done: d.eveningDone),
+                  _ChecklistPill(
+                    label: 'Journal',
+                    done: d.journal.trim().isNotEmpty,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
@@ -269,6 +291,42 @@ class _ActionBanner extends StatelessWidget {
             const Icon(Icons.chevron_right),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ChecklistPill extends StatelessWidget {
+  const _ChecklistPill({required this.label, required this.done});
+
+  final String label;
+  final bool done;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: done ? const Color(0x221A6B4C) : const Color(0x221D2C38),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: done ? const Color(0x991A6B4C) : const Color(0x33FFFFFF),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            done ? Icons.check_circle : Icons.circle_outlined,
+            size: 14,
+            color: done ? Colors.greenAccent : Colors.white70,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+        ],
       ),
     );
   }
@@ -601,6 +659,22 @@ class SupportPage extends StatelessWidget {
                 title: const Text('Evening reminder'),
                 value: d.reminderEvening,
                 onChanged: controller.setEveningReminder,
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () async {
+                    await controller.sendTestNotification();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Test notification sent')),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.notifications_active_outlined),
+                  label: const Text('Send test notification'),
+                ),
               ),
               const SizedBox(height: 8),
               SizedBox(
