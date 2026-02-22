@@ -126,6 +126,14 @@ class HomePage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
+        if (d.journal.trim().isEmpty)
+          _ActionBanner(
+            title: 'Write your first journal check-in',
+            subtitle: 'A few honest lines is enough',
+            icon: Icons.edit_note_rounded,
+            onTap: () => context.go('/journal'),
+          ),
+        if (d.journal.trim().isEmpty) const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
@@ -647,6 +655,21 @@ class SupportPage extends StatelessWidget {
                   if (contacts != null) await controller.setContacts(contacts);
                 },
               ),
+              if (d.contacts.isEmpty)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0x22C13A4F),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0x66C13A4F)),
+                  ),
+                  child: const Text(
+                    'Tip: add at least one emergency contact so support is ready before you need it.',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
               const Divider(),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
