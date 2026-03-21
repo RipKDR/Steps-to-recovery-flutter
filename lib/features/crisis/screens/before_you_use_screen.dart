@@ -27,7 +27,6 @@ class _BeforeYouUseScreenState extends State<BeforeYouUseScreen> {
   Widget build(BuildContext context) {
     final minutes = _secondsRemaining ~/ 60;
     final seconds = _secondsRemaining % 60;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -40,64 +39,73 @@ class _BeforeYouUseScreenState extends State<BeforeYouUseScreen> {
         child: Column(
           children: [
             // Warning message
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                border: Border.all(color: AppColors.warning),
-              ),
-              child: Text(
-                'Take 5 minutes before making any decisions. A craving is like a wave - it will pass.',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.warning,
+            Semantics(
+              liveRegion: true,
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                  border: Border.all(color: AppColors.warning),
                 ),
-                textAlign: TextAlign.center,
+                child: Text(
+                  'Take 5 minutes before making any decisions. A craving is like a wave - it will pass.',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.warning,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.xxl),
-            
+
             // Timer display
-            Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.warning,
-                  width: 4,
+            Semantics(
+              label: 'Timer: $minutes minutes and $seconds seconds remaining',
+              liveRegion: true,
+              child: Container(
+                width: 250,
+                height: 250,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.warning,
+                    width: 4,
+                  ),
                 ),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      minutes.toString().padLeft(2, '0'),
-                      style: AppTypography.displayLarge.copyWith(
-                        color: AppColors.warning,
-                        fontSize: 64,
-                      ),
+                child: Center(
+                  child: ExcludeSemantics(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          minutes.toString().padLeft(2, '0'),
+                          style: AppTypography.displayLarge.copyWith(
+                            color: AppColors.warning,
+                            fontSize: 64,
+                          ),
+                        ),
+                        Text(
+                          ':',
+                          style: AppTypography.displayLarge.copyWith(
+                            color: AppColors.warning,
+                          ),
+                        ),
+                        Text(
+                          seconds.toString().padLeft(2, '0'),
+                          style: AppTypography.displayLarge.copyWith(
+                            color: AppColors.warning,
+                            fontSize: 64,
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      ':',
-                      style: AppTypography.displayLarge.copyWith(
-                        color: AppColors.warning,
-                      ),
-                    ),
-                    Text(
-                      seconds.toString().padLeft(2, '0'),
-                      style: AppTypography.displayLarge.copyWith(
-                        color: AppColors.warning,
-                        fontSize: 64,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: AppSpacing.xxl),
-            
+
             // Breathing guide
             if (_isRunning) ...[
               Text(
@@ -105,11 +113,11 @@ class _BeforeYouUseScreenState extends State<BeforeYouUseScreen> {
                 style: AppTypography.headlineSmall,
               ),
               const SizedBox(height: AppSpacing.md),
-              const _BreathingCircle(),
+              _BreathingCircle(),
             ],
-            
+
             const Spacer(),
-            
+
             // Control buttons
             Row(
               children: [
@@ -136,15 +144,19 @@ class _BeforeYouUseScreenState extends State<BeforeYouUseScreen> {
             ),
             const SizedBox(height: AppSpacing.md),
             Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  // Call for help
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.danger,
-                  foregroundColor: AppColors.textOnDark,
+              child: Semantics(
+                button: true,
+                label: 'Call for help',
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Call for help
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.danger,
+                    foregroundColor: AppColors.textOnDark,
+                  ),
+                  child: const Text('Call for Help'),
                 ),
-                child: const Text('Call for Help'),
               ),
             ),
           ],
@@ -157,7 +169,7 @@ class _BeforeYouUseScreenState extends State<BeforeYouUseScreen> {
     setState(() {
       _isRunning = true;
     });
-    
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_secondsRemaining > 0) {
         setState(() {
@@ -197,11 +209,11 @@ class _BreathingCircleState extends State<_BreathingCircle>
       duration: const Duration(seconds: 4),
       vsync: this,
     );
-    
+
     _animation = Tween<double>(begin: 0.5, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
-    
+
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         setState(() => _instruction = 'Breathe Out');
@@ -211,7 +223,7 @@ class _BreathingCircleState extends State<_BreathingCircle>
         _controller.forward();
       }
     });
-    
+
     _controller.forward();
   }
 
@@ -223,18 +235,21 @@ class _BreathingCircleState extends State<_BreathingCircle>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Container(
-          width: 150 * _animation.value,
-          height: 150 * _animation.value,
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+
+    if (reduceMotion) {
+      return Semantics(
+        liveRegion: true,
+        label: 'Breathing guide: $_instruction',
+        child: Container(
+          width: 150,
+          height: 150,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: RadialGradient(
               colors: [
-                AppColors.primaryAmber.withValues(alpha: 0.3 * _animation.value),
-                AppColors.primaryAmber.withValues(alpha: 0.1 * _animation.value),
+                AppColors.primaryAmber.withValues(alpha: 0.3),
+                AppColors.primaryAmber.withValues(alpha: 0.1),
               ],
             ),
           ),
@@ -246,8 +261,39 @@ class _BreathingCircleState extends State<_BreathingCircle>
               ),
             ),
           ),
-        );
-      },
+        ),
+      );
+    }
+
+    return Semantics(
+      liveRegion: true,
+      label: 'Breathing guide: $_instruction',
+      child: AnimatedBuilder(
+        animation: _animation,
+        builder: (context, child) {
+          return Container(
+            width: 150 * _animation.value,
+            height: 150 * _animation.value,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  AppColors.primaryAmber.withValues(alpha: 0.3 * _animation.value),
+                  AppColors.primaryAmber.withValues(alpha: 0.1 * _animation.value),
+                ],
+              ),
+            ),
+            child: Center(
+              child: Text(
+                _instruction,
+                style: AppTypography.titleMedium.copyWith(
+                  color: AppColors.primaryAmber,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

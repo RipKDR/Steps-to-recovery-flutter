@@ -1,7 +1,6 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:steps_recovery_flutter/navigation/shell_screen.dart';
 import 'package:steps_recovery_flutter/main.dart';
 
 void main() {
@@ -9,6 +8,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const StepsToRecoveryApp());
     await tester.pumpAndSettle();
-    expect(find.byType(ShellScreen), findsOneWidget);
+    expect(find.text('Welcome to Steps to Recovery'), findsOneWidget);
+    expect(find.text('Next'), findsOneWidget);
   });
 }

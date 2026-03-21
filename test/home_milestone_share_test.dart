@@ -1,9 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:steps_recovery_flutter/core/services/preferences_service.dart';
-import 'package:steps_recovery_flutter/main.dart';
+import 'package:steps_recovery_flutter/features/home/screens/home_screen.dart';
 
 import 'test_helpers.dart';
 
@@ -17,9 +16,9 @@ void main() {
     shareCalls = <MethodCall>[];
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(shareChannel, (call) async {
-      shareCalls.add(call);
-      return shareResult;
-    });
+          shareCalls.add(call);
+          return shareResult;
+        });
   });
 
   tearDown(() {
@@ -27,14 +26,12 @@ void main() {
         .setMockMethodCallHandler(shareChannel, null);
   });
 
-  testWidgets('share milestone CTA stays hidden without unread milestones', (tester) async {
+  testWidgets('share milestone CTA stays hidden without unread milestones', (
+    tester,
+  ) async {
     await createSignedInUser(sobrietyDate: DateTime.now());
 
-    await tester.pumpWidget(const StepsToRecoveryApp());
-    await tester.pumpAndSettle();
-    await tester.pumpAndSettle();
-
-    await _pumpHomeScreen(tester);
+    await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
     await _pumpHomeScreen(tester);
 
     expect(find.textContaining('Share '), findsNothing);
@@ -52,11 +49,7 @@ void main() {
         sobrietyDate: DateTime.now().subtract(const Duration(days: 30)),
       );
 
-      await tester.pumpWidget(
-        const StepsToRecoveryApp(),
-      );
-      await tester.pumpAndSettle();
-      await tester.pumpAndSettle();
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
       await _pumpHomeScreen(tester);
 
       expect(find.text('Share 1 Month'), findsOneWidget);
@@ -85,35 +78,31 @@ void main() {
     },
   );
 
-  testWidgets('dismissed share keeps the milestone prompt and skips completion metric', (
-    tester,
-  ) async {
-    shareResult = '';
+  testWidgets(
+    'dismissed share keeps the milestone prompt and skips completion metric',
+    (tester) async {
+      shareResult = '';
 
-    await createSignedInUser(
-      sobrietyDate: DateTime.now().subtract(const Duration(days: 7)),
-    );
+      await createSignedInUser(
+        sobrietyDate: DateTime.now().subtract(const Duration(days: 7)),
+      );
 
-    await tester.pumpWidget(
-      const StepsToRecoveryApp(
-      ),
-    );
-    await tester.pumpAndSettle();
-    await tester.pumpAndSettle();
-    await _pumpHomeScreen(tester);
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
+      await _pumpHomeScreen(tester);
 
-    expect(find.text('Share 1 Week'), findsOneWidget);
+      expect(find.text('Share 1 Week'), findsOneWidget);
 
-    await tester.tap(find.text('Share 1 Week'));
-    await _pumpAfterInteraction(tester);
+      await tester.tap(find.text('Share 1 Week'));
+      await _pumpAfterInteraction(tester);
 
-    expect(await PreferencesService().getAchievementShareTappedCount(), 1);
-    expect(await PreferencesService().getAchievementShareCompletedCount(), 0);
-    expect(find.text('Share 1 Week'), findsOneWidget);
+      expect(await PreferencesService().getAchievementShareTappedCount(), 1);
+      expect(await PreferencesService().getAchievementShareCompletedCount(), 0);
+      expect(find.text('Share 1 Week'), findsOneWidget);
 
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    },
+  );
 }
 
 Future<void> _pumpHomeScreen(WidgetTester tester) async {
