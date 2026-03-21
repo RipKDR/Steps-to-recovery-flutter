@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -25,18 +26,20 @@ class _CravingSurfScreenState extends State<CravingSurfScreen>
       duration: const Duration(seconds: 4),
       vsync: this,
     );
-    
+
     _animation = Tween<double>(begin: 0.3, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
-    
+
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
+        HapticFeedback.lightImpact();
         setState(() {
           _instruction = 'Breathe Out';
         });
         _controller.reverse();
       } else if (status == AnimationStatus.dismissed) {
+        HapticFeedback.lightImpact();
         setState(() {
           _instruction = 'Breathe In';
           _breathCount++;
@@ -44,7 +47,7 @@ class _CravingSurfScreenState extends State<CravingSurfScreen>
         _controller.forward();
       }
     });
-    
+
     _controller.forward();
   }
 
@@ -56,6 +59,8 @@ class _CravingSurfScreenState extends State<CravingSurfScreen>
 
   @override
   Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Craving Surf'),
@@ -66,11 +71,14 @@ class _CravingSurfScreenState extends State<CravingSurfScreen>
         child: Column(
           children: [
             const SizedBox(height: AppSpacing.xl),
-            
+
             // Instruction
-            Text(
-              'Ride the wave',
-              style: AppTypography.headlineMedium,
+            Semantics(
+              header: true,
+              child: Text(
+                'Ride the wave',
+                style: AppTypography.headlineMedium,
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
@@ -81,75 +89,43 @@ class _CravingSurfScreenState extends State<CravingSurfScreen>
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xxl),
-            
+
             // Animated wave
             Expanded(
               child: Center(
-                child: AnimatedBuilder(
-                  animation: _animation,
-                  builder: (context, child) {
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 200 * _animation.value,
-                          height: 200 * _animation.value,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: RadialGradient(
-                              colors: [
-                                AppColors.primaryAmber.withValues(alpha: 0.4),
-                                AppColors.primaryAmber.withValues(alpha: 0.1),
-                              ],
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              _instruction,
-                              style: AppTypography.titleLarge.copyWith(
-                                color: AppColors.primaryAmber,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.xxl),
-                        Text(
-                          'Breath $_breathCount',
-                          style: AppTypography.bodyLarge.copyWith(
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                child: reduceMotion
+                    ? _buildStaticBreathingCircle()
+                    : _buildAnimatedBreathingCircle(),
+              ),
+            ),
+
+            // Tips
+            Semantics(
+              label: 'Reminders: This feeling will pass. You have survived every craving before. Focus on your breath. Reach out if you need support.',
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceCard,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Remember:',
+                      style: AppTypography.titleMedium,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _TipRow(tip: 'This feeling will pass'),
+                    _TipRow(tip: 'You\'ve survived every craving before'),
+                    _TipRow(tip: 'Focus on your breath'),
+                    _TipRow(tip: 'Reach out if you need support'),
+                  ],
                 ),
               ),
             ),
-            
-            // Tips
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceCard,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Remember:',
-                    style: AppTypography.titleMedium,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _TipRow(tip: 'This feeling will pass'),
-                  _TipRow(tip: 'You\'ve survived every craving before'),
-                  _TipRow(tip: 'Focus on your breath'),
-                  _TipRow(tip: 'Reach out if you need support'),
-                ],
-              ),
-            ),
             const SizedBox(height: AppSpacing.xl),
-            
+
             // Complete button
             SizedBox(
               width: double.infinity,
@@ -162,6 +138,91 @@ class _CravingSurfScreenState extends State<CravingSurfScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildStaticBreathingCircle() {
+    return Semantics(
+      liveRegion: true,
+      label: 'Breathing guide: $_instruction. Breath count: $_breathCount',
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 200,
+            height: 200,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  AppColors.primaryAmber.withValues(alpha: 0.4),
+                  AppColors.primaryAmber.withValues(alpha: 0.1),
+                ],
+              ),
+            ),
+            child: Center(
+              child: Text(
+                _instruction,
+                style: AppTypography.titleLarge.copyWith(
+                  color: AppColors.primaryAmber,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xxl),
+          Text(
+            'Breath $_breathCount',
+            style: AppTypography.bodyLarge.copyWith(
+              color: AppColors.textMuted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnimatedBreathingCircle() {
+    return Semantics(
+      liveRegion: true,
+      label: 'Breathing guide: $_instruction. Breath count: $_breathCount',
+      child: AnimatedBuilder(
+        animation: _animation,
+        builder: (context, child) {
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 200 * _animation.value,
+                height: 200 * _animation.value,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.primaryAmber.withValues(alpha: 0.4),
+                      AppColors.primaryAmber.withValues(alpha: 0.1),
+                    ],
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    _instruction,
+                    style: AppTypography.titleLarge.copyWith(
+                      color: AppColors.primaryAmber,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xxl),
+              Text(
+                'Breath $_breathCount',
+                style: AppTypography.bodyLarge.copyWith(
+                  color: AppColors.textMuted,
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -178,10 +239,12 @@ class _TipRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Row(
         children: [
-          const Icon(
-            Icons.check_circle,
-            size: AppSpacing.iconSm,
-            color: AppColors.success,
+          ExcludeSemantics(
+            child: const Icon(
+              Icons.check_circle,
+              size: AppSpacing.iconSm,
+              color: AppColors.success,
+            ),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(

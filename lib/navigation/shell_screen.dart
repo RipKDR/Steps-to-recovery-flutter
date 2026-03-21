@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../core/theme/app_colors.dart';
+import '../widgets/responsive_layout.dart';
 
-/// Shell screen with bottom navigation bar
+/// Shell screen with adaptive navigation (bottom tabs / rail / sidebar)
 class ShellScreen extends StatelessWidget {
   final Widget child;
 
@@ -12,42 +13,51 @@ class ShellScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
 
-    return Scaffold(
-      body: child,
-      bottomNavigationBar: NavigationBar(
-        backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.primaryAmber.withValues(alpha: 0.2),
-        selectedIndex: _calculateSelectedIndex(location),
-        onDestinationSelected: (index) => _onItemTapped(index, context),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home, color: AppColors.primaryAmber),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.edit_outlined),
-            selectedIcon: Icon(Icons.edit, color: AppColors.primaryAmber),
-            label: 'Journal',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.stairs_outlined),
-            selectedIcon: Icon(Icons.stairs, color: AppColors.primaryAmber),
-            label: 'Steps',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.people_outlined),
-            selectedIcon: Icon(Icons.people, color: AppColors.primaryAmber),
-            label: 'Meetings',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person, color: AppColors.primaryAmber),
-            label: 'Profile',
-          ),
-        ],
+    return PopScope(
+      canPop: !_isRootTab(location),
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && location != '/home') {
+          context.go('/home');
+        }
+      },
+      child: AdaptiveNavigation(
+      selectedIndex: _calculateSelectedIndex(location),
+      onDestinationSelected: (index) => _onItemTapped(index, context),
+      destinations: const [
+        NavigationDestination(
+          icon: Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home, color: AppColors.primaryAmber),
+          label: 'Home',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.edit_outlined),
+          selectedIcon: Icon(Icons.edit, color: AppColors.primaryAmber),
+          label: 'Journal',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.stairs_outlined),
+          selectedIcon: Icon(Icons.stairs, color: AppColors.primaryAmber),
+          label: 'Steps',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.people_outlined),
+          selectedIcon: Icon(Icons.people, color: AppColors.primaryAmber),
+          label: 'Meetings',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.person_outline),
+          selectedIcon: Icon(Icons.person, color: AppColors.primaryAmber),
+          label: 'Profile',
+        ),
+      ],
+      body: FocusTraversalGroup(child: child),
       ),
     );
+  }
+
+  bool _isRootTab(String location) {
+    const roots = ['/home', '/journal', '/steps', '/meetings', '/profile'];
+    return roots.contains(location);
   }
 
   int _calculateSelectedIndex(String location) {
