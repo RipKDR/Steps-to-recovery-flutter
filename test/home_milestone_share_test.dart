@@ -29,25 +29,19 @@ void main() {
   testWidgets('share milestone CTA stays hidden without unread milestones', (
     tester,
   ) async {
-    print('diag:first:start');
     await createSignedInUser(sobrietyDate: DateTime.now());
-    print('diag:first:after-signup');
 
     await tester.pumpWidget(
       const MaterialApp(
         home: HomeScreen(),
       ),
     );
-    print('diag:first:after-pump-widget');
     await _pumpHomeScreen(tester);
-    print('diag:first:after-pump-home');
 
     expect(find.textContaining('Share '), findsNothing);
-    print('diag:first:after-expect');
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
-    print('diag:first:after-dispose');
   });
 
   testWidgets(

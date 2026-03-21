@@ -7,12 +7,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:steps_recovery_flutter/core/services/app_state_service.dart';
 import 'package:steps_recovery_flutter/core/services/database_service.dart';
 import 'package:steps_recovery_flutter/core/services/encryption_service.dart';
+import 'package:steps_recovery_flutter/core/services/preferences_service.dart';
 
 Future<void> prepareTestState() async {
   TestWidgetsFlutterBinding.ensureInitialized();
   SharedPreferences.setMockInitialValues(<String, Object>{});
   FlutterSecureStoragePlatform.instance =
       TestFlutterSecureStoragePlatform(<String, String>{});
+  await PreferencesService().initialize();
+  await PreferencesService().clear();
   await EncryptionService().initialize();
   await DatabaseService().initialize();
   await AppStateService.instance.initialize();
