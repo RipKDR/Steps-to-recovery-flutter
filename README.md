@@ -2,6 +2,8 @@
 
 Fresh rebuild of the app using Flutter + Dart.
 
+The runnable Flutter project is the repo root. A nested `app/` folder exists as a preserved recovery snapshot and is not the canonical app.
+
 ## Stack
 
 - Flutter 3.41.x
@@ -26,18 +28,29 @@ Fresh rebuild of the app using Flutter + Dart.
 
 ## Run
 
-```bash
-flutter pub get
-flutter run
+```powershell
+.\tool\flutterw.ps1 pub get
+.\tool\flutterw.ps1 run -d chrome
 ```
+
+`tool/flutterw.ps1` resolves the Flutter SDK from `android/local.properties`, `FLUTTER_ROOT`, or `PATH`, so the project can be run even when `flutter` is not globally available in the shell.
+
+Verified locally on March 21, 2026:
+
+- `.\tool\flutterw.ps1 analyze`
+- `.\tool\flutterw.ps1 test`
+- `.\tool\flutterw.ps1 build apk --debug`
+- `.\tool\flutterw.ps1 build web`
+
+Windows desktop builds additionally require Visual Studio with the "Desktop development with C++" workload installed.
 
 ## Optional remote sync config
 
 Pass backend values with dart-defines:
 
-```bash
-flutter run \
-  --dart-define=API_BASE_URL=https://your-api.example.com \
+```powershell
+.\tool\flutterw.ps1 run `
+  --dart-define=API_BASE_URL=https://your-api.example.com `
   --dart-define=API_AUTH_TOKEN=your_token_here
 ```
 

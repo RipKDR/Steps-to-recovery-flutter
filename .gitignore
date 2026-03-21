@@ -44,6 +44,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Preserved duplicate project snapshot; the runnable app is the repo root.
+/app/
 
 #Ignore vscode AI rules
 .github\instructions\codacy.instructions.md
