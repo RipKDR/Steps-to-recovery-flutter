@@ -1,23 +1,55 @@
 {
   "permissions": {
     "allow": [
-      "Bash(flutter analyze:*)",
-      "Bash(flutter pub:*)",
-      "Bash(grep -r \"BMAD\\\\|bmad\" /c/Users/H/Steps-to-recovery-flutter --include=*.dart --include=*.md --include=*.json)",
-      "Bash(wc:*)",
-      "Bash(flutter test:*)",
-      "Bash(cd:*)",
+      "Bash(flutter:*)",
       "Bash(dart:*)",
-      "Bash(dart analyze:*)",
+      "Bash(git:*)",
+      "Bash(python:*)",
+      "Bash(wc:*)",
+      "Bash(cd:*)",
       "Bash(for wt:*)",
+<<<<<<< Updated upstream
       "Bash(do git:*)",
       "Bash(java -version)",
       "Bash(while read:*)",
       "Bash(do basename:*)"
+=======
+      "Skill(update-config)"
+>>>>>>> Stashed changes
     ]
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "supabase"
-  ]
+  ],
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -c \"import sys,json,subprocess; d=json.load(sys.stdin); f=d.get('tool_input',{}).get('file_path',''); subprocess.run(['dart','format',f]) if f.endswith('.dart') else None\" 2>/dev/null || true",
+            "statusMessage": "Formatting Dart..."
+          },
+          {
+            "type": "command",
+            "command": "python -c \"import sys,json,subprocess,os; d=json.load(sys.stdin); f=d.get('tool_input',{}).get('file_path',''); subprocess.run(['flutter','pub','get'],cwd=os.path.dirname(os.path.abspath(f))) if f.endswith('pubspec.yaml') else None\" 2>/dev/null || true",
+            "statusMessage": "Running flutter pub get..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -c \"import json; print(json.dumps({'systemMessage': 'Reminder: run flutter test to verify changes. Coverage gaps: services/sync, analytics.'}))\"",
+            "statusMessage": "Wrapping up..."
+          }
+        ]
+      }
+    ]
+  }
 }
