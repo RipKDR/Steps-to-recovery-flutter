@@ -1,18 +1,115 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/constants/recovery_content.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 
 /// Daily Reading screen
-class DailyReadingScreen extends StatelessWidget {
+class DailyReadingScreen extends StatefulWidget {
   const DailyReadingScreen({super.key});
 
   @override
+  State<DailyReadingScreen> createState() => _DailyReadingScreenState();
+}
+
+class _DailyReadingScreenState extends State<DailyReadingScreen> {
+  DateTime _selectedDate = DateUtils.dateOnly(DateTime.now());
+
+  void _previousDay() {
+    setState(() {
+      _selectedDate = DateUtils.dateOnly(
+        _selectedDate.subtract(const Duration(days: 1)),
+      );
+    });
+  }
+
+  void _nextDay() {
+    setState(() {
+      _selectedDate = DateUtils.dateOnly(
+        _selectedDate.add(const Duration(days: 1)),
+      );
+    });
+  }
+
+  void _jumpToToday() {
+    setState(() {
+      _selectedDate = DateUtils.dateOnly(DateTime.now());
+    });
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 365 * 5)),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        _selectedDate = DateUtils.dateOnly(picked);
+      });
+    }
+  }
+
+  void _showLibraryReading(ReadingContent reading) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.background,
+      isScrollControlled: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(reading.title, style: AppTypography.headlineSmall),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  reading.source,
+                  style: AppTypography.labelMedium.copyWith(
+                    color: AppColors.primaryAmber,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  reading.content,
+                  style: AppTypography.bodyMedium.copyWith(height: 1.7),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => context.pop(),
+                    child: const Text('Close'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final reading = readingForDate(_selectedDate);
+    final common = commonReadings.where((item) => item.isCommonlyRead).toList();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Daily Reading'),
         backgroundColor: AppColors.background,
+        actions: [
+          IconButton(
+            tooltip: 'Choose date',
+            icon: const Icon(Icons.calendar_month),
+            onPressed: _pickDate,
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -35,8 +132,13 @@ class DailyReadingScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    _formatDate(DateTime.now()),
+                    _formatDate(_selectedDate),
                     style: AppTypography.titleMedium,
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: _jumpToToday,
+                    child: const Text('Today'),
                   ),
                 ],
               ),
@@ -44,9 +146,13 @@ class DailyReadingScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.xxl),
             
             // Reading title
+            Text(reading.title, style: AppTypography.displaySmall),
+            const SizedBox(height: AppSpacing.sm),
             Text(
-              'Just for Today',
-              style: AppTypography.displaySmall,
+              'Source: ${reading.source.toUpperCase()}',
+              style: AppTypography.labelMedium.copyWith(
+                color: AppColors.primaryAmber,
+              ),
             ),
             const SizedBox(height: AppSpacing.lg),
             
@@ -62,21 +168,7 @@ class DailyReadingScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Just for today I will be happy. This assumes to be true what Abraham Lincoln said, that "Most folks are about as happy as they make up their minds to be."',
-                    style: AppTypography.bodyLarge.copyWith(
-                      height: 1.8,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Text(
-                    'Just for today I will adjust myself to what is, and not try to adjust what is to me.',
-                    style: AppTypography.bodyLarge.copyWith(
-                      height: 1.8,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Text(
-                    'Just for today I will exercise my soul in three respects: I will do somebody a good turn, and not get found out.',
+                    reading.content,
                     style: AppTypography.bodyLarge.copyWith(
                       height: 1.8,
                     ),
@@ -99,46 +191,92 @@ class DailyReadingScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
               ),
               child: Text(
-                'What does "adjusting yourself to what is" mean to you in your recovery journey today?',
+                reading.reflectionPrompt,
                 style: AppTypography.bodyMedium.copyWith(
                   height: 1.6,
                 ),
               ),
             ),
+            const SizedBox(height: AppSpacing.lg),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  context.push('/journal/editor?mode=create');
+                },
+                icon: const Icon(Icons.edit),
+                label: const Text('Write reflection'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryAmber,
+                  foregroundColor: AppColors.textOnDark,
+                ),
+              ),
+            ),
             const SizedBox(height: AppSpacing.xxl),
             
-            // Action buttons
+            Text(
+              'Recovery Library',
+              style: AppTypography.headlineSmall,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              height: 118,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: common.length,
+                separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.md),
+                itemBuilder: (context, index) {
+                  final item = common[index];
+                  return SizedBox(
+                    width: 220,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                      onTap: () => _showLibraryReading(item),
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceCard,
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              item.title,
+                              style: AppTypography.titleMedium,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              item.category,
+                              style: AppTypography.labelSmall.copyWith(
+                                color: AppColors.primaryAmber,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () {
-                      // Previous day
-                    },
+                    onPressed: _previousDay,
                     icon: const Icon(Icons.chevron_left),
                     label: const Text('Previous'),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      // Write reflection
-                    },
-                    icon: const Icon(Icons.edit),
-                    label: const Text('Reflect'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryAmber,
-                      foregroundColor: AppColors.textOnDark,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () {
-                      // Next day
-                    },
+                    onPressed: _nextDay,
                     icon: const Icon(Icons.chevron_right),
                     label: const Text('Next'),
                   ),

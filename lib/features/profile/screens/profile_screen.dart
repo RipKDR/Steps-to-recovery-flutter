@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/services/app_state_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -10,149 +11,167 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        backgroundColor: AppColors.background,
-      ),
-      body: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          // Profile header
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.xxl),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceCard,
-              border: Border(
-                bottom: BorderSide(color: AppColors.border),
-              ),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  width: AppSpacing.sext,
-                  height: AppSpacing.sext,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: AppColors.primaryGradient,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+    return AnimatedBuilder(
+      animation: AppStateService.instance,
+      builder: (context, _) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Profile'),
+            backgroundColor: AppColors.background,
+          ),
+          body: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              // Profile header
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.xxl),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceCard,
+                  border: Border(
+                    bottom: BorderSide(color: AppColors.border),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: AppSpacing.sext,
+                      height: AppSpacing.sext,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: AppColors.primaryGradient,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.person,
+                        size: AppSpacing.iconXxl,
+                        color: AppColors.textOnDark,
+                      ),
                     ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    size: AppSpacing.iconXxl,
-                    color: AppColors.textOnDark,
-                  ),
+                    const SizedBox(height: AppSpacing.lg),
+                    Text(
+                      AppStateService.instance.userLabel,
+                      style: AppTypography.headlineMedium,
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      AppStateService.instance.sobrietySummary,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.primaryAmber,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                Text(
-                  'User Name',
-                  style: AppTypography.headlineMedium,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  '30 days sober',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.primaryAmber,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          // Settings sections
-          _SettingsSection(
-            title: 'Recovery',
-            children: [
-              _SettingsTile(
-                icon: Icons.people,
-                title: 'Sponsor',
-                subtitle: 'Manage sponsor connection',
-                onTap: () {
-                  context.push('/profile/sponsor');
-                },
               ),
-              _SettingsTile(
-                icon: Icons.shield,
-                title: 'Safety Plan',
-                subtitle: 'Create your personal safety plan',
-                onTap: () {
-                  context.push('/home/safety-plan');
-                },
+
+              // Settings sections
+              _SettingsSection(
+                title: 'Recovery',
+                children: [
+                  _SettingsTile(
+                    icon: Icons.people,
+                    title: 'Sponsor',
+                    subtitle: 'Manage sponsor connection',
+                    onTap: () {
+                      context.push('/profile/sponsor');
+                    },
+                  ),
+                  _SettingsTile(
+                    icon: Icons.shield,
+                    title: 'Safety Plan',
+                    subtitle: 'Create your personal safety plan',
+                    onTap: () {
+                      context.push('/home/safety-plan');
+                    },
+                  ),
+                ],
+              ),
+
+              _SettingsSection(
+                title: 'Preferences',
+                children: [
+                  _SettingsTile(
+                    icon: Icons.notifications,
+                    title: 'App settings',
+                    subtitle: 'Edit reminders and profile preferences',
+                    onTap: () {
+                      context.push('/profile/settings');
+                    },
+                  ),
+                  _SettingsTile(
+                    icon: Icons.notifications_active_outlined,
+                    title: 'Notifications',
+                    subtitle: 'Check-in reminders and alerts',
+                    onTap: () {
+                      context.push('/profile/settings');
+                    },
+                  ),
+                  _SettingsTile(
+                    icon: Icons.psychology_outlined,
+                    title: 'AI Companion',
+                    subtitle: 'Configure AI settings',
+                    onTap: () {
+                      context.push('/profile/ai-settings');
+                    },
+                  ),
+                  _SettingsTile(
+                    icon: Icons.lock,
+                    title: 'Security',
+                    subtitle: 'Biometric lock and privacy',
+                    onTap: () {
+                      context.push('/profile/security');
+                    },
+                  ),
+                ],
+              ),
+
+              _SettingsSection(
+                title: 'Support',
+                children: [
+                  _SettingsTile(
+                    icon: Icons.help,
+                    title: 'Help & FAQ',
+                    onTap: () {},
+                  ),
+                  _SettingsTile(
+                    icon: Icons.privacy_tip,
+                    title: 'Privacy Policy',
+                    onTap: () {},
+                  ),
+                  _SettingsTile(
+                    icon: Icons.description,
+                    title: 'Terms of Service',
+                    onTap: () {},
+                  ),
+                ],
+              ),
+
+              // Logout button
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: OutlinedButton(
+                  onPressed: () async {
+                    await AppStateService.instance.signOut();
+                    if (context.mounted) {
+                      context.go('/login');
+                    }
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.danger,
+                    side: const BorderSide(color: AppColors.danger),
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    child: Text('Log Out'),
+                  ),
+                ),
               ),
             ],
           ),
-          
-          _SettingsSection(
-            title: 'Preferences',
-            children: [
-              _SettingsTile(
-                icon: Icons.notifications,
-                title: 'Notifications',
-                subtitle: 'Check-in reminders and alerts',
-                onTap: () {},
-              ),
-              _SettingsTile(
-                icon: Icons.psychology,
-                title: 'AI Companion',
-                subtitle: 'Configure AI settings',
-                onTap: () {
-                  context.push('/profile/ai-settings');
-                },
-              ),
-              _SettingsTile(
-                icon: Icons.lock,
-                title: 'Security',
-                subtitle: 'Biometric lock and privacy',
-                onTap: () {
-                  context.push('/profile/security');
-                },
-              ),
-            ],
-          ),
-          
-          _SettingsSection(
-            title: 'Support',
-            children: [
-              _SettingsTile(
-                icon: Icons.help,
-                title: 'Help & FAQ',
-                onTap: () {},
-              ),
-              _SettingsTile(
-                icon: Icons.privacy_tip,
-                title: 'Privacy Policy',
-                onTap: () {},
-              ),
-              _SettingsTile(
-                icon: Icons.description,
-                title: 'Terms of Service',
-                onTap: () {},
-              ),
-            ],
-          ),
-          
-          // Logout button
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: OutlinedButton(
-              onPressed: () {
-                // Logout
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.danger,
-                side: const BorderSide(color: AppColors.danger),
-              ),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-                child: Text('Log Out'),
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

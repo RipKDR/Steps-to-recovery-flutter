@@ -1,11 +1,27 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/recovery_content.dart';
+import '../../../core/models/database_models.dart';
+import '../../../core/services/database_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 
 /// Challenges screen - Recovery challenges
-class ChallengesScreen extends StatelessWidget {
+class ChallengesScreen extends StatefulWidget {
   const ChallengesScreen({super.key});
+
+  @override
+  State<ChallengesScreen> createState() => _ChallengesScreenState();
+}
+
+class _ChallengesScreenState extends State<ChallengesScreen> {
+  late final Future<List<Challenge>> _challengeFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _challengeFuture = DatabaseService().getChallenges();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,55 +30,150 @@ class ChallengesScreen extends StatelessWidget {
         title: const Text('Challenges'),
         backgroundColor: AppColors.background,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Active challenges
-            Text(
-              'Active Challenges',
-              style: AppTypography.headlineSmall,
+      body: FutureBuilder<List<Challenge>>(
+        future: _challengeFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final challenges = snapshot.data ?? const <Challenge>[];
+          final active = challenges.where((item) => item.isActive).toList();
+          final completed = challenges.where((item) => item.isCompleted).toList();
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Active Challenges',
+                  style: AppTypography.headlineSmall,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                if (active.isEmpty)
+                  _EmptyChallengesState(
+                    title: 'No active challenges yet',
+                    description:
+                        'Choose a recovery challenge to build consistency in journaling, meetings, or step work.',
+                  )
+                else
+                  Column(
+                    children: active
+                        .map(
+                          (challenge) => Padding(
+                            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                            child: _ChallengeCard(
+                              title: challenge.title,
+                              description: challenge.description,
+                              progress: _progressForChallenge(challenge),
+                              daysLeft: _daysLeft(challenge),
+                              isActive: true,
+                              reward: '${challenge.durationDays} day challenge',
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  'Starter Templates',
+                  style: AppTypography.headlineSmall,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ...challengeTemplates.map(
+                  (template) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                    child: _TemplateCard(template: template),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  'Completed',
+                  style: AppTypography.headlineSmall,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                if (completed.isEmpty)
+                  _EmptyChallengesState(
+                    title: 'No completed challenges yet',
+                    description:
+                        'Finished challenges will show up here once the local database starts recording progress.',
+                  )
+                else
+                  Column(
+                    children: completed
+                        .map(
+                          (challenge) => Padding(
+                            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                            child: _CompletedChallengeCard(
+                              title: challenge.title,
+                              description: challenge.description,
+                              completedDate: challenge.endDate?.toIso8601String().split('T').first ?? 'completed',
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  'When It Gets Hard',
+                  style: AppTypography.headlineSmall,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ...copingStrategies.map(
+                  (strategy) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: _StrategyCard(text: strategy),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  'Crisis Resources',
+                  style: AppTypography.headlineSmall,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ...crisisResources.map(
+                  (resource) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: _CrisisResourceCard(resource: resource),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.md),
-            _ChallengeCard(
-              title: '30 Day Check-in Streak',
-              description: 'Complete daily check-ins for 30 days',
-              progress: 0.7,
-              daysLeft: 9,
-              isActive: true,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _ChallengeCard(
-              title: 'Meeting Explorer',
-              description: 'Attend 10 different meetings',
-              progress: 0.4,
-              daysLeft: 15,
-              isActive: true,
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-            
-            // Completed challenges
-            Text(
-              'Completed',
-              style: AppTypography.headlineSmall,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _CompletedChallengeCard(
-              title: 'First Week',
-              description: 'Complete your first 7 days',
-              completedDate: 'Dec 15, 2025',
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _CompletedChallengeCard(
-              title: 'Step 1 Complete',
-              description: 'Finish all Step 1 questions',
-              completedDate: 'Dec 10, 2025',
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
+  }
+
+  double _progressForChallenge(Challenge challenge) {
+    if (challenge.isCompleted) {
+      return 1.0;
+    }
+
+    final endDate = challenge.endDate;
+    if (endDate == null) {
+      return 0.1;
+    }
+
+    final total = endDate.difference(challenge.startDate).inSeconds;
+    if (total <= 0) {
+      return 0.1;
+    }
+
+    final elapsed = DateTime.now()
+        .difference(challenge.startDate)
+        .inSeconds
+        .clamp(0, total);
+    return ((elapsed / total).clamp(0.05, 0.99)).toDouble();
+  }
+
+  int _daysLeft(Challenge challenge) {
+    if (challenge.endDate == null) {
+      return challenge.durationDays;
+    }
+    final remaining = challenge.endDate!.difference(DateTime.now()).inDays;
+    return remaining < 0 ? 0 : remaining;
   }
 }
 
@@ -72,13 +183,15 @@ class _ChallengeCard extends StatelessWidget {
   final double progress;
   final int daysLeft;
   final bool isActive;
+  final String reward;
 
   const _ChallengeCard({
     required this.title,
     required this.description,
     required this.progress,
     required this.daysLeft,
-    this.isActive = true,
+    required this.isActive,
+    required this.reward,
   });
 
   @override
@@ -114,10 +227,7 @@ class _ChallengeCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: AppTypography.titleMedium,
-                      ),
+                      Text(title, style: AppTypography.titleMedium),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
                         description,
@@ -131,8 +241,6 @@ class _ChallengeCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
-            
-            // Progress bar
             ClipRRect(
               borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
               child: LinearProgressIndicator(
@@ -145,8 +253,6 @@ class _ChallengeCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
-            
-            // Progress info
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -162,6 +268,80 @@ class _ChallengeCard extends StatelessWidget {
                     color: AppColors.primaryAmber,
                   ),
                 ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              reward,
+              style: AppTypography.labelSmall.copyWith(
+                color: AppColors.success,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TemplateCard extends StatelessWidget {
+  final ChallengeTemplateContent template;
+
+  const _TemplateCard({required this.template});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceInteractive,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  ),
+                  child: const Icon(
+                    Icons.playlist_add_check,
+                    color: AppColors.primaryAmber,
+                    size: AppSpacing.iconLg,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(template.title, style: AppTypography.titleMedium),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        template.difficulty,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              template.description,
+              style: AppTypography.bodyMedium.copyWith(height: 1.5),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: [
+                _InfoChip(label: '${template.target} target'),
+                _InfoChip(label: '${template.duration} days'),
+                _InfoChip(label: template.reward),
               ],
             ),
           ],
@@ -230,6 +410,139 @@ class _CompletedChallengeCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StrategyCard extends StatelessWidget {
+  final String text;
+
+  const _StrategyCard({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.spa, color: AppColors.primaryAmber, size: AppSpacing.iconSm),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(text, style: AppTypography.bodyMedium),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CrisisResourceCard extends StatelessWidget {
+  final CrisisResourceContent resource;
+
+  const _CrisisResourceCard({required this.resource});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Text(resource.emoji, style: const TextStyle(fontSize: 24)),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(resource.title, style: AppTypography.bodyMedium),
+                Text(
+                  resource.subtitle,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            resource.phone,
+            style: AppTypography.labelMedium.copyWith(
+              color: resource.isEmergency ? AppColors.danger : AppColors.primaryAmber,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyChallengesState extends StatelessWidget {
+  final String title;
+  final String description;
+
+  const _EmptyChallengesState({
+    required this.title,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: AppTypography.titleMedium),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            description,
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textMuted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final String label;
+
+  const _InfoChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceInteractive,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+      ),
+      child: Text(
+        label,
+        style: AppTypography.labelSmall.copyWith(
+          color: AppColors.textSecondary,
         ),
       ),
     );

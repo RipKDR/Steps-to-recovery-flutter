@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
+
+import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/step_prompts.dart';
+import '../../../core/models/database_models.dart';
+import '../../../core/services/database_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 
-/// Step Review screen - Review all answers for a step
+/// Step review with persisted answers and completion state.
 class StepReviewScreen extends StatelessWidget {
-  final int stepNumber;
-
   const StepReviewScreen({
     super.key,
     required this.stepNumber,
   });
+
+  final int stepNumber;
 
   @override
   Widget build(BuildContext context) {
@@ -23,99 +29,205 @@ class StepReviewScreen extends StatelessWidget {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Review Step $stepNumber'),
-        backgroundColor: AppColors.background,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: () {
-              // Share with sponsor
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.download),
-            onPressed: () {
-              // Export answers
-            },
-          ),
-        ],
-      ),
-      body: CustomScrollView(
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final sections = step.sections;
-                  int questionIndex = 0;
-                  
-                  for (final section in sections) {
-                    if (questionIndex + section.prompts.length > index) {
-                      final promptIndex = index - questionIndex;
-                      return _AnswerCard(
-                        sectionTitle: section.title,
-                        question: section.prompts[promptIndex],
-                        answer: 'Your answer would appear here...', // Placeholder
-                      );
-                    }
-                    questionIndex += section.prompts.length;
-                  }
-                  
-                  return null;
-                },
-                childCount: step.prompts.length,
+    return AnimatedBuilder(
+      animation: DatabaseService(),
+      builder: (context, _) {
+        return FutureBuilder<List<StepWorkAnswer>>(
+          future: DatabaseService().getStepAnswers(stepNumber: stepNumber),
+          builder: (context, snapshot) {
+            final answers = snapshot.data ?? const <StepWorkAnswer>[];
+            final flattened = _flattenQuestions(step);
+            final answerMap = <int, StepWorkAnswer>{
+              for (final answer in answers) answer.questionNumber: answer,
+            };
+            final completed = answerMap.values
+                .where((answer) => answer.answer?.trim().isNotEmpty == true)
+                .length;
+
+            return Scaffold(
+              appBar: AppBar(
+                title: Text('Review Step $stepNumber'),
+                backgroundColor: AppColors.background,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.share),
+                    onPressed: completed == 0
+                        ? null
+                        : () => _shareAnswers(step, flattened, answerMap),
+                  ),
+                ],
               ),
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          border: Border(
-            top: BorderSide(color: AppColors.border),
-          ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('Back to Steps'),
+              body: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceCard,
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(step.title, style: AppTypography.headlineSmall),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              '$completed of ${flattened.length} prompts answered',
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final question = flattened[index];
+                          final answer = answerMap[question.questionNumber];
+                          return _AnswerCard(
+                            questionNumber: question.questionNumber,
+                            sectionTitle: question.sectionTitle,
+                            question: question.prompt,
+                            answer: answer?.answer?.trim().isNotEmpty == true
+                                ? answer!.answer!
+                                : 'No answer yet.',
+                            isComplete: answer?.answer?.trim().isNotEmpty == true,
+                            onEdit: () {
+                              context.push(
+                                '${AppRoutes.stepDetail}?stepNumber=$stepNumber&question=$index',
+                              );
+                            },
+                          );
+                        },
+                        childCount: flattened.length,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  // Mark as complete
-                },
-                child: const Text('Mark Complete'),
+              bottomNavigationBar: Container(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  border: Border(top: BorderSide(color: AppColors.border)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => context.go(AppRoutes.steps),
+                        child: const Text('Back to Steps'),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: completed == flattened.length && flattened.isNotEmpty
+                            ? () async {
+                                await DatabaseService().saveStepProgress(
+                                  StepProgress(
+                                    id: '',
+                                    userId: DatabaseService().activeUserId ?? '',
+                                    stepNumber: stepNumber,
+                                    status: StepStatus.completed,
+                                    completionPercentage: 1,
+                                    completedAt: DateTime.now(),
+                                    createdAt: DateTime.now(),
+                                    updatedAt: DateTime.now(),
+                                  ),
+                                );
+                                if (context.mounted) {
+                                  context.go(AppRoutes.steps);
+                                }
+                              }
+                            : null,
+                        child: const Text('Mark Complete'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
+            );
+          },
+        );
+      },
     );
+  }
+
+  void _shareAnswers(
+    StepPrompt step,
+    List<_StepQuestion> questions,
+    Map<int, StepWorkAnswer> answers,
+  ) {
+    final buffer = StringBuffer('Step ${step.step}: ${step.title}\n\n');
+    for (final question in questions) {
+      final answer = answers[question.questionNumber]?.answer?.trim();
+      if (answer == null || answer.isEmpty) {
+        continue;
+      }
+      buffer
+        ..writeln('${question.questionNumber}. ${question.prompt}')
+        ..writeln(answer)
+        ..writeln();
+    }
+    Share.share(buffer.toString());
+  }
+
+  List<_StepQuestion> _flattenQuestions(StepPrompt step) {
+    final items = <_StepQuestion>[];
+    var questionNumber = 1;
+    for (final section in step.sections) {
+      for (final prompt in section.prompts) {
+        items.add(
+          _StepQuestion(
+            questionNumber: questionNumber,
+            sectionTitle: section.title,
+            prompt: prompt,
+          ),
+        );
+        questionNumber += 1;
+      }
+    }
+    return items;
   }
 }
 
-class _AnswerCard extends StatelessWidget {
-  final String sectionTitle;
-  final String question;
-  final String answer;
+class _StepQuestion {
+  const _StepQuestion({
+    required this.questionNumber,
+    required this.sectionTitle,
+    required this.prompt,
+  });
 
+  final int questionNumber;
+  final String sectionTitle;
+  final String prompt;
+}
+
+class _AnswerCard extends StatelessWidget {
   const _AnswerCard({
+    required this.questionNumber,
     required this.sectionTitle,
     required this.question,
     required this.answer,
+    required this.isComplete,
+    required this.onEdit,
   });
+
+  final int questionNumber;
+  final String sectionTitle;
+  final String question;
+  final String answer;
+  final bool isComplete;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -126,44 +238,45 @@ class _AnswerCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Section badge
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.xs,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.primaryAmber.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-              ),
-              child: Text(
-                sectionTitle,
-                style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.primaryAmber,
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryAmber.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                  ),
+                  child: Text(
+                    '$sectionTitle • $questionNumber',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.primaryAmber,
+                    ),
+                  ),
                 ),
-              ),
+                const Spacer(),
+                TextButton(
+                  onPressed: onEdit,
+                  child: Text(isComplete ? 'Edit' : 'Answer'),
+                ),
+              ],
             ),
             const SizedBox(height: AppSpacing.md),
-            
-            // Question
-            Text(
-              question,
-              style: AppTypography.titleMedium,
-            ),
+            Text(question, style: AppTypography.titleMedium),
             const SizedBox(height: AppSpacing.md),
-            
-            // Answer
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: AppColors.surfaceInteractive,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                border: Border.all(
+                  color: isComplete ? AppColors.success : AppColors.border,
+                ),
               ),
-              child: Text(
-                answer,
-                style: AppTypography.bodyMedium,
-              ),
+              child: Text(answer, style: AppTypography.bodyMedium),
             ),
           ],
         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/services/app_state_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -60,7 +61,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Align(
               alignment: Alignment.topRight,
               child: TextButton(
-                onPressed: () => _completeOnboarding(),
+                onPressed: _completeOnboarding,
                 child: const Text('Skip'),
               ),
             ),
@@ -140,9 +141,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  void _completeOnboarding() {
-    // Mark onboarding as complete
-    context.go('/login');
+  Future<void> _completeOnboarding() async {
+    await AppStateService.instance.completeOnboarding();
+    if (!mounted) {
+      return;
+    }
+    context.go('/signup');
   }
 }
 

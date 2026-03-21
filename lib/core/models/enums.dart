@@ -132,6 +132,17 @@ enum StepStatus {
   inProgress,
   completed;
 
+  String get value {
+    switch (this) {
+      case StepStatus.notStarted:
+        return 'not_started';
+      case StepStatus.inProgress:
+        return 'in_progress';
+      case StepStatus.completed:
+        return 'completed';
+    }
+  }
+
   String get displayName {
     switch (this) {
       case StepStatus.notStarted:
@@ -140,6 +151,19 @@ enum StepStatus {
         return 'In Progress';
       case StepStatus.completed:
         return 'Completed';
+    }
+  }
+
+  static StepStatus fromString(String value) {
+    switch (value) {
+      case 'not_started':
+        return StepStatus.notStarted;
+      case 'in_progress':
+        return StepStatus.inProgress;
+      case 'completed':
+        return StepStatus.completed;
+      default:
+        return StepStatus.notStarted;
     }
   }
 }

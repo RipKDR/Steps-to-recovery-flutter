@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'core/theme/app_theme.dart';
+import 'core/services/app_state_service.dart';
 import 'core/services/encryption_service.dart';
 import 'core/services/database_service.dart';
 import 'core/services/logger_service.dart';
@@ -48,6 +49,10 @@ Future<void> _initializeServices() async {
     // Initialize database
     await DatabaseService().initialize();
     logger.debug('Database service initialized');
+
+    // Initialize auth and app shell state
+    await AppStateService.instance.initialize();
+    logger.debug('App state service initialized');
 
     // Initialize connectivity monitoring
     await ConnectivityService().initialize();

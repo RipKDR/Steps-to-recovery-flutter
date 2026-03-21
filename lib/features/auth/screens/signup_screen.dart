@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/services/app_state_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -20,6 +21,7 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _agreeToTerms = false;
+  DateTime? _sobrietyDate;
 
   @override
   void dispose() {
@@ -119,7 +121,19 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 readOnly: true,
                 onTap: () async {
-                  // Show date picker
+                  final picked = await showDatePicker(
+                    context: context,
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime.now(),
+                    initialDate: _sobrietyDate ?? DateTime.now().subtract(const Duration(days: 30)),
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      _sobrietyDate = picked;
+                      _sobrietyDateController.text =
+                          '${picked.month.toString().padLeft(2, '0')}/${picked.day.toString().padLeft(2, '0')}/${picked.year}';
+                    });
+                  }
                 },
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -210,20 +224,52 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void _signup() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email and password are required.')),
+      );
+      return;
+    }
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Passwords do not match.')),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
-    
-    // Simulate signup
-    Future.delayed(const Duration(seconds: 2), () {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
-      // Navigate to onboarding or home
-      if (mounted) {
-        context.go('/home');
-      }
-    });
+
+    AppStateService.instance
+        .signUp(
+          email: email,
+          password: password,
+          sobrietyDate: _sobrietyDate,
+        )
+        .then((_) {
+          if (!mounted) {
+            return;
+          }
+          setState(() {
+            _isLoading = false;
+          });
+          context.go('/home');
+        })
+        .catchError((Object error) {
+          if (!mounted) {
+            return;
+          }
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error.toString())),
+          );
+        });
   }
 }

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/models/database_models.dart';
+import '../../../core/services/database_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 
-/// Evening Pulse screen - Evening reflection and check-in
+/// Evening check-in with gratitude capture and craving tracking.
 class EveningPulseScreen extends StatefulWidget {
   const EveningPulseScreen({super.key});
 
@@ -16,6 +19,14 @@ class _EveningPulseScreenState extends State<EveningPulseScreen> {
   final _gratitudeController = TextEditingController();
   int _selectedMood = 3;
   int _selectedCraving = 0;
+  bool _isSaving = false;
+  late final Future<void> _loadFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFuture = _loadExisting();
+  }
 
   @override
   void dispose() {
@@ -24,107 +35,144 @@ class _EveningPulseScreenState extends State<EveningPulseScreen> {
     super.dispose();
   }
 
+  Future<void> _loadExisting() async {
+    final existing = await DatabaseService().getTodayCheckIn(CheckInType.evening);
+    if (existing != null && mounted) {
+      _reflectionController.text = existing.reflection ?? '';
+      _selectedMood = existing.mood?.clamp(1, 5) ?? 3;
+      _selectedCraving = existing.craving?.clamp(0, 10) ?? 0;
+    }
+  }
+
+  Future<void> _save() async {
+    setState(() => _isSaving = true);
+    try {
+      await DatabaseService().saveCheckIn(
+        DailyCheckIn(
+          id: '',
+          userId: DatabaseService().activeUserId ?? '',
+          checkInType: CheckInType.evening,
+          checkInDate: DateTime.now(),
+          reflection: _reflectionController.text.trim(),
+          mood: _selectedMood,
+          craving: _selectedCraving,
+          createdAt: DateTime.now(),
+          syncStatus: SyncStatus.pending,
+        ),
+      );
+
+      final gratitude = _gratitudeController.text.trim();
+      if (gratitude.isNotEmpty) {
+        await DatabaseService().saveGratitudeEntry(
+          GratitudeEntry(
+            id: '',
+            userId: DatabaseService().activeUserId ?? '',
+            content: gratitude,
+            createdAt: DateTime.now(),
+          ),
+        );
+      }
+
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Evening Pulse'),
-        backgroundColor: AppColors.background,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'How was your day?',
-              style: AppTypography.headlineSmall,
+    return FutureBuilder<void>(
+      future: _loadFuture,
+      builder: (context, snapshot) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Evening Pulse'),
+            backgroundColor: AppColors.background,
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('How was your day?', style: AppTypography.headlineSmall),
+                const SizedBox(height: AppSpacing.lg),
+                _MoodSelector(
+                  selectedMood: _selectedMood,
+                  onMoodSelected: (mood) => setState(() => _selectedMood = mood),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                Text('Craving level (0-10)', style: AppTypography.titleMedium),
+                const SizedBox(height: AppSpacing.md),
+                _CravingSlider(
+                  value: _selectedCraving,
+                  onChanged: (value) => setState(() => _selectedCraving = value),
+                ),
+                const SizedBox(height: AppSpacing.xxl),
+                Text(
+                  'What are you grateful for today?',
+                  style: AppTypography.titleMedium,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextField(
+                  controller: _gratitudeController,
+                  maxLines: 2,
+                  style: AppTypography.bodyMedium,
+                  decoration: const InputDecoration(
+                    hintText: 'I am grateful for...',
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  'Reflection on the day',
+                  style: AppTypography.titleMedium,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextField(
+                  controller: _reflectionController,
+                  maxLines: 6,
+                  style: AppTypography.bodyMedium,
+                  decoration: const InputDecoration(
+                    hintText: 'What helped? What needs support tomorrow?',
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xxl),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isSaving ? null : _save,
+                    child: Text(_isSaving ? 'Saving...' : 'Save Reflection'),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.lg),
-            
-            // Mood selector
-            _MoodSelector(
-              selectedMood: _selectedMood,
-              onMoodSelected: (mood) => setState(() => _selectedMood = mood),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            
-            // Craving level
-            Text(
-              'Craving level (0-10)',
-              style: AppTypography.titleMedium,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _CravingSlider(
-              value: _selectedCraving,
-              onChanged: (value) => setState(() => _selectedCraving = value),
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-            
-            Text(
-              'What are you grateful for today?',
-              style: AppTypography.titleMedium,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: _gratitudeController,
-              maxLines: 2,
-              style: AppTypography.bodyMedium,
-              decoration: const InputDecoration(
-                hintText: 'I am grateful for...',
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            
-            Text(
-              'Reflection on the day',
-              style: AppTypography.titleMedium,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: _reflectionController,
-              maxLines: 5,
-              style: AppTypography.bodyMedium,
-              decoration: const InputDecoration(
-                hintText: 'What went well? What could be better?',
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-            
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Save check-in
-                  Navigator.pop(context);
-                },
-                child: const Text('Save Reflection'),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
 
 class _MoodSelector extends StatelessWidget {
-  final int selectedMood;
-  final Function(int) onMoodSelected;
-
   const _MoodSelector({
     required this.selectedMood,
     required this.onMoodSelected,
   });
 
+  final int selectedMood;
+  final ValueChanged<int> onMoodSelected;
+
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: List.generate(5, (index) {
+      children: List<Widget>.generate(5, (index) {
         final mood = index + 1;
         final isSelected = selectedMood == mood;
-        
+
         return GestureDetector(
           onTap: () => onMoodSelected(mood),
           child: Column(
@@ -180,13 +228,13 @@ class _MoodSelector extends StatelessWidget {
 }
 
 class _CravingSlider extends StatelessWidget {
-  final int value;
-  final Function(int) onChanged;
-
   const _CravingSlider({
     required this.value,
     required this.onChanged,
   });
+
+  final int value;
+  final ValueChanged<int> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -225,7 +273,7 @@ class _CravingSlider extends StatelessWidget {
           max: 10,
           divisions: 10,
           activeColor: AppColors.primaryAmber,
-          onChanged: (value) => onChanged(value.round()),
+          onChanged: (nextValue) => onChanged(nextValue.round()),
         ),
       ],
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/services/app_state_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -135,6 +136,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     : const Text('Log In'),
               ),
               const SizedBox(height: AppSpacing.lg),
+              OutlinedButton(
+                onPressed: _isLoading ? null : _continueAsGuest,
+                child: const Text('Continue as Guest'),
+              ),
+              const SizedBox(height: AppSpacing.lg),
               
               // Sign up
               Row(
@@ -159,22 +165,71 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _login() {
+  Future<void> _continueAsGuest() async {
     setState(() {
       _isLoading = true;
     });
-    
-    // Simulate login
-    Future.delayed(const Duration(seconds: 2), () {
+
+    try {
+      await AppStateService.instance.signInAnonymously();
+      if (!mounted) {
+        return;
+      }
+      context.go('/home');
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.toString())),
+      );
+    } finally {
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
-        // Navigate to home
-        if (mounted) {
-          context.go('/home');
-        }
       }
+    }
+  }
+
+  void _login() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email and password are required.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
     });
+
+    AppStateService.instance
+        .signIn(
+          email: email,
+          password: password,
+        )
+        .then((_) {
+          if (!mounted) {
+            return;
+          }
+          setState(() {
+            _isLoading = false;
+          });
+          context.go('/home');
+        })
+        .catchError((Object error) {
+          if (!mounted) {
+            return;
+          }
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error.toString())),
+          );
+        });
   }
 }

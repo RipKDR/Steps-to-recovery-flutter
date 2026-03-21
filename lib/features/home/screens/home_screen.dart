@@ -1,69 +1,151 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/constants/app_constants.dart';
+import '../../../core/models/database_models.dart';
+import '../../../core/services/app_state_service.dart';
+import '../../../core/services/database_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 
-/// Home screen - Dashboard with quick actions and check-in cards
+/// Home dashboard with dynamic sobriety, check-ins, and quick actions.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            floating: true,
-            backgroundColor: AppColors.background,
-            title: const Text(
-              'Steps to Recovery',
-              style: AppTypography.headlineMedium,
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                onPressed: () {},
-              ),
-            ],
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                // Sobriety counter card
-                _SobrietyCard(),
-                const SizedBox(height: AppSpacing.lg),
-                
-                // Quick actions
-                _QuickActions(),
-                const SizedBox(height: AppSpacing.xxl),
-                
-                // Check-in cards
-                const Text(
-                  'Today',
-                  style: AppTypography.headlineSmall,
+    return AnimatedBuilder(
+      animation: Listenable.merge(<Listenable>[
+        AppStateService.instance,
+        DatabaseService(),
+      ]),
+      builder: (context, _) {
+        return FutureBuilder<_HomeSnapshot>(
+          future: _loadSnapshot(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const Scaffold(
+                backgroundColor: AppColors.background,
+                body: Center(
+                  child: CircularProgressIndicator(color: AppColors.primaryAmber),
                 ),
-                const SizedBox(height: AppSpacing.md),
-                _CheckInCards(),
-              ]),
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
-        icon: const Icon(Icons.add),
-        label: const Text('Quick Journal'),
-        backgroundColor: AppColors.primaryAmber,
-        foregroundColor: AppColors.textOnDark,
-      ),
+              );
+            }
+
+            final data = snapshot.data ?? const _HomeSnapshot.empty();
+
+            return Scaffold(
+              body: CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    floating: true,
+                    backgroundColor: AppColors.background,
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Steps to Recovery',
+                          style: AppTypography.headlineMedium,
+                        ),
+                        Text(
+                          'Welcome back, ${AppStateService.instance.userLabel}',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                    actions: [
+                      IconButton(
+                        icon: const Icon(Icons.bar_chart_outlined),
+                        onPressed: () => context.push('/home/progress'),
+                      ),
+                    ],
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        _SobrietyCard(snapshot: data),
+                        const SizedBox(height: AppSpacing.lg),
+                        _SupportStrip(snapshot: data),
+                        const SizedBox(height: AppSpacing.xl),
+                        _QuickActions(snapshot: data),
+                        const SizedBox(height: AppSpacing.xxl),
+                        const Text('Today', style: AppTypography.headlineSmall),
+                        const SizedBox(height: AppSpacing.md),
+                        _CheckInCards(snapshot: data),
+                      ]),
+                    ),
+                  ),
+                ],
+              ),
+              floatingActionButton: FloatingActionButton.extended(
+                onPressed: () => context.push('/journal/editor?mode=create'),
+                icon: const Icon(Icons.add),
+                label: const Text('Quick Journal'),
+                backgroundColor: AppColors.primaryAmber,
+                foregroundColor: AppColors.textOnDark,
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<_HomeSnapshot> _loadSnapshot() async {
+    final database = DatabaseService();
+    final currentUser = await database.getCurrentUser();
+    final morning = await database.getTodayCheckIn(CheckInType.morning);
+    final evening = await database.getTodayCheckIn(CheckInType.evening);
+    final sponsor = await database.getSponsor(database.activeUserId ?? '');
+    final achievements = await database.getAchievements(isViewed: false);
+
+    return _HomeSnapshot(
+      user: currentUser,
+      morningCheckIn: morning,
+      eveningCheckIn: evening,
+      sponsor: sponsor,
+      unreadAchievements: achievements.length,
     );
   }
 }
 
+class _HomeSnapshot {
+  const _HomeSnapshot({
+    required this.user,
+    required this.morningCheckIn,
+    required this.eveningCheckIn,
+    required this.sponsor,
+    required this.unreadAchievements,
+  });
+
+  const _HomeSnapshot.empty()
+      : user = null,
+        morningCheckIn = null,
+        eveningCheckIn = null,
+        sponsor = null,
+        unreadAchievements = 0;
+
+  final UserProfile? user;
+  final DailyCheckIn? morningCheckIn;
+  final DailyCheckIn? eveningCheckIn;
+  final Contact? sponsor;
+  final int unreadAchievements;
+}
+
 class _SobrietyCard extends StatelessWidget {
+  const _SobrietyCard({required this.snapshot});
+
+  final _HomeSnapshot snapshot;
+
   @override
   Widget build(BuildContext context) {
+    final user = snapshot.user;
+    final soberLabel = user == null ? 'Recovery starts now' : user.sobrietyMilestone;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
@@ -85,17 +167,64 @@ class _SobrietyCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            '30 days',
+            '${AppStateService.instance.sobrietyDays} days',
             style: AppTypography.displayLarge.copyWith(
               color: AppColors.textOnDark,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Keep coming back!',
+            soberLabel,
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textOnDark.withValues(alpha: 0.8),
+              color: AppColors.textOnDark.withValues(alpha: 0.84),
             ),
+          ),
+          if (snapshot.unreadAchievements > 0) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              '${snapshot.unreadAchievements} new achievement${snapshot.unreadAchievements == 1 ? '' : 's'} waiting',
+              style: AppTypography.labelMedium.copyWith(
+                color: AppColors.textOnDark,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SupportStrip extends StatelessWidget {
+  const _SupportStrip({required this.snapshot});
+
+  final _HomeSnapshot snapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _InfoColumn(
+              label: 'Sponsor',
+              value: snapshot.sponsor?.name ?? 'Not added',
+            ),
+          ),
+          Expanded(
+            child: _InfoColumn(
+              label: 'Program',
+              value: AppStateService.instance.programType ?? 'Choose in settings',
+            ),
+          ),
+          TextButton(
+            onPressed: () => context.push(AppRoutes.sponsor),
+            child: const Text('Manage'),
           ),
         ],
       ),
@@ -103,16 +232,44 @@ class _SobrietyCard extends StatelessWidget {
   }
 }
 
-class _QuickActions extends StatelessWidget {
+class _InfoColumn extends StatelessWidget {
+  const _InfoColumn({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Quick Actions',
-          style: AppTypography.headlineSmall,
+          label,
+          style: AppTypography.labelSmall.copyWith(
+            color: AppColors.textMuted,
+          ),
         ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(value, style: AppTypography.titleMedium),
+      ],
+    );
+  }
+}
+
+class _QuickActions extends StatelessWidget {
+  const _QuickActions({required this.snapshot});
+
+  final _HomeSnapshot snapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Quick Actions', style: AppTypography.headlineSmall),
         const SizedBox(height: AppSpacing.md),
         Wrap(
           spacing: AppSpacing.sm,
@@ -121,22 +278,32 @@ class _QuickActions extends StatelessWidget {
             _ActionButton(
               icon: Icons.self_improvement,
               label: 'Step Work',
-              onTap: () {},
+              onTap: () => context.go(AppRoutes.steps),
             ),
             _ActionButton(
-              icon: Icons.edit,
+              icon: Icons.edit_note,
               label: 'Journal',
-              onTap: () {},
+              onTap: () => context.go(AppRoutes.journal),
             ),
             _ActionButton(
               icon: Icons.favorite,
               label: 'Gratitude',
-              onTap: () {},
+              onTap: () => context.push('/home/gratitude'),
+            ),
+            _ActionButton(
+              icon: Icons.menu_book_outlined,
+              label: 'Reading',
+              onTap: () => context.push('/home/daily-reading'),
+            ),
+            _ActionButton(
+              icon: Icons.people_alt_outlined,
+              label: 'Meetings',
+              onTap: () => context.go(AppRoutes.meetings),
             ),
             _ActionButton(
               icon: Icons.crisis_alert,
               label: 'Emergency',
-              onTap: () {},
+              onTap: () => context.push('/home/emergency'),
             ),
           ],
         ),
@@ -146,15 +313,15 @@ class _QuickActions extends StatelessWidget {
 }
 
 class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
   const _ActionButton({
     required this.icon,
     required this.label,
     required this.onTap,
   });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -176,10 +343,7 @@ class _ActionButton extends StatelessWidget {
           children: [
             Icon(icon, size: AppSpacing.iconMd, color: AppColors.primaryAmber),
             const SizedBox(width: AppSpacing.sm),
-            Text(
-              label,
-              style: AppTypography.labelMedium,
-            ),
+            Text(label, style: AppTypography.labelMedium),
           ],
         ),
       ),
@@ -188,22 +352,32 @@ class _ActionButton extends StatelessWidget {
 }
 
 class _CheckInCards extends StatelessWidget {
+  const _CheckInCards({required this.snapshot});
+
+  final _HomeSnapshot snapshot;
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         _CheckInCard(
           title: 'Morning Intention',
-          subtitle: 'Set your intention for the day',
+          subtitle: snapshot.morningCheckIn?.intention?.trim().isNotEmpty == true
+              ? snapshot.morningCheckIn!.intention!
+              : 'Set your intention for the day',
           icon: Icons.wb_sunny_outlined,
-          onTap: () {},
+          isComplete: snapshot.morningCheckIn != null,
+          onTap: () => context.push('/home/morning-intention'),
         ),
         const SizedBox(height: AppSpacing.md),
         _CheckInCard(
           title: 'Evening Pulse',
-          subtitle: 'Reflect on your day',
+          subtitle: snapshot.eveningCheckIn?.reflection?.trim().isNotEmpty == true
+              ? snapshot.eveningCheckIn!.reflection!
+              : 'Reflect on your day and log cravings',
           icon: Icons.nightlight_outlined,
-          onTap: () {},
+          isComplete: snapshot.eveningCheckIn != null,
+          onTap: () => context.push('/home/evening-pulse'),
         ),
       ],
     );
@@ -211,17 +385,19 @@ class _CheckInCards extends StatelessWidget {
 }
 
 class _CheckInCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final VoidCallback onTap;
-
   const _CheckInCard({
     required this.title,
     required this.subtitle,
     required this.icon,
+    required this.isComplete,
     required this.onTap,
   });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final bool isComplete;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -250,9 +426,18 @@ class _CheckInCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: AppTypography.titleMedium,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(title, style: AppTypography.titleMedium),
+                        ),
+                        if (isComplete)
+                          const Icon(
+                            Icons.check_circle,
+                            color: AppColors.success,
+                            size: AppSpacing.iconMd,
+                          ),
+                      ],
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
@@ -260,14 +445,13 @@ class _CheckInCard extends StatelessWidget {
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textMuted,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
-                color: AppColors.textMuted,
-              ),
+              const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ],
           ),
         ),
