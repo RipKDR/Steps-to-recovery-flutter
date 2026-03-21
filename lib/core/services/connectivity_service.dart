@@ -4,25 +4,37 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 
 /// Network connectivity service
 class ConnectivityService {
-  static final ConnectivityService _instance = ConnectivityService._internal();
-  factory ConnectivityService() => _instance;
-  ConnectivityService._internal();
+  static final Connectivity _plugin = Connectivity();
+  static final ConnectivityService _instance = ConnectivityService._(
+    checkConnectivity: () => _plugin.checkConnectivity(),
+    onConnectivityChanged: _plugin.onConnectivityChanged,
+  );
 
-  final Connectivity _connectivity = Connectivity();
-  final StreamController<bool> _connectivityController = StreamController<bool>.broadcast();
-  
+  factory ConnectivityService() => _instance;
+
+  ConnectivityService._({
+    required Future<List<ConnectivityResult>> Function() checkConnectivity,
+    required Stream<List<ConnectivityResult>> onConnectivityChanged,
+  })  : _checkConnectivity = checkConnectivity,
+        _onConnectivityChanged = onConnectivityChanged;
+
+  final Future<List<ConnectivityResult>> Function() _checkConnectivity;
+  final Stream<List<ConnectivityResult>> _onConnectivityChanged;
+
+  final StreamController<bool> _connectivityController =
+      StreamController<bool>.broadcast();
+
   bool _isConnected = true;
   StreamSubscription<List<ConnectivityResult>>? _subscription;
 
   /// Initialize connectivity monitoring
   Future<void> initialize() async {
     try {
-      // Check initial connectivity
-      final results = await _connectivity.checkConnectivity();
+      final results = await _checkConnectivity();
       _updateConnectionStatus(results);
 
-      // Listen for changes
-      _subscription = _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+      _subscription =
+          _onConnectivityChanged.listen(_updateConnectionStatus);
     } catch (e) {
       debugPrint('Failed to initialize connectivity: $e');
     }
@@ -30,19 +42,25 @@ class ConnectivityService {
 
   void _updateConnectionStatus(List<ConnectivityResult> results) {
     final wasConnected = _isConnected;
-    _isConnected = results.any((result) => 
-      result != ConnectivityResult.none,
+    _isConnected = results.any(
+      (result) => result != ConnectivityResult.none,
     );
 
     if (wasConnected != _isConnected) {
       _connectivityController.add(_isConnected);
-      
+
       if (_isConnected) {
         debugPrint('Connection restored');
       } else {
         debugPrint('Connection lost');
       }
     }
+  }
+
+  /// For tests: push connectivity results without going through the plugin.
+  @visibleForTesting
+  void applyConnectivityResultsForTest(List<ConnectivityResult> results) {
+    _updateConnectionStatus(results);
   }
 
   /// Stream of connectivity status changes
@@ -54,7 +72,7 @@ class ConnectivityService {
   /// Check if currently on mobile data
   Future<bool> get isOnMobileData async {
     try {
-      final results = await _connectivity.checkConnectivity();
+      final results = await _checkConnectivity();
       return results.contains(ConnectivityResult.mobile);
     } catch (e) {
       return false;
@@ -64,7 +82,7 @@ class ConnectivityService {
   /// Check if currently on WiFi
   Future<bool> get isOnWifi async {
     try {
-      final results = await _connectivity.checkConnectivity();
+      final results = await _checkConnectivity();
       return results.contains(ConnectivityResult.wifi);
     } catch (e) {
       return false;
@@ -76,4 +94,16 @@ class ConnectivityService {
     _subscription?.cancel();
     _connectivityController.close();
   }
+}
+
+/// Builds a non-singleton [ConnectivityService] for tests with fake streams.
+@visibleForTesting
+ConnectivityService createConnectivityServiceForTesting({
+  required Future<List<ConnectivityResult>> Function() checkConnectivity,
+  required Stream<List<ConnectivityResult>> onConnectivityChanged,
+}) {
+  return ConnectivityService._(
+    checkConnectivity: checkConnectivity,
+    onConnectivityChanged: onConnectivityChanged,
+  );
 }

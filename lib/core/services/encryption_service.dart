@@ -38,8 +38,14 @@ class EncryptionService {
         _iv = IV.fromSecureRandom(16);
 
         // Store in secure storage
-        await _secureStorage.write(key: _keyTag, value: base64Encode(_key!.bytes));
-        await _secureStorage.write(key: _ivTag, value: base64Encode(_iv!.bytes));
+        await _secureStorage.write(
+          key: _keyTag,
+          value: base64Encode(_key!.bytes),
+        );
+        await _secureStorage.write(
+          key: _ivTag,
+          value: base64Encode(_iv!.bytes),
+        );
       } else {
         // Use existing key and IV
         _key = Key(base64Decode(keyString));
@@ -55,7 +61,9 @@ class EncryptionService {
   /// Encrypt a string value
   String encrypt(String plainText) {
     if (_key == null || _iv == null) {
-      throw Exception('Encryption service not initialized. Call initialize() first.');
+      throw Exception(
+        'Encryption service not initialized. Call initialize() first.',
+      );
     }
 
     try {
@@ -71,7 +79,9 @@ class EncryptionService {
   /// Decrypt a string value
   String decrypt(String encryptedText) {
     if (_key == null || _iv == null) {
-      throw Exception('Encryption service not initialized. Call initialize() first.');
+      throw Exception(
+        'Encryption service not initialized. Call initialize() first.',
+      );
     }
 
     try {
@@ -106,7 +116,10 @@ class EncryptionService {
   }
 
   /// Derive a key from a password/passphrase
-  Future<Key> deriveKeyFromPassword(String password, {String salt = 'steps_recovery_salt'}) async {
+  Future<Key> deriveKeyFromPassword(
+    String password, {
+    String salt = 'steps_recovery_salt',
+  }) async {
     // Simple hash-based key derivation (for production, use a proper KDF)
     final bytes = utf8.encode(password + salt);
     final hash = sha256.convert(bytes);

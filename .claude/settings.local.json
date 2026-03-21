@@ -1,6 +1,16 @@
 {
   "permissions": {
     "allow": [
+      "Bash(flutter analyze:*)",
+      "Bash(flutter pub:*)",
+      "Bash(grep -r \"BMAD\\\\|bmad\" /c/Users/H/Steps-to-recovery-flutter --include=*.dart --include=*.md --include=*.json)",
+      "Bash(wc:*)",
+      "Bash(flutter test:*)",
+      "Bash(cd:*)",
+      "Bash(dart:*)",
+      "Bash(dart analyze:*)",
+      "Bash(for wt:*)",
+      "Bash(do git:*)"
       "Bash(flutter:*)",
       "Bash(dart:*)",
       "Bash(git:*)",
@@ -8,19 +18,18 @@
       "Bash(wc:*)",
       "Bash(cd:*)",
       "Bash(for wt:*)",
-<<<<<<< Updated upstream
       "Bash(do git:*)",
       "Bash(java -version)",
       "Bash(while read:*)",
       "Bash(do basename:*)"
-=======
       "Skill(update-config)"
->>>>>>> Stashed changes
+
     ]
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "supabase"
+  ]
   ],
   "hooks": {
     "PostToolUse": [
