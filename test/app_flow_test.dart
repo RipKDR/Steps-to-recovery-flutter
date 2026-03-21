@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:steps_recovery_flutter/core/models/database_models.dart';
 import 'package:steps_recovery_flutter/core/services/database_service.dart';
 import 'package:steps_recovery_flutter/features/crisis/screens/before_you_use_screen.dart';
 import 'package:steps_recovery_flutter/features/journal/screens/journal_editor_screen.dart';
