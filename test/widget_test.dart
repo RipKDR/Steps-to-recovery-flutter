@@ -7,6 +7,8 @@ void main() {
   testWidgets('App boots', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const StepsToRecoveryApp());
+
+    expect(find.byType(MaterialApp), findsOneWidget);
     await tester.pumpAndSettle();
     expect(find.text('Welcome to Steps to Recovery'), findsOneWidget);
     expect(find.text('Next'), findsOneWidget);

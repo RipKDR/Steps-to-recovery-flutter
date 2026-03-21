@@ -197,9 +197,11 @@ class _HomeScreenState extends State<HomeScreen> {
       'event=achievement_share_tapped achievementKey=${featuredAchievement.achievementKey}',
     );
 
-    final result = await Share.share(
-      shareContent.shareText,
-      subject: shareContent.shareSubject,
+    final result = await SharePlus.instance.share(
+      ShareParams(
+        text: shareContent.shareText,
+        subject: shareContent.shareSubject,
+      ),
     );
 
     if (!context.mounted) {

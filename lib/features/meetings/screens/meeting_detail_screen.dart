@@ -74,7 +74,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
       buffer.writeln(meeting.notes);
     }
 
-    await Share.share(buffer.toString().trim());
+    await SharePlus.instance.share(ShareParams(text: buffer.toString().trim()));
   }
 
   Future<void> _openDirections(Meeting meeting) async {

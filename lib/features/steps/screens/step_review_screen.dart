@@ -178,7 +178,7 @@ class StepReviewScreen extends StatelessWidget {
         ..writeln(answer)
         ..writeln();
     }
-    Share.share(buffer.toString());
+    SharePlus.instance.share(ShareParams(text: buffer.toString()));
   }
 
   List<_StepQuestion> _flattenQuestions(StepPrompt step) {

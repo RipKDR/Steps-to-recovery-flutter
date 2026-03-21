@@ -32,8 +32,6 @@ abstract class NotificationsPluginWrapper {
     required tz.TZDateTime scheduledDate,
     required NotificationDetails notificationDetails,
     required AndroidScheduleMode androidScheduleMode,
-    required UILocalNotificationDateInterpretation
-        uiLocalNotificationDateInterpretation,
     String? title,
     String? body,
     String? payload,
@@ -67,7 +65,7 @@ class _RealNotificationsPluginWrapper implements NotificationsPluginWrapper {
     DidReceiveNotificationResponseCallback? onDidReceiveNotificationResponse,
   }) {
     return _plugin.initialize(
-      settings,
+      settings: settings,
       onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
     );
   }
@@ -81,10 +79,10 @@ class _RealNotificationsPluginWrapper implements NotificationsPluginWrapper {
     String? payload,
   }) {
     return _plugin.show(
-      id,
-      title,
-      body,
-      notificationDetails,
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: notificationDetails,
       payload: payload,
     );
   }
@@ -95,30 +93,26 @@ class _RealNotificationsPluginWrapper implements NotificationsPluginWrapper {
     required tz.TZDateTime scheduledDate,
     required NotificationDetails notificationDetails,
     required AndroidScheduleMode androidScheduleMode,
-    required UILocalNotificationDateInterpretation
-        uiLocalNotificationDateInterpretation,
     String? title,
     String? body,
     String? payload,
     DateTimeComponents? matchDateTimeComponents,
   }) {
     return _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      scheduledDate,
-      notificationDetails,
-      uiLocalNotificationDateInterpretation:
-          uiLocalNotificationDateInterpretation,
-      matchDateTimeComponents: matchDateTimeComponents,
+      id: id,
+      scheduledDate: scheduledDate,
+      notificationDetails: notificationDetails,
       androidScheduleMode: androidScheduleMode,
+      title: title,
+      body: body,
       payload: payload,
+      matchDateTimeComponents: matchDateTimeComponents,
     );
   }
 
   @override
   Future<void> cancel({required int id}) {
-    return _plugin.cancel(id);
+    return _plugin.cancel(id: id);
   }
 
   @override
@@ -339,8 +333,6 @@ class NotificationService implements ReminderScheduler {
       body: body,
       scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
       notificationDetails: details,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
   }
@@ -394,8 +386,6 @@ class NotificationService implements ReminderScheduler {
       body: body,
       scheduledDate: scheduledDate,
       notificationDetails: details,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
     );

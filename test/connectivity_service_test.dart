@@ -41,21 +41,62 @@ class _FakeConnectivity {
 }
 
 // ---------------------------------------------------------------------------
+// Testable subclass — injects the fake instead of the real plugin.
+// ---------------------------------------------------------------------------
+
+/// Thin subclass that accepts a fake [Connectivity]-like object so that no
+/// platform channels are involved during tests.
+class _TestableConnectivityService extends ConnectivityService {
+  _TestableConnectivityService._() : super._internal();
+
+  static _TestableConnectivityService create() =>
+      _TestableConnectivityService._();
+
+  late _FakeConnectivity _fake;
+
+  /// Must be called before [initialize].
+  void injectFake(_FakeConnectivity fake) {
+    _fake = fake;
+  }
+
+  @override
+  Future<void> initialize() async {
+    try {
+      final results = await _fake.checkConnectivity();
+      updateConnectionStatusForTest(results);
+      subscribeForTest(_fake.onConnectivityChanged);
+    } catch (e) {
+      // mirrors production catch block
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Extension that exposes protected-style helpers for testing only.
+// ---------------------------------------------------------------------------
+
+extension _ConnectivityTestHelpers on ConnectivityService {
+  void updateConnectionStatusForTest(List<ConnectivityResult> results) =>
+      _updateConnectionStatus(results);
+
+  void subscribeForTest(Stream<List<ConnectivityResult>> stream) {
+    _subscription = stream.listen(_updateConnectionStatus);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
 void main() {
   group('ConnectivityService', () {
     late _FakeConnectivity fake;
-    late ConnectivityService svc;
+    late _TestableConnectivityService svc;
 
     setUp(() {
       TestWidgetsFlutterBinding.ensureInitialized();
       fake = _FakeConnectivity();
-      svc = createConnectivityServiceForTesting(
-        checkConnectivity: fake.checkConnectivity,
-        onConnectivityChanged: fake.onConnectivityChanged,
-      );
+      svc = _TestableConnectivityService.create()..injectFake(fake);
     });
 
     tearDown(() {
@@ -110,16 +151,16 @@ void main() {
 
     group('_updateConnectionStatus (via public helper)', () {
       test('transitions from connected to disconnected', () {
-        svc.applyConnectivityResultsForTest([ConnectivityResult.wifi]);
+        svc.updateConnectionStatusForTest([ConnectivityResult.wifi]);
         expect(svc.isConnected, isTrue);
 
-        svc.applyConnectivityResultsForTest([ConnectivityResult.none]);
+        svc.updateConnectionStatusForTest([ConnectivityResult.none]);
         expect(svc.isConnected, isFalse);
       });
 
       test('transitions from disconnected to connected', () {
-        svc.applyConnectivityResultsForTest([ConnectivityResult.none]);
-        svc.applyConnectivityResultsForTest([ConnectivityResult.mobile]);
+        svc.updateConnectionStatusForTest([ConnectivityResult.none]);
+        svc.updateConnectionStatusForTest([ConnectivityResult.mobile]);
         expect(svc.isConnected, isTrue);
       });
 
@@ -128,18 +169,18 @@ void main() {
         final events = <bool>[];
         svc.connectivityStream.listen(events.add);
 
-        svc.applyConnectivityResultsForTest([ConnectivityResult.wifi]);
+        svc.updateConnectionStatusForTest([ConnectivityResult.wifi]);
         // State was already true (initial default), so no event expected.
         expect(events, isEmpty);
       });
 
       test('vpn counts as connected', () {
-        svc.applyConnectivityResultsForTest([ConnectivityResult.vpn]);
+        svc.updateConnectionStatusForTest([ConnectivityResult.vpn]);
         expect(svc.isConnected, isTrue);
       });
 
       test('bluetooth counts as connected', () {
-        svc.applyConnectivityResultsForTest([ConnectivityResult.bluetooth]);
+        svc.updateConnectionStatusForTest([ConnectivityResult.bluetooth]);
         expect(svc.isConnected, isTrue);
       });
     });

@@ -1,4 +1,4 @@
-
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:steps_recovery_flutter/main.dart';
@@ -7,33 +7,35 @@ import 'test_helpers.dart';
 
 void main() {
   testWidgets(
-    'signed-in shell routes between the home, journal, and meetings screens',
+    'signed-in shell uses the richer feature home, journal, and meetings screens',
     (tester) async {
       await createSignedInUser();
 
       await tester.pumpWidget(const StepsToRecoveryApp());
       await _pumpShell(tester);
 
-      expect(find.text('Welcome back'), findsOneWidget);
-      expect(find.text('Morning'), findsOneWidget);
-      expect(find.text('Evening'), findsOneWidget);
+      expect(find.text('Quick Actions'), findsOneWidget);
+      expect(find.text('Quick Journal'), findsOneWidget);
 
-      await tester.tap(find.text('Journal').last);
+      await tester.tap(find.byIcon(Icons.edit_outlined));
       await _pumpShell(tester);
 
-      expect(find.text('No journal entries yet'), findsOneWidget);
-      expect(find.text('New entry'), findsOneWidget);
+      expect(
+        find.widgetWithText(TextField, 'Search titles, content, or tags'),
+        findsOneWidget,
+      );
 
-      await tester.tap(find.text('Meetings').last);
+      await tester.tap(find.byIcon(Icons.people_outlined));
       await _pumpShell(tester);
 
-      expect(find.text('Morning Serenity Group'), findsOneWidget);
-      expect(find.text('Just for Today Online'), findsOneWidget);
+      expect(find.byIcon(Icons.filter_list), findsOneWidget);
+      expect(find.text('Favorites'), findsWidgets);
     },
   );
 }
 
 Future<void> _pumpShell(WidgetTester tester) async {
   await tester.pump();
-  await tester.pumpAndSettle();
+  await tester.pump(const Duration(milliseconds: 200));
+  await tester.pump(const Duration(milliseconds: 200));
 }

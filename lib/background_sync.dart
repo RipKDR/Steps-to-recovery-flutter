@@ -48,7 +48,7 @@ class BackgroundSyncService {
       frequency: const Duration(hours: 6),
       initialDelay: const Duration(minutes: 20),
       constraints: Constraints(networkType: NetworkType.connected),
-      existingWorkPolicy: ExistingWorkPolicy.replace,
+      existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
       backoffPolicy: BackoffPolicy.exponential,
       backoffPolicyDelay: const Duration(minutes: 15),
     );
