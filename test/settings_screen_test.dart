@@ -56,7 +56,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: SettingsScreen(
-            pickReminderTime: (_, __) async {
+            pickReminderTime: (context, initialTime) async {
               pickerCalls += 1;
               return const TimeOfDay(hour: 6, minute: 30);
             },

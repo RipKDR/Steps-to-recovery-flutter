@@ -145,6 +145,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           body: AnimatedBuilder(
             animation: AppStateService.instance,
             builder: (context, _) {
+              final remindersEnabled =
+                  AppStateService.instance.notificationsEnabled;
+              final reminderAccentColor = remindersEnabled
+                  ? AppColors.primaryAmber
+                  : Theme.of(context).disabledColor;
+
               return ListView(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 children: [
@@ -190,26 +196,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ListTile(
                     key: const Key('settings-morning-reminder'),
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(
+                    leading: Icon(
                       Icons.wb_sunny_outlined,
-                      color: AppColors.primaryAmber,
+                      color: reminderAccentColor,
                     ),
                     title: const Text('Morning reminder'),
-                    subtitle: Text(_morningReminderTime),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => _pickReminderTime(isMorning: true),
+                    subtitle: Text(
+                      remindersEnabled
+                          ? _morningReminderTime
+                          : 'Enable notifications to edit',
+                    ),
+                    trailing: Icon(
+                      Icons.chevron_right,
+                      color: remindersEnabled
+                          ? null
+                          : Theme.of(context).disabledColor,
+                    ),
+                    onTap: remindersEnabled
+                        ? () => _pickReminderTime(isMorning: true)
+                        : null,
                   ),
                   ListTile(
                     key: const Key('settings-evening-reminder'),
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(
+                    leading: Icon(
                       Icons.nightlight_outlined,
-                      color: AppColors.primaryAmber,
+                      color: reminderAccentColor,
                     ),
                     title: const Text('Evening reminder'),
-                    subtitle: Text(_eveningReminderTime),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => _pickReminderTime(isMorning: false),
+                    subtitle: Text(
+                      remindersEnabled
+                          ? _eveningReminderTime
+                          : 'Enable notifications to edit',
+                    ),
+                    trailing: Icon(
+                      Icons.chevron_right,
+                      color: remindersEnabled
+                          ? null
+                          : Theme.of(context).disabledColor,
+                    ),
+                    onTap: remindersEnabled
+                        ? () => _pickReminderTime(isMorning: false)
+                        : null,
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   Text('Privacy', style: AppTypography.headlineSmall),
