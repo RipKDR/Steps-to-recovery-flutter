@@ -7,7 +7,6 @@ import 'core/services/logger_service.dart';
 import 'core/services/connectivity_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/preferences_service.dart';
-import 'core/services/ai_service.dart';
 import 'navigation/app_router.dart';
 
 void main() async {

@@ -26,7 +26,7 @@ class EmergencyScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
-                color: AppColors.danger.withOpacity(0.1),
+                color: AppColors.danger.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                 border: Border.all(color: AppColors.danger),
               ),
@@ -207,7 +207,7 @@ class _ContactCard extends StatelessWidget {
                 width: AppSpacing.quint,
                 height: AppSpacing.quint,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryAmber.withOpacity(0.2),
+                  color: AppColors.primaryAmber.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -237,7 +237,7 @@ class _ContactCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.2),
+                  color: AppColors.success.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -279,7 +279,7 @@ class _CrisisToolCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: AppColors.danger.withOpacity(0.2),
+                  color: AppColors.danger.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
                 child: Icon(

@@ -39,7 +39,7 @@ class _DangerZoneScreenState extends State<DangerZoneScreen> {
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              color: AppColors.danger.withOpacity(0.1),
+              color: AppColors.danger.withValues(alpha: 0.1),
               border: Border(
                 bottom: BorderSide(color: AppColors.danger),
               ),
@@ -132,7 +132,7 @@ class _RiskyContactCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
-                    color: AppColors.danger.withOpacity(0.2),
+                    color: AppColors.danger.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   ),
                   child: const Icon(

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -53,7 +52,7 @@ class MeetingDetailScreen extends StatelessWidget {
                 vertical: AppSpacing.xs,
               ),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.2),
+                color: AppColors.success.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
               ),
               child: Row(
@@ -143,7 +142,7 @@ class MeetingDetailScreen extends StatelessWidget {
                     onPressed: () {
                       // Check in
                     },
-                    icon: const Icon(Icons.check_in),
+                    icon: const Icon(Icons.event_available),
                     label: const Text('Check In'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryAmber,

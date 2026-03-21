@@ -34,7 +34,6 @@ class AppRouter {
 
   static final GoRouter router = GoRouter(
     initialLocation: AppRoutes.onboarding,
-    debugLogDiagnostics: (String message) => debugPrint(message),
     routes: [
       // Auth routes
       GoRoute(

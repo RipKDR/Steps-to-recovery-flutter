@@ -94,7 +94,7 @@ class _SobrietyCard extends StatelessWidget {
           Text(
             'Keep coming back!',
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textOnDark.withOpacity(0.8),
+              color: AppColors.textOnDark.withValues(alpha: 0.8),
             ),
           ),
         ],
@@ -236,7 +236,7 @@ class _CheckInCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryAmber.withOpacity(0.2),
+                  color: AppColors.primaryAmber.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
                 child: Icon(

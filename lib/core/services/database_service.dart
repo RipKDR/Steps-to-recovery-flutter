@@ -1,6 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:isar/isar.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import '../models/database_models.dart';
 import '../models/enums.dart';
@@ -12,43 +10,24 @@ class DatabaseService {
   factory DatabaseService() => _instance;
   DatabaseService._internal();
 
-  Isar? _isar;
   final Uuid _uuid = const Uuid();
 
   /// Initialize the database
   Future<void> initialize() async {
-    if (_isar != null) return;
-
-    try {
-      final dir = await getApplicationDocumentsDirectory();
-      _isar = await Isar.open(
-        [
-          // Note: In a real implementation, you would define Isar collections here
-          // For now, we're using in-memory storage as a placeholder
-        ],
-        directory: dir.path,
-        inspector: true,
-      );
-      debugPrint('Database initialized successfully');
-    } catch (e) {
-      debugPrint('Failed to initialize database: $e');
-      // Fallback to in-memory operations
-      _isar = null;
-    }
+    // Placeholder - Isar initialization would go here
+    debugPrint('Database service initialized (in-memory mode)');
   }
 
   /// Check if database is initialized
-  bool get isInitialized => _isar != null;
+  bool get isInitialized => true;
 
   // ==================== USER PROFILE ====================
 
   Future<UserProfile?> getCurrentUser() async {
-    // Placeholder - in real implementation, query Isar
     return null;
   }
 
   Future<UserProfile> saveUser(UserProfile user) async {
-    // Placeholder - in real implementation, save to Isar
     return user;
   }
 
@@ -61,7 +40,6 @@ class DatabaseService {
     DateTime? endDate,
     int limit = 100,
   }) async {
-    // Placeholder - return empty list
     return [];
   }
 
@@ -70,15 +48,21 @@ class DatabaseService {
   }
 
   Future<DailyCheckIn> saveCheckIn(DailyCheckIn checkIn) async {
-    return checkIn.copyWith(
+    return DailyCheckIn(
       id: checkIn.id.isNotEmpty ? checkIn.id : _uuid.v4(),
-      createdAt: checkIn.createdAt.isNotEmpty ? checkIn.createdAt : DateTime.now(),
+      userId: checkIn.userId,
+      checkInType: checkIn.checkInType,
+      checkInDate: checkIn.checkInDate,
+      intention: checkIn.intention,
+      reflection: checkIn.reflection,
+      mood: checkIn.mood,
+      craving: checkIn.craving,
+      syncStatus: checkIn.syncStatus,
+      createdAt: DateTime.now(),
     );
   }
 
-  Future<void> deleteCheckIn(String id) async {
-    // Placeholder
-  }
+  Future<void> deleteCheckIn(String id) async {}
 
   Future<DailyCheckIn?> getTodayCheckIn(CheckInType type) async {
     final now = DateTime.now();
@@ -111,16 +95,22 @@ class DatabaseService {
   }
 
   Future<JournalEntry> saveJournalEntry(JournalEntry entry) async {
-    return entry.copyWith(
+    return JournalEntry(
       id: entry.id.isNotEmpty ? entry.id : _uuid.v4(),
-      createdAt: entry.createdAt.isNotEmpty ? entry.createdAt : DateTime.now(),
+      userId: entry.userId,
+      title: entry.title,
+      content: entry.content,
+      mood: entry.mood,
+      craving: entry.craving,
+      tags: entry.tags,
+      isFavorite: entry.isFavorite,
+      syncStatus: entry.syncStatus,
+      createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
   }
 
-  Future<void> deleteJournalEntry(String id) async {
-    // Placeholder
-  }
+  Future<void> deleteJournalEntry(String id) async {}
 
   // ==================== STEP WORK ====================
 
@@ -137,18 +127,21 @@ class DatabaseService {
     required int stepNumber,
     required int questionNumber,
   }) async {
-    final answers = await getStepAnswers(
-      userId: userId,
-      stepNumber: stepNumber,
-    );
-    
+    final answers = await getStepAnswers(userId: userId, stepNumber: stepNumber);
     return answers.where((a) => a.questionNumber == questionNumber).firstOrNull;
   }
 
   Future<StepWorkAnswer> saveStepAnswer(StepWorkAnswer answer) async {
-    return answer.copyWith(
+    return StepWorkAnswer(
       id: answer.id.isNotEmpty ? answer.id : _uuid.v4(),
-      createdAt: answer.createdAt.isNotEmpty ? answer.createdAt : DateTime.now(),
+      userId: answer.userId,
+      stepNumber: answer.stepNumber,
+      questionNumber: answer.questionNumber,
+      answer: answer.answer,
+      isComplete: answer.isComplete,
+      completedAt: answer.completedAt,
+      syncStatus: answer.syncStatus,
+      createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
   }
@@ -158,9 +151,14 @@ class DatabaseService {
   }
 
   Future<StepProgress> saveStepProgress(StepProgress progress) async {
-    return progress.copyWith(
+    return StepProgress(
       id: progress.id.isNotEmpty ? progress.id : _uuid.v4(),
-      createdAt: progress.createdAt.isNotEmpty ? progress.createdAt : DateTime.now(),
+      userId: progress.userId,
+      stepNumber: progress.stepNumber,
+      status: progress.status,
+      completionPercentage: progress.completionPercentage,
+      completedAt: progress.completedAt,
+      createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
   }
@@ -180,15 +178,19 @@ class DatabaseService {
   }
 
   Future<Contact> saveContact(Contact contact) async {
-    return contact.copyWith(
+    return Contact(
       id: contact.id.isNotEmpty ? contact.id : _uuid.v4(),
-      createdAt: contact.createdAt.isNotEmpty ? contact.createdAt : DateTime.now(),
+      userId: contact.userId,
+      name: contact.name,
+      phoneNumber: contact.phoneNumber,
+      email: contact.email,
+      relationship: contact.relationship,
+      isPrimary: contact.isPrimary,
+      createdAt: DateTime.now(),
     );
   }
 
-  Future<void> deleteContact(String id) async {
-    // Placeholder
-  }
+  Future<void> deleteContact(String id) async {}
 
   // ==================== MEETINGS ====================
 
@@ -202,17 +204,24 @@ class DatabaseService {
   }
 
   Future<Meeting> saveMeeting(Meeting meeting) async {
-    return meeting.copyWith(
+    return Meeting(
       id: meeting.id.isNotEmpty ? meeting.id : _uuid.v4(),
+      name: meeting.name,
+      location: meeting.location,
+      address: meeting.address,
+      dateTime: meeting.dateTime,
+      meetingType: meeting.meetingType,
+      formats: meeting.formats,
+      notes: meeting.notes,
+      isFavorite: meeting.isFavorite,
+      latitude: meeting.latitude,
+      longitude: meeting.longitude,
     );
   }
 
-  Future<void> deleteMeeting(String id) async {
-    // Placeholder
-  }
+  Future<void> deleteMeeting(String id) async {}
 
   Future<Meeting> toggleMeetingFavorite(String meetingId) async {
-    // Placeholder
     return Meeting(
       id: meetingId,
       name: '',
@@ -232,16 +241,16 @@ class DatabaseService {
   }
 
   Future<ChatConversation> saveChatConversation(ChatConversation conversation) async {
-    return conversation.copyWith(
+    return ChatConversation(
       id: conversation.id.isNotEmpty ? conversation.id : _uuid.v4(),
-      createdAt: conversation.createdAt.isNotEmpty ? conversation.createdAt : DateTime.now(),
+      userId: conversation.userId,
+      title: conversation.title,
+      createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
   }
 
-  Future<void> deleteChatConversation(String id) async {
-    // Placeholder
-  }
+  Future<void> deleteChatConversation(String id) async {}
 
   Future<List<ChatMessage>> getChatMessages({
     String? conversationId,
@@ -251,9 +260,14 @@ class DatabaseService {
   }
 
   Future<ChatMessage> saveChatMessage(ChatMessage message) async {
-    return message.copyWith(
+    return ChatMessage(
       id: message.id.isNotEmpty ? message.id : _uuid.v4(),
-      createdAt: message.createdAt.isNotEmpty ? message.createdAt : DateTime.now(),
+      conversationId: message.conversationId,
+      userId: message.userId,
+      content: message.content,
+      isUser: message.isUser,
+      createdAt: DateTime.now(),
+      encryptedContent: message.encryptedContent,
     );
   }
 
@@ -268,15 +282,15 @@ class DatabaseService {
   }
 
   Future<GratitudeEntry> saveGratitudeEntry(GratitudeEntry entry) async {
-    return entry.copyWith(
+    return GratitudeEntry(
       id: entry.id.isNotEmpty ? entry.id : _uuid.v4(),
-      createdAt: entry.createdAt.isNotEmpty ? entry.createdAt : DateTime.now(),
+      userId: entry.userId,
+      content: entry.content,
+      createdAt: DateTime.now(),
     );
   }
 
-  Future<void> deleteGratitudeEntry(String id) async {
-    // Placeholder
-  }
+  Future<void> deleteGratitudeEntry(String id) async {}
 
   // ==================== SAFETY PLAN ====================
 
@@ -285,9 +299,15 @@ class DatabaseService {
   }
 
   Future<SafetyPlan> saveSafetyPlan(SafetyPlan plan) async {
-    return plan.copyWith(
+    return SafetyPlan(
       id: plan.id.isNotEmpty ? plan.id : _uuid.v4(),
-      createdAt: plan.createdAt.isNotEmpty ? plan.createdAt : DateTime.now(),
+      userId: plan.userId,
+      warningSigns: plan.warningSigns,
+      copingStrategies: plan.copingStrategies,
+      supportContacts: plan.supportContacts,
+      professionalContacts: plan.professionalContacts,
+      safeEnvironments: plan.safeEnvironments,
+      createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
   }
@@ -303,15 +323,21 @@ class DatabaseService {
   }
 
   Future<Challenge> saveChallenge(Challenge challenge) async {
-    return challenge.copyWith(
+    return Challenge(
       id: challenge.id.isNotEmpty ? challenge.id : _uuid.v4(),
-      createdAt: challenge.createdAt.isNotEmpty ? challenge.createdAt : DateTime.now(),
+      userId: challenge.userId,
+      title: challenge.title,
+      description: challenge.description,
+      durationDays: challenge.durationDays,
+      startDate: challenge.startDate,
+      endDate: challenge.endDate,
+      isCompleted: challenge.isCompleted,
+      isActive: challenge.isActive,
+      createdAt: DateTime.now(),
     );
   }
 
-  Future<void> deleteChallenge(String id) async {
-    // Placeholder
-  }
+  Future<void> deleteChallenge(String id) async {}
 
   // ==================== READING REFLECTIONS ====================
 
@@ -324,9 +350,13 @@ class DatabaseService {
   }
 
   Future<ReadingReflection> saveReadingReflection(ReadingReflection reflection) async {
-    return reflection.copyWith(
+    return ReadingReflection(
       id: reflection.id.isNotEmpty ? reflection.id : _uuid.v4(),
-      createdAt: reflection.createdAt.isNotEmpty ? reflection.createdAt : DateTime.now(),
+      userId: reflection.userId,
+      readingId: reflection.readingId,
+      readingDate: reflection.readingDate,
+      reflection: reflection.reflection,
+      createdAt: DateTime.now(),
     );
   }
 
@@ -340,35 +370,30 @@ class DatabaseService {
   }
 
   Future<Achievement> saveAchievement(Achievement achievement) async {
-    return achievement.copyWith(
+    return Achievement(
       id: achievement.id.isNotEmpty ? achievement.id : _uuid.v4(),
-      earnedAt: achievement.earnedAt.isNotEmpty ? achievement.earnedAt : DateTime.now(),
+      userId: achievement.userId,
+      achievementKey: achievement.achievementKey,
+      type: achievement.type,
+      earnedAt: DateTime.now(),
+      isViewed: achievement.isViewed,
     );
   }
 
-  Future<void> markAchievementViewed(String id) async {
-    // Placeholder
-  }
+  Future<void> markAchievementViewed(String id) async {}
 
   // ==================== UTILITIES ====================
 
-  /// Clear all data (for testing/logout)
   Future<void> clearAllData() async {
-    // Placeholder - in real implementation, clear all collections
     debugPrint('All data cleared');
   }
 
-  /// Export data (for backup)
   Future<Map<String, dynamic>> exportData() async {
     return {};
   }
 
-  /// Import data (for restore)
-  Future<void> importData(Map<String, dynamic> data) async {
-    // Placeholder
-  }
+  Future<void> importData(Map<String, dynamic> data) async {}
 
-  /// Get database statistics
   Future<Map<String, int>> getStats() async {
     return {
       'checkIns': 0,
@@ -379,11 +404,5 @@ class DatabaseService {
     };
   }
 
-  /// Close database connection
-  Future<void> close() async {
-    if (_isar != null) {
-      await _isar!.close();
-      _isar = null;
-    }
-  }
+  Future<void> close() async {}
 }

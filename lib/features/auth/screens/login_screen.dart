@@ -166,11 +166,15 @@ class _LoginScreenState extends State<LoginScreen> {
     
     // Simulate login
     Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isLoading = false;
-      });
-      // Navigate to home
-      context.go('/home');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        // Navigate to home
+        if (mounted) {
+          context.go('/home');
+        }
+      }
     });
   }
 }

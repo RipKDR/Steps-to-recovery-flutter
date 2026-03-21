@@ -133,7 +133,7 @@ class _AnswerCard extends StatelessWidget {
                 vertical: AppSpacing.xs,
               ),
               decoration: BoxDecoration(
-                color: AppColors.primaryAmber.withOpacity(0.2),
+                color: AppColors.primaryAmber.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
               ),
               child: Text(

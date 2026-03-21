@@ -89,6 +89,8 @@ enum AchievementType {
         return AchievementType.streak;
       case 'step_completion':
         return AchievementType.stepCompletion;
+      default:
+        return AchievementType.milestone;
     }
   }
 }
@@ -118,6 +120,8 @@ enum SyncOperation {
         return SyncOperation.update;
       case 'delete':
         return SyncOperation.delete;
+      default:
+        return SyncOperation.insert;
     }
   }
 }

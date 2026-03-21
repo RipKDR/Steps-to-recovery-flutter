@@ -12,18 +12,12 @@ class SafetyPlanScreen extends StatefulWidget {
 }
 
 class _SafetyPlanScreenState extends State<SafetyPlanScreen> {
-  int _currentStep = 0;
+  final int _currentStep = 0;
   final _warningSignsController = TextEditingController();
   final _copingController = TextEditingController();
   final _supportController = TextEditingController();
   final _professionalController = TextEditingController();
   final _environmentController = TextEditingController();
-
-  final List<String> _warningSigns = [];
-  final List<String> _copingStrategies = [];
-  final List<String> _supportContacts = [];
-  final List<String> _professionalContacts = [];
-  final List<String> _safeEnvironments = [];
 
   @override
   void dispose() {

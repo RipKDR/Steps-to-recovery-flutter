@@ -1,6 +1,7 @@
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import 'dart:math';
+import 'package:flutter/material.dart';
 
 /// Utility functions for the app
 class AppUtils {

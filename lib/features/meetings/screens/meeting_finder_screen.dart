@@ -58,7 +58,7 @@ class _MeetingFinderScreenState extends State<MeetingFinderScreen> {
                         });
                       },
                       backgroundColor: AppColors.surfaceInteractive,
-                      selectedColor: AppColors.primaryAmber.withOpacity(0.2),
+                      selectedColor: AppColors.primaryAmber.withValues(alpha: 0.2),
                       labelStyle: AppTypography.labelMedium.copyWith(
                         color: isSelected
                             ? AppColors.primaryAmber
@@ -161,8 +161,8 @@ class _MeetingCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: type == 'Online'
-                          ? AppColors.info.withOpacity(0.2)
-                          : AppColors.success.withOpacity(0.2),
+                          ? AppColors.info.withValues(alpha: 0.2)
+                          : AppColors.success.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     ),
                     child: Text(

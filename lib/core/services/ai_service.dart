@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/database_models.dart';
-import '../constants/app_constants.dart';
 
 /// AI service for chat and memory extraction
 class AiService {
@@ -81,7 +80,10 @@ Please respond in a helpful, supportive manner.
   String _buildContext(List<ChatMessage>? history) {
     if (history == null || history.isEmpty) return '';
     
-    final recentMessages = history.takeLast(10);
+    // Get last 10 messages
+    final recentMessages = history.length > 10 
+        ? history.sublist(history.length - 10) 
+        : history;
     final buffer = StringBuffer('Recent conversation:\n');
     
     for (final msg in recentMessages) {

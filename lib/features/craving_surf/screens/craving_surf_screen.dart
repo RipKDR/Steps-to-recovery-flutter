@@ -98,8 +98,8 @@ class _CravingSurfScreenState extends State<CravingSurfScreen>
                             shape: BoxShape.circle,
                             gradient: RadialGradient(
                               colors: [
-                                AppColors.primaryAmber.withOpacity(0.4),
-                                AppColors.primaryAmber.withOpacity(0.1),
+                                AppColors.primaryAmber.withValues(alpha: 0.4),
+                                AppColors.primaryAmber.withValues(alpha: 0.1),
                               ],
                             ),
                           ),

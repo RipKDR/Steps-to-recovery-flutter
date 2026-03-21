@@ -121,15 +121,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       _completeOnboarding();
                     }
                   },
-                  child: Text(
-                    _currentPage < _pages.length - 1 ? 'Next' : 'Get Started',
-                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryAmber,
                     foregroundColor: AppColors.textOnDark,
                     padding: const EdgeInsets.symmetric(
                       vertical: AppSpacing.md,
                     ),
+                  ),
+                  child: Text(
+                    _currentPage < _pages.length - 1 ? 'Next' : 'Get Started',
                   ),
                 ),
               ),

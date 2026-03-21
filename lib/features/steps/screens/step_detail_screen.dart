@@ -63,7 +63,7 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
         backgroundColor: AppColors.background,
         actions: [
           IconButton(
-            icon: const Icon(Icons.review),
+            icon: const Icon(Icons.assignment),
             onPressed: () {
               context.push(
                 '${AppRoutes.steps}/review?stepNumber=$_currentStepNumber',

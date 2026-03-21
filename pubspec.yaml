@@ -10,16 +10,10 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # State Management
-  flutter_riverpod: ^2.6.1
-  riverpod_annotation: ^2.6.1
-
   # Navigation
   go_router: ^14.6.2
 
-  # Local Database
-  isar: ^3.1.0+1
-  isar_flutter_libs: ^3.1.0+1
+  # Local Storage
   path_provider: ^2.1.5
 
   # Encryption & Security
@@ -49,11 +43,11 @@ dependencies:
   smooth_page_indicator: ^1.2.0+3
 
   # Forms & Validation
-  flutter_form_builder: ^9.7.0
+  flutter_form_builder: ^10.3.0+2
   form_builder_validators: ^11.1.0
 
   # Utilities
-  intl: ^0.19.0
+  intl: ^0.20.2
   uuid: ^4.5.1
   collection: ^1.19.0
   equatable: ^2.0.7
@@ -73,8 +67,8 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   build_runner: ^2.4.13
-  riverpod_generator: ^2.6.5
-  isar_generator: ^3.1.0+1
+  # Removed riverpod_generator and isar_generator due to version conflicts
+  # These can be added later if code generation is needed
   json_serializable: ^6.9.0
   json_annotation: ^4.9.0
   mockito: ^5.4.4
@@ -85,14 +79,3 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
-    
-  fonts:
-    - family: Inter
-      fonts:
-        - asset: assets/fonts/Inter-Regular.ttf
-        - asset: assets/fonts/Inter-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/Inter-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/Inter-Bold.ttf
-          weight: 700

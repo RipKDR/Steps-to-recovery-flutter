@@ -51,7 +51,7 @@ class AppTheme {
         centerTitle: false,
         titleTextStyle: AppTypography.headlineMedium,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.surfaceCard,
         elevation: AppSpacing.elevationSm,
         shape: RoundedRectangleBorder(
@@ -165,7 +165,7 @@ class AppTheme {
         foregroundColor: AppColors.textOnDark,
         elevation: AppSpacing.elevationMd,
       ),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: AppColors.surfaceCard,
         elevation: AppSpacing.elevationLg,
         shape: RoundedRectangleBorder(

@@ -95,14 +95,14 @@ class _ChallengeCard extends StatelessWidget {
                   padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
                     color: isActive
-                        ? AppColors.primaryAmber.withOpacity(0.2)
+                        ? AppColors.primaryAmber.withValues(alpha: 0.2)
                         : AppColors.surfaceInteractive,
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   ),
                   child: Icon(
                     isActive
                         ? Icons.local_fire_department
-                        : Icons.challenge_outlined,
+                        : Icons.emoji_events_outlined,
                     color: isActive
                         ? AppColors.primaryAmber
                         : AppColors.textMuted,
@@ -192,7 +192,7 @@ class _CompletedChallengeCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.2),
+                color: AppColors.success.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               ),
               child: const Icon(

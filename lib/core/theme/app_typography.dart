@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 /// Design system typography tokens
-/// Based on Inter font family
+/// Uses the platform default font until custom font assets are added.
 class AppTypography {
   AppTypography._();
 
-  static const String fontFamily = 'Inter';
+  static const String? fontFamily = null;
 
   // Display styles
   static const TextStyle displayLarge = TextStyle(

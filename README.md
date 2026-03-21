@@ -3,6 +3,7 @@
 Fresh rebuild of the app using Flutter + Dart.
 
 ## Stack
+
 - Flutter 3.41.x
 - Dart 3.11.x
 - Material 3 + `go_router`
@@ -11,6 +12,7 @@ Fresh rebuild of the app using Flutter + Dart.
 - Remote sync scaffold (`http`)
 
 ## Included
+
 - Home dashboard with streak + next action
 - Daily check-in (morning/evening)
 - Journal page
@@ -23,12 +25,14 @@ Fresh rebuild of the app using Flutter + Dart.
 - Background sync scheduler scaffold (`workmanager`, periodic task)
 
 ## Run
+
 ```bash
 flutter pub get
 flutter run
 ```
 
 ## Optional remote sync config
+
 Pass backend values with dart-defines:
 
 ```bash

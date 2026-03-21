@@ -43,7 +43,7 @@ class _BeforeYouUseScreenState extends State<BeforeYouUseScreen> {
             Container(
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
-                color: AppColors.warning.withOpacity(0.1),
+                color: AppColors.warning.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                 border: Border.all(color: AppColors.warning),
               ),
@@ -233,8 +233,8 @@ class _BreathingCircleState extends State<_BreathingCircle>
             shape: BoxShape.circle,
             gradient: RadialGradient(
               colors: [
-                AppColors.primaryAmber.withOpacity(0.3 * _animation.value),
-                AppColors.primaryAmber.withOpacity(0.1 * _animation.value),
+                AppColors.primaryAmber.withValues(alpha: 0.3 * _animation.value),
+                AppColors.primaryAmber.withValues(alpha: 0.1 * _animation.value),
               ],
             ),
           ),

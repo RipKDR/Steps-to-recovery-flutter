@@ -216,11 +216,14 @@ class _SignupScreenState extends State<SignupScreen> {
     
     // Simulate signup
     Future.delayed(const Duration(seconds: 2), () {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
       // Navigate to onboarding or home
-      context.go('/home');
+      if (mounted) {
+        context.go('/home');
+      }
     });
   }
 }

@@ -14,37 +14,37 @@ class LoggerService {
       lineLength: 120,
       colors: true,
       printEmojis: true,
-      printTime: true,
+      dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
     ),
   );
 
-  void debug(String message, {String? tag}) {
+  void debug(String message) {
     if (kDebugMode) {
-      _logger.d(message, tag: tag);
+      _logger.d(message);
     }
   }
 
-  void info(String message, {String? tag}) {
-    _logger.i(message, tag: tag);
+  void info(String message) {
+    _logger.i(message);
   }
 
-  void warning(String message, {String? tag}) {
-    _logger.w(message, tag: tag);
+  void warning(String message) {
+    _logger.w(message);
   }
 
-  void error(String message, {String? tag, dynamic error, StackTrace? stackTrace}) {
-    _logger.e(message, tag: tag, error: error, stackTrace: stackTrace);
+  void error(String message, {dynamic error, StackTrace? stackTrace}) {
+    _logger.e(message, error: error, stackTrace: stackTrace);
   }
 
-  void wtf(String message, {String? tag}) {
-    _logger.wtf(message, tag: tag);
+  void fatal(String message) {
+    _logger.f(message);
   }
 }
 
 /// Usage:
 /// ```dart
 /// final logger = LoggerService();
-/// logger.debug('Debug message', tag: 'MyClass');
+/// logger.debug('Debug message');
 /// logger.info('Info message');
 /// logger.error('Error occurred', error: e, stackTrace: stackTrace);
 /// ```

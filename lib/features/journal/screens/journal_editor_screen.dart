@@ -24,7 +24,6 @@ class _JournalEditorScreenState extends State<JournalEditorScreen> {
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
   bool _isFavorite = false;
-  List<String> _tags = [];
 
   @override
   void dispose() {
@@ -182,7 +181,7 @@ class _TagChip extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: isSelected
-            ? AppColors.primaryAmber.withOpacity(0.2)
+            ? AppColors.primaryAmber.withValues(alpha: 0.2)
             : AppColors.surfaceInteractive,
         borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
         border: Border.all(

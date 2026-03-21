@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../core/theme/app_colors.dart';
-import '../core/theme/app_spacing.dart';
 
 /// Shell screen with bottom navigation bar
 class ShellScreen extends StatelessWidget {
@@ -17,7 +16,7 @@ class ShellScreen extends StatelessWidget {
       body: child,
       bottomNavigationBar: NavigationBar(
         backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.primaryAmber.withOpacity(0.2),
+        indicatorColor: AppColors.primaryAmber.withValues(alpha: 0.2),
         selectedIndex: _calculateSelectedIndex(location),
         onDestinationSelected: (index) => _onItemTapped(index, context),
         destinations: const [

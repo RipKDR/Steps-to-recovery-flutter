@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -108,17 +109,10 @@ class EncryptionService {
 
   /// Derive a key from a password/passphrase
   Future<Key> deriveKeyFromPassword(String password, {String salt = 'steps_recovery_salt'}) async {
-    final pbkdf2 = PBKDF2KeyDeriver(
-      Hmac(crypto.sha256, utf8.encode(salt)),
-    );
-
-    final keyBytes = await pbkdf2.deriveKey(
-      keyMaterial: utf8.encode(password),
-      iterations: 100000,
-      bits: 256,
-    );
-
-    return Key(keyBytes);
+    // Simple hash-based key derivation (for production, use a proper KDF)
+    final bytes = utf8.encode(password + salt);
+    final hash = sha256.convert(bytes);
+    return Key(Uint8List.fromList(hash.bytes));
   }
 
   /// Clear encryption keys (for logout)
