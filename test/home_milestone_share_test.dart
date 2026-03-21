@@ -36,9 +36,12 @@ void main() {
         home: HomeScreen(),
       ),
     );
-    await tester.pumpAndSettle();
+    await _pumpHomeScreen(tester);
 
     expect(find.textContaining('Share '), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
   });
 
   testWidgets(
@@ -55,12 +58,12 @@ void main() {
           home: HomeScreen(),
         ),
       );
-      await tester.pumpAndSettle();
+      await _pumpHomeScreen(tester);
 
       expect(find.text('Share 1 Month'), findsOneWidget);
 
       await tester.tap(find.text('Share 1 Month'));
-      await tester.pumpAndSettle();
+      await _pumpAfterInteraction(tester);
 
       expect(shareCalls, hasLength(1));
       expect(shareCalls.single.method, 'share');
@@ -77,6 +80,9 @@ void main() {
       expect(await PreferencesService().getAchievementShareCompletedCount(), 1);
       expect(find.text('Share 1 Month'), findsNothing);
       expect(find.text('1 Month shared.'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
     },
   );
 
@@ -94,15 +100,30 @@ void main() {
         home: HomeScreen(),
       ),
     );
-    await tester.pumpAndSettle();
+    await _pumpHomeScreen(tester);
 
     expect(find.text('Share 1 Week'), findsOneWidget);
 
     await tester.tap(find.text('Share 1 Week'));
-    await tester.pumpAndSettle();
+    await _pumpAfterInteraction(tester);
 
     expect(await PreferencesService().getAchievementShareTappedCount(), 1);
     expect(await PreferencesService().getAchievementShareCompletedCount(), 0);
     expect(find.text('Share 1 Week'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
   });
+}
+
+Future<void> _pumpHomeScreen(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 100));
+  await tester.pump(const Duration(milliseconds: 100));
+}
+
+Future<void> _pumpAfterInteraction(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 150));
+  await tester.pump(const Duration(milliseconds: 150));
 }
