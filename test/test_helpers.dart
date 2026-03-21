@@ -7,14 +7,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:steps_recovery_flutter/core/services/app_state_service.dart';
 import 'package:steps_recovery_flutter/core/services/database_service.dart';
 import 'package:steps_recovery_flutter/core/services/encryption_service.dart';
+import 'package:steps_recovery_flutter/core/services/notification_service.dart';
+import 'package:steps_recovery_flutter/core/services/preferences_service.dart';
 
 Future<void> prepareTestState() async {
   TestWidgetsFlutterBinding.ensureInitialized();
   SharedPreferences.setMockInitialValues(<String, Object>{});
-  FlutterSecureStoragePlatform.instance =
-      TestFlutterSecureStoragePlatform(<String, String>{});
+  PreferencesService().resetForTest();
+  FlutterSecureStoragePlatform.instance = TestFlutterSecureStoragePlatform(
+    <String, String>{},
+  );
   await EncryptionService().initialize();
   await DatabaseService().initialize();
+  AppStateService.instance.setReminderSchedulerForTest(
+    _NoopReminderScheduler(),
+  );
   await AppStateService.instance.initialize();
   await AppStateService.instance.resetLocalData();
   await AppStateService.instance.initialize();
@@ -34,4 +41,13 @@ Future<void> createSignedInUser({
     sobrietyDate: sobrietyDate ?? DateTime(2024, 1, 1),
     programType: programType,
   );
+}
+
+class _NoopReminderScheduler implements ReminderScheduler {
+  @override
+  Future<void> syncDailyCheckInReminders({
+    required bool enabled,
+    required String morningTime,
+    required String eveningTime,
+  }) async {}
 }

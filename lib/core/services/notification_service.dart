@@ -3,14 +3,26 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 
+abstract class ReminderScheduler {
+  Future<void> syncDailyCheckInReminders({
+    required bool enabled,
+    required String morningTime,
+    required String eveningTime,
+  });
+}
+
 /// Notification service for local notifications
-class NotificationService {
+class NotificationService implements ReminderScheduler {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
+
+  static const int morningCheckInReminderId = 1001;
+  static const int eveningCheckInReminderId = 1002;
 
   /// Initialize notification service
   Future<void> initialize() async {
@@ -20,8 +32,10 @@ class NotificationService {
     tz.initializeTimeZones();
 
     // Android settings
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
+
     // iOS settings
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -41,7 +55,7 @@ class NotificationService {
 
     // Create notification channels
     await _createChannels();
-    
+
     _isInitialized = true;
   }
 
@@ -74,21 +88,27 @@ class NotificationService {
 
     for (final channel in channels) {
       await _notifications
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.createNotificationChannel(channel);
     }
   }
 
   /// Request notification permissions
   Future<bool> requestPermissions() async {
-    final androidImpl = _notifications.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    
+    final androidImpl = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+
     final androidGranted = await androidImpl?.requestNotificationsPermission();
-    
-    final iosImpl = _notifications.resolvePlatformSpecificImplementation<
-        IOSFlutterLocalNotificationsPlugin>();
-    
+
+    final iosImpl = _notifications
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
+
     final iosGranted = await iosImpl?.requestPermissions(
       alert: true,
       badge: true,
@@ -128,13 +148,7 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    await _notifications.show(
-      id,
-      title,
-      body,
-      details,
-      payload: payload,
-    );
+    await _notifications.show(id, title, body, details, payload: payload);
   }
 
   /// Schedule a notification
@@ -233,6 +247,66 @@ class NotificationService {
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
+  }
+
+  @override
+  Future<void> syncDailyCheckInReminders({
+    required bool enabled,
+    required String morningTime,
+    required String eveningTime,
+  }) async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+
+    await cancelNotification(morningCheckInReminderId);
+    await cancelNotification(eveningCheckInReminderId);
+
+    if (!enabled) {
+      return;
+    }
+
+    final permissionsGranted = await requestPermissions();
+    if (!permissionsGranted) {
+      return;
+    }
+
+    await scheduleDailyCheckIn(
+      id: morningCheckInReminderId,
+      title: 'Morning intention',
+      body: 'Start the day with a quick recovery check-in.',
+      time: _parseTimeOfDay(
+        morningTime,
+        fallback: const TimeOfDay(hour: 8, minute: 0),
+      ),
+    );
+    await scheduleDailyCheckIn(
+      id: eveningCheckInReminderId,
+      title: 'Evening pulse',
+      body: 'Take a minute to reflect before the day ends.',
+      time: _parseTimeOfDay(
+        eveningTime,
+        fallback: const TimeOfDay(hour: 20, minute: 0),
+      ),
+    );
+  }
+
+  TimeOfDay _parseTimeOfDay(String value, {required TimeOfDay fallback}) {
+    final parts = value.trim().split(':');
+    if (parts.length != 2) {
+      return fallback;
+    }
+
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) {
+      return fallback;
+    }
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+      return fallback;
+    }
+
+    return TimeOfDay(hour: hour, minute: minute);
   }
 
   /// Cancel a notification

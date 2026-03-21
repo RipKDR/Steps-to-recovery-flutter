@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/constants/recovery_content.dart';
 import '../../../core/models/database_models.dart';
+import '../../../core/services/ai_service.dart';
 import '../../../core/services/app_state_service.dart';
 import '../../../core/services/database_service.dart';
 import '../../../core/theme/app_colors.dart';
@@ -11,7 +12,10 @@ import '../../../core/theme/app_typography.dart';
 
 /// AI Companion Chat screen
 class CompanionChatScreen extends StatefulWidget {
-  const CompanionChatScreen({super.key});
+  const CompanionChatScreen({super.key, CompanionResponder? responder})
+    : responder = responder ?? const _DefaultCompanionResponder();
+
+  final CompanionResponder responder;
 
   @override
   State<CompanionChatScreen> createState() => _CompanionChatScreenState();
@@ -56,7 +60,9 @@ class _CompanionChatScreenState extends State<CompanionChatScreen> {
       return;
     }
 
-    var conversations = await database.getChatConversations(userId: currentUser.id);
+    var conversations = await database.getChatConversations(
+      userId: currentUser.id,
+    );
     ChatConversation conversation;
     if (conversations.isNotEmpty) {
       conversation = conversations.first;
@@ -72,7 +78,9 @@ class _CompanionChatScreenState extends State<CompanionChatScreen> {
       );
     }
 
-    var messages = await database.getChatMessages(conversationId: conversation.id);
+    var messages = await database.getChatMessages(
+      conversationId: conversation.id,
+    );
     if (messages.isEmpty) {
       await database.saveChatMessage(
         ChatMessage(
@@ -84,7 +92,9 @@ class _CompanionChatScreenState extends State<CompanionChatScreen> {
           createdAt: DateTime.now(),
         ),
       );
-      messages = await database.getChatMessages(conversationId: conversation.id);
+      messages = await database.getChatMessages(
+        conversationId: conversation.id,
+      );
     }
 
     if (!mounted) {
@@ -108,8 +118,9 @@ class _CompanionChatScreenState extends State<CompanionChatScreen> {
     if (conversation == null) {
       return;
     }
-    final messages =
-        await DatabaseService().getChatMessages(conversationId: conversation.id);
+    final messages = await DatabaseService().getChatMessages(
+      conversationId: conversation.id,
+    );
     if (!mounted) {
       return;
     }
@@ -163,7 +174,7 @@ class _CompanionChatScreenState extends State<CompanionChatScreen> {
     _messageController.clear();
     await _refreshMessages();
 
-    final response = await _buildLocalResponse(messageText);
+    final response = await _buildResponse(messageText);
     if (!mounted) {
       return;
     }
@@ -192,10 +203,74 @@ class _CompanionChatScreenState extends State<CompanionChatScreen> {
     await _refreshMessages();
   }
 
+  Future<String> _buildResponse(String messageText) async {
+    if (_shouldUseCloudResponder) {
+      try {
+        final response = await widget.responder.respond(
+          message: messageText,
+          userId: _currentUserId!,
+          conversationHistory: List<ChatMessage>.from(_messages),
+          recoveryContext: await _buildRecoveryContext(),
+        );
+        if (response.trim().isNotEmpty) {
+          return response.trim();
+        }
+      } catch (_) {
+        // Fall back to the local responder so the chat remains available offline.
+      }
+    }
+
+    return _buildLocalResponse(messageText);
+  }
+
+  bool get _shouldUseCloudResponder =>
+      AppStateService.instance.aiProxyEnabled &&
+      _currentUserId != null &&
+      widget.responder.isCloudAvailable;
+
+  bool get _cloudGuidanceConfigured =>
+      AppStateService.instance.aiProxyEnabled &&
+      widget.responder.isCloudAvailable;
+
+  Future<List<String>> _buildRecoveryContext() async {
+    final context = <String>[];
+    final appState = AppStateService.instance;
+
+    if (appState.displayName != null &&
+        appState.displayName!.trim().isNotEmpty) {
+      context.add('User display name: ${appState.displayName!.trim()}');
+    }
+    if (appState.programType != null &&
+        appState.programType!.trim().isNotEmpty) {
+      context.add('Program: ${appState.programType!.trim()}');
+    }
+    if (appState.sobrietyDate != null) {
+      context.add('Sobriety summary: ${appState.sobrietySummary}');
+    }
+
+    final sponsor = _currentUserId == null
+        ? null
+        : await DatabaseService().getSponsor(_currentUserId!);
+    if (sponsor != null) {
+      context.add('Sponsor: ${sponsor.name} (${sponsor.phoneNumber})');
+    }
+
+    final nextMeeting = await _getNextMeeting();
+    if (nextMeeting != null) {
+      context.add(
+        'Next meeting: ${nextMeeting.name} at ${_formatMeetingTime(nextMeeting.dateTime)}',
+      );
+    }
+
+    return context;
+  }
+
   Future<String> _buildLocalResponse(String messageText) async {
     final lower = messageText.toLowerCase();
     final database = DatabaseService();
-    final sponsor = _currentUserId == null ? null : await database.getSponsor(_currentUserId!);
+    final sponsor = _currentUserId == null
+        ? null
+        : await database.getSponsor(_currentUserId!);
     final nextMeeting = await _getNextMeeting();
 
     if (_containsAny(lower, const [
@@ -317,10 +392,13 @@ class _CompanionChatScreenState extends State<CompanionChatScreen> {
   }
 
   String _initialGreeting() {
-    final proxyEnabled = AppStateService.instance.aiProxyEnabled;
-    return proxyEnabled
-        ? 'Cloud support is enabled, but I always keep a local recovery fallback available. What is going on today?'
-        : 'Local recovery support is active. No network is required for responses. What is going on today?';
+    if (_cloudGuidanceConfigured) {
+      return 'Cloud recovery guidance is available, and a local fallback stays ready if you lose connectivity. What is going on today?';
+    }
+    if (AppStateService.instance.aiProxyEnabled) {
+      return 'Cloud support is enabled in settings, but this device is currently using the local fallback path. What is going on today?';
+    }
+    return 'Local recovery support is active. No network is required for responses. What is going on today?';
   }
 
   String _crisisLine(String title) {
@@ -366,8 +444,10 @@ class _CompanionChatScreenState extends State<CompanionChatScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        AppStateService.instance.aiProxyEnabled
-                            ? 'Cloud proxy is enabled, but local fallback stays available.'
+                        _shouldUseCloudResponder
+                            ? 'Cloud guidance is active, with local fallback kept ready.'
+                            : AppStateService.instance.aiProxyEnabled
+                            ? 'Cloud proxy is enabled, but local fallback is handling responses until cloud access is configured.'
                             : 'Local-only support is active.',
                       ),
                     ),
@@ -378,143 +458,175 @@ class _CompanionChatScreenState extends State<CompanionChatScreen> {
           ),
           body: _isLoading
               ? const Center(
-                  child: CircularProgressIndicator(color: AppColors.primaryAmber),
+                  child: CircularProgressIndicator(
+                    color: AppColors.primaryAmber,
+                  ),
                 )
               : _currentUserId == null || _conversation == null
-                  ? _SignedOutState(
-                      onSignInHint: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Sign in to start a local companion chat.'),
-                          ),
-                        );
-                      },
-                    )
-                  : Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.lg,
-                            AppSpacing.lg,
-                            AppSpacing.lg,
-                            AppSpacing.sm,
-                          ),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(AppSpacing.md),
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceCard,
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.offline_bolt,
-                                  color: AppColors.primaryAmber,
-                                ),
-                                const SizedBox(width: AppSpacing.md),
-                                Expanded(
-                                  child: Text(
-                                    AppStateService.instance.aiProxyEnabled
-                                        ? 'Local recovery guidance is always available if cloud support is unavailable.'
-                                        : 'Local-only guidance is active. No external API is required for these responses.',
-                                    style: AppTypography.bodySmall,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+              ? _SignedOutState(
+                  onSignInHint: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Sign in to start a local companion chat.',
                         ),
-                        Expanded(
-                          child: ListView.builder(
-                            controller: _scrollController,
-                            padding: const EdgeInsets.all(AppSpacing.lg),
-                            itemCount: _messages.length,
-                            itemBuilder: (context, index) {
-                              final message = _messages[index];
-                              return _ChatBubble(message: message);
-                            },
+                      ),
+                    );
+                  },
+                )
+              : Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg,
+                        AppSpacing.lg,
+                        AppSpacing.lg,
+                        AppSpacing.sm,
+                      ),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceCard,
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusLg,
                           ),
+                          border: Border.all(color: AppColors.border),
                         ),
-                        if (_isSending)
-                          const Padding(
-                            padding: EdgeInsets.only(bottom: AppSpacing.sm),
-                            child: LinearProgressIndicator(
-                              minHeight: 2,
-                              backgroundColor: AppColors.surfaceInteractive,
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.offline_bolt,
                               color: AppColors.primaryAmber,
                             ),
-                          ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.lg,
-                            vertical: AppSpacing.sm,
-                          ),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
-                                _QuickActionChip(
-                                  label: 'I am struggling',
-                                  onTap: () => _sendMessage('I am struggling'),
-                                ),
-                                const SizedBox(width: AppSpacing.sm),
-                                _QuickActionChip(
-                                  label: 'Need a meeting',
-                                  onTap: () => _sendMessage('I need a meeting'),
-                                ),
-                                const SizedBox(width: AppSpacing.sm),
-                                _QuickActionChip(
-                                  label: 'Help with steps',
-                                  onTap: () => _sendMessage('I need help with my steps'),
-                                ),
-                                const SizedBox(width: AppSpacing.sm),
-                                _QuickActionChip(
-                                  label: 'Safety plan',
-                                  onTap: () => _sendMessage('I need my safety plan'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            border: Border(
-                              top: BorderSide(color: AppColors.border),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: _messageController,
-                                  style: AppTypography.bodyMedium,
-                                  decoration: const InputDecoration(
-                                    hintText: 'Type a message...',
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                  maxLines: 4,
-                                  minLines: 1,
-                                  onSubmitted: (_) => _sendMessage(),
-                                ),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                              child: Text(
+                                _shouldUseCloudResponder
+                                    ? 'Cloud guidance is active for richer responses, and local recovery guidance remains available if cloud support drops.'
+                                    : AppStateService.instance.aiProxyEnabled
+                                    ? 'Cloud support is enabled, but this chat is using the local fallback until cloud access is configured.'
+                                    : 'Local-only guidance is active. No external API is required for these responses.',
+                                style: AppTypography.bodySmall,
                               ),
-                              const SizedBox(width: AppSpacing.md),
-                              IconButton(
-                                icon: const Icon(Icons.send),
-                                color: AppColors.primaryAmber,
-                                onPressed: _isSending ? null : _sendMessage,
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
+                    Expanded(
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        itemCount: _messages.length,
+                        itemBuilder: (context, index) {
+                          final message = _messages[index];
+                          return _ChatBubble(message: message);
+                        },
+                      ),
+                    ),
+                    if (_isSending)
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: LinearProgressIndicator(
+                          minHeight: 2,
+                          backgroundColor: AppColors.surfaceInteractive,
+                          color: AppColors.primaryAmber,
+                        ),
+                      ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                        vertical: AppSpacing.sm,
+                      ),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _QuickActionChip(
+                              label: 'I am struggling',
+                              onTap: () => _sendMessage('I am struggling'),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            _QuickActionChip(
+                              label: 'Need a meeting',
+                              onTap: () => _sendMessage('I need a meeting'),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            _QuickActionChip(
+                              label: 'Help with steps',
+                              onTap: () =>
+                                  _sendMessage('I need help with my steps'),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            _QuickActionChip(
+                              label: 'Safety plan',
+                              onTap: () =>
+                                  _sendMessage('I need my safety plan'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        border: Border(
+                          top: BorderSide(color: AppColors.border),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _messageController,
+                              style: AppTypography.bodyMedium,
+                              decoration: const InputDecoration(
+                                hintText: 'Type a message...',
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              maxLines: 4,
+                              minLines: 1,
+                              onSubmitted: (_) => _sendMessage(),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          IconButton(
+                            icon: const Icon(Icons.send),
+                            color: AppColors.primaryAmber,
+                            onPressed: _isSending ? null : _sendMessage,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
         );
       },
+    );
+  }
+}
+
+class _DefaultCompanionResponder implements CompanionResponder {
+  const _DefaultCompanionResponder();
+
+  @override
+  bool get isCloudAvailable => AiService().isCloudAvailable;
+
+  @override
+  Future<String> respond({
+    required String message,
+    required String userId,
+    List<ChatMessage>? conversationHistory,
+    List<String>? recoveryContext,
+  }) {
+    return AiService().respond(
+      message: message,
+      userId: userId,
+      conversationHistory: conversationHistory,
+      recoveryContext: recoveryContext,
     );
   }
 }
@@ -531,7 +643,9 @@ class _ChatBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Row(
-        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isUser) ...[
@@ -539,9 +653,7 @@ class _ChatBubble extends StatelessWidget {
               width: AppSpacing.quint,
               height: AppSpacing.quint,
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: AppColors.primaryGradient,
-                ),
+                gradient: LinearGradient(colors: AppColors.primaryGradient),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -560,13 +672,16 @@ class _ChatBubble extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
               ),
               child: Column(
-                crossAxisAlignment:
-                    isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                crossAxisAlignment: isUser
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
                 children: [
                   Text(
                     message.content,
                     style: AppTypography.bodyMedium.copyWith(
-                      color: isUser ? AppColors.textOnDark : AppColors.textPrimary,
+                      color: isUser
+                          ? AppColors.textOnDark
+                          : AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
@@ -593,10 +708,7 @@ class _QuickActionChip extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _QuickActionChip({
-    required this.label,
-    required this.onTap,
-  });
+  const _QuickActionChip({required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -613,10 +725,7 @@ class _QuickActionChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
           border: Border.all(color: AppColors.border),
         ),
-        child: Text(
-          label,
-          style: AppTypography.labelMedium,
-        ),
+        child: Text(label, style: AppTypography.labelMedium),
       ),
     );
   }
@@ -625,9 +734,7 @@ class _QuickActionChip extends StatelessWidget {
 class _SignedOutState extends StatelessWidget {
   final VoidCallback onSignInHint;
 
-  const _SignedOutState({
-    required this.onSignInHint,
-  });
+  const _SignedOutState({required this.onSignInHint});
 
   @override
   Widget build(BuildContext context) {

@@ -4,9 +4,15 @@ import '../../../core/services/app_state_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/app_utils.dart';
+
+typedef ReminderTimePicker =
+    Future<TimeOfDay?> Function(BuildContext context, TimeOfDay initialTime);
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, this.pickReminderTime});
+
+  final ReminderTimePicker? pickReminderTime;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -16,9 +22,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late Future<void> _loadFuture;
   final _displayNameController = TextEditingController();
   final _programTypeController = TextEditingController();
-  final _morningReminderController = TextEditingController();
-  final _eveningReminderController = TextEditingController();
   DateTime? _sobrietyDate;
+  String _morningReminderTime = '08:00';
+  String _eveningReminderTime = '20:00';
   bool _saving = false;
 
   @override
@@ -31,8 +37,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void dispose() {
     _displayNameController.dispose();
     _programTypeController.dispose();
-    _morningReminderController.dispose();
-    _eveningReminderController.dispose();
     super.dispose();
   }
 
@@ -45,13 +49,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     _displayNameController.text = state.displayName ?? '';
     _programTypeController.text = state.programType ?? '';
-    _morningReminderController.text = state.morningReminderTime;
-    _eveningReminderController.text = state.eveningReminderTime;
+    _morningReminderTime = state.morningReminderTime;
+    _eveningReminderTime = state.eveningReminderTime;
     _sobrietyDate = state.sobrietyDate;
   }
 
   Future<void> _pickSobrietyDate() async {
-    final initial = _sobrietyDate ?? DateTime.now().subtract(const Duration(days: 30));
+    final initial =
+        _sobrietyDate ?? DateTime.now().subtract(const Duration(days: 30));
     final picked = await showDatePicker(
       context: context,
       firstDate: DateTime(2000),
@@ -65,22 +70,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _pickReminderTime({required bool isMorning}) async {
+    final currentValue = isMorning
+        ? _morningReminderTime
+        : _eveningReminderTime;
+    final initialTime = AppUtils.parseTime(currentValue);
+    final picked =
+        await (widget.pickReminderTime ??
+            ((BuildContext context, TimeOfDay initialTime) {
+              return showTimePicker(context: context, initialTime: initialTime);
+            }))(context, initialTime);
+
+    if (picked == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      final formatted = AppUtils.formatTimeOfDay(picked);
+      if (isMorning) {
+        _morningReminderTime = formatted;
+      } else {
+        _eveningReminderTime = formatted;
+      }
+    });
+  }
+
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      await AppStateService.instance.updateDisplayName(_displayNameController.text);
-      await AppStateService.instance.updateProgramType(_programTypeController.text);
+      await AppStateService.instance.updateDisplayName(
+        _displayNameController.text,
+      );
+      await AppStateService.instance.updateProgramType(
+        _programTypeController.text,
+      );
       await AppStateService.instance.updateSobrietyDate(_sobrietyDate);
-      await AppStateService.instance.setMorningReminderTime(_morningReminderController.text.trim().isEmpty
-          ? '08:00'
-          : _morningReminderController.text.trim());
-      await AppStateService.instance.setEveningReminderTime(_eveningReminderController.text.trim().isEmpty
-          ? '20:00'
-          : _eveningReminderController.text.trim());
+      await AppStateService.instance.setMorningReminderTime(
+        _morningReminderTime,
+      );
+      await AppStateService.instance.setEveningReminderTime(
+        _eveningReminderTime,
+      );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Settings saved')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Settings saved')));
       }
     } finally {
       if (mounted) {
@@ -114,97 +148,107 @@ class _SettingsScreenState extends State<SettingsScreen> {
               return ListView(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 children: [
-              Text(
-                'Account',
-                style: AppTypography.headlineSmall,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextField(
-                controller: _displayNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Display name',
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextField(
-                controller: _programTypeController,
-                decoration: const InputDecoration(
-                  labelText: 'Program type',
-                  prefixIcon: Icon(Icons.groups_outlined),
-                  hintText: 'AA, NA, CA...',
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.calendar_today_outlined, color: AppColors.primaryAmber),
-                title: const Text('Sobriety date'),
-                subtitle: Text(
-                  _sobrietyDate == null ? 'Not set' : _sobrietyDate!.toIso8601String().split('T').first,
-                ),
-                trailing: TextButton(
-                  onPressed: _pickSobrietyDate,
-                  child: const Text('Pick'),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              Text(
-                'Reminders',
-                style: AppTypography.headlineSmall,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextField(
-                controller: _morningReminderController,
-                decoration: const InputDecoration(
-                  labelText: 'Morning reminder',
-                  hintText: '08:00',
-                  prefixIcon: Icon(Icons.wb_sunny_outlined),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextField(
-                controller: _eveningReminderController,
-                decoration: const InputDecoration(
-                  labelText: 'Evening reminder',
-                  hintText: '20:00',
-                  prefixIcon: Icon(Icons.nightlight_outlined),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              Text(
-                'Privacy',
-                style: AppTypography.headlineSmall,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Notifications enabled'),
-                value: AppStateService.instance.notificationsEnabled,
-                onChanged: (value) => AppStateService.instance.setNotificationsEnabled(value),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.psychology_outlined, color: AppColors.primaryAmber),
-                title: const Text('AI companion settings'),
-                subtitle: const Text('Configure recovery support behavior'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/profile/ai-settings'),
-              ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.security_outlined, color: AppColors.primaryAmber),
-                title: const Text('Security settings'),
-                subtitle: const Text('Session and biometric lock'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/profile/security'),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              ElevatedButton(
-                onPressed: _saving ? null : _save,
-                child: Text(_saving ? 'Saving...' : 'Save changes'),
-              ),
+                  Text('Account', style: AppTypography.headlineSmall),
+                  const SizedBox(height: AppSpacing.md),
+                  TextField(
+                    controller: _displayNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Display name',
+                      prefixIcon: Icon(Icons.person_outline),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextField(
+                    controller: _programTypeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Program type',
+                      prefixIcon: Icon(Icons.groups_outlined),
+                      hintText: 'AA, NA, CA...',
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(
+                      Icons.calendar_today_outlined,
+                      color: AppColors.primaryAmber,
+                    ),
+                    title: const Text('Sobriety date'),
+                    subtitle: Text(
+                      _sobrietyDate == null
+                          ? 'Not set'
+                          : _sobrietyDate!.toIso8601String().split('T').first,
+                    ),
+                    trailing: TextButton(
+                      onPressed: _pickSobrietyDate,
+                      child: const Text('Pick'),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  Text('Reminders', style: AppTypography.headlineSmall),
+                  const SizedBox(height: AppSpacing.md),
+                  ListTile(
+                    key: const Key('settings-morning-reminder'),
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(
+                      Icons.wb_sunny_outlined,
+                      color: AppColors.primaryAmber,
+                    ),
+                    title: const Text('Morning reminder'),
+                    subtitle: Text(_morningReminderTime),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => _pickReminderTime(isMorning: true),
+                  ),
+                  ListTile(
+                    key: const Key('settings-evening-reminder'),
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(
+                      Icons.nightlight_outlined,
+                      color: AppColors.primaryAmber,
+                    ),
+                    title: const Text('Evening reminder'),
+                    subtitle: Text(_eveningReminderTime),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => _pickReminderTime(isMorning: false),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  Text('Privacy', style: AppTypography.headlineSmall),
+                  const SizedBox(height: AppSpacing.sm),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Notifications enabled'),
+                    value: AppStateService.instance.notificationsEnabled,
+                    onChanged: (value) =>
+                        AppStateService.instance.setNotificationsEnabled(value),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(
+                      Icons.psychology_outlined,
+                      color: AppColors.primaryAmber,
+                    ),
+                    title: const Text('AI companion settings'),
+                    subtitle: const Text('Configure recovery support behavior'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/profile/ai-settings'),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(
+                      Icons.security_outlined,
+                      color: AppColors.primaryAmber,
+                    ),
+                    title: const Text('Security settings'),
+                    subtitle: const Text('Session and biometric lock'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/profile/security'),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  ElevatedButton(
+                    onPressed: _saving ? null : _save,
+                    child: Text(_saving ? 'Saving...' : 'Save changes'),
+                  ),
                 ],
               );
             },

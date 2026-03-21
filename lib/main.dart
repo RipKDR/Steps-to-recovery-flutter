@@ -20,12 +20,14 @@ void main() async {
   ]);
 
   // Set system UI overlay style
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: Colors.black,
-    systemNavigationBarIconBrightness: Brightness.light,
-  ));
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: Colors.black,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
 
   // Initialize all services
   await _initializeServices();
@@ -60,7 +62,7 @@ Future<void> _initializeServices() async {
 
     // Initialize notifications
     await NotificationService().initialize();
-    await NotificationService().requestPermissions();
+    await AppStateService.instance.syncReminderPreferences();
     logger.debug('Notification service initialized');
 
     // AI service is initialized on-demand
@@ -68,7 +70,11 @@ Future<void> _initializeServices() async {
 
     logger.info('All services initialized successfully');
   } catch (e, stackTrace) {
-    logger.error('Failed to initialize services', error: e, stackTrace: stackTrace);
+    logger.error(
+      'Failed to initialize services',
+      error: e,
+      stackTrace: stackTrace,
+    );
     // Continue anyway - app can function with limited services
   }
 }
@@ -86,9 +92,9 @@ class StepsToRecoveryApp extends StatelessWidget {
       builder: (context, child) {
         // Ensure text scale factor is reasonable
         return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: const TextScaler.linear(1.0),
-          ),
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(1.0)),
           child: child!,
         );
       },
