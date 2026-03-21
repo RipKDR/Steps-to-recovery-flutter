@@ -16,6 +16,12 @@ class AppConfig {
     defaultValue: '',
   );
 
+  // Sentry crash reporting
+  static const sentryDsn = String.fromEnvironment(
+    'SENTRY_DSN',
+    defaultValue: '',
+  );
+
   // Supabase configuration
   static const supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',

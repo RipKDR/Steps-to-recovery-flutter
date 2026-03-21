@@ -11,15 +11,169 @@ abstract class ReminderScheduler {
   });
 }
 
+/// Thin wrapper around [FlutterLocalNotificationsPlugin] so that
+/// [NotificationService] can be unit-tested without platform channels.
+abstract class NotificationsPluginWrapper {
+  Future<bool?> initialize({
+    required InitializationSettings settings,
+    DidReceiveNotificationResponseCallback? onDidReceiveNotificationResponse,
+  });
+
+  Future<void> show({
+    required int id,
+    String? title,
+    String? body,
+    NotificationDetails? notificationDetails,
+    String? payload,
+  });
+
+  Future<void> zonedSchedule({
+    required int id,
+    required tz.TZDateTime scheduledDate,
+    required NotificationDetails notificationDetails,
+    required AndroidScheduleMode androidScheduleMode,
+    String? title,
+    String? body,
+    String? payload,
+    DateTimeComponents? matchDateTimeComponents,
+  });
+
+  Future<void> cancel({required int id});
+
+  Future<void> cancelAll();
+
+  Future<bool?> requestAndroidPermission();
+
+  Future<bool?> requestIOSPermission({
+    bool alert = false,
+    bool badge = false,
+    bool sound = false,
+  });
+
+  Future<void> createAndroidNotificationChannel(
+      AndroidNotificationChannel channel);
+}
+
+/// Default implementation that delegates to the real plugin singleton.
+class _RealNotificationsPluginWrapper implements NotificationsPluginWrapper {
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
+
+  @override
+  Future<bool?> initialize({
+    required InitializationSettings settings,
+    DidReceiveNotificationResponseCallback? onDidReceiveNotificationResponse,
+  }) {
+    return _plugin.initialize(
+      settings: settings,
+      onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
+    );
+  }
+
+  @override
+  Future<void> show({
+    required int id,
+    String? title,
+    String? body,
+    NotificationDetails? notificationDetails,
+    String? payload,
+  }) {
+    return _plugin.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: notificationDetails,
+      payload: payload,
+    );
+  }
+
+  @override
+  Future<void> zonedSchedule({
+    required int id,
+    required tz.TZDateTime scheduledDate,
+    required NotificationDetails notificationDetails,
+    required AndroidScheduleMode androidScheduleMode,
+    String? title,
+    String? body,
+    String? payload,
+    DateTimeComponents? matchDateTimeComponents,
+  }) {
+    return _plugin.zonedSchedule(
+      id: id,
+      scheduledDate: scheduledDate,
+      notificationDetails: notificationDetails,
+      androidScheduleMode: androidScheduleMode,
+      title: title,
+      body: body,
+      payload: payload,
+      matchDateTimeComponents: matchDateTimeComponents,
+    );
+  }
+
+  @override
+  Future<void> cancel({required int id}) {
+    return _plugin.cancel(id: id);
+  }
+
+  @override
+  Future<void> cancelAll() {
+    return _plugin.cancelAll();
+  }
+
+  @override
+  Future<bool?> requestAndroidPermission() {
+    return _plugin
+            .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin>()
+            ?.requestNotificationsPermission() ??
+        Future.value(null);
+  }
+
+  @override
+  Future<bool?> requestIOSPermission({
+    bool alert = false,
+    bool badge = false,
+    bool sound = false,
+  }) {
+    return _plugin
+            .resolvePlatformSpecificImplementation<
+                IOSFlutterLocalNotificationsPlugin>()
+            ?.requestPermissions(
+              alert: alert,
+              badge: badge,
+              sound: sound,
+            ) ??
+        Future.value(null);
+  }
+
+  @override
+  Future<void> createAndroidNotificationChannel(
+      AndroidNotificationChannel channel) async {
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+  }
+}
+
 /// Notification service for local notifications
 class NotificationService implements ReminderScheduler {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
-  NotificationService._internal();
+  NotificationService._internal()
+      : _notifications = _RealNotificationsPluginWrapper();
 
-  final FlutterLocalNotificationsPlugin _notifications =
-      FlutterLocalNotificationsPlugin();
+  /// Constructor exposed for unit testing with a mock plugin wrapper.
+  @visibleForTesting
+  NotificationService.forTesting(this._notifications);
+
+  final NotificationsPluginWrapper _notifications;
   bool _isInitialized = false;
+
+  /// Expose [_parseTimeOfDay] for unit testing.
+  @visibleForTesting
+  TimeOfDay parseTimeOfDay(String value, {required TimeOfDay fallback}) =>
+      _parseTimeOfDay(value, fallback: fallback);
 
   static const int morningCheckInReminderId = 1001;
   static const int eveningCheckInReminderId = 1002;
@@ -87,29 +241,15 @@ class NotificationService implements ReminderScheduler {
     ];
 
     for (final channel in channels) {
-      await _notifications
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.createNotificationChannel(channel);
+      await _notifications.createAndroidNotificationChannel(channel);
     }
   }
 
   /// Request notification permissions
   Future<bool> requestPermissions() async {
-    final androidImpl = _notifications
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
+    final androidGranted = await _notifications.requestAndroidPermission();
 
-    final androidGranted = await androidImpl?.requestNotificationsPermission();
-
-    final iosImpl = _notifications
-        .resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin
-        >();
-
-    final iosGranted = await iosImpl?.requestPermissions(
+    final iosGranted = await _notifications.requestIOSPermission(
       alert: true,
       badge: true,
       sound: true,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/services/analytics_service.dart';
 import '../../../core/services/app_state_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -271,6 +272,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     subtitle: const Text('Session and biometric lock'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => context.push('/profile/security'),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Usage analytics'),
+                    subtitle: const Text(
+                      'Help improve the app (no recovery data shared)',
+                    ),
+                    value: !AnalyticsService().isOptedOut,
+                    onChanged: (value) {
+                      AnalyticsService().setOptOut(!value);
+                      setState(() {});
+                    },
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   ElevatedButton(

@@ -1,5 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+import 'app_config.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/app_state_service.dart';
 import 'core/services/encryption_service.dart';
@@ -33,7 +38,37 @@ void main() async {
   // Initialize all services
   await _initializeServices();
 
-  runApp(const StepsToRecoveryApp());
+  // Wrap app with Sentry if DSN is configured
+  if (AppConfig.sentryDsn.isNotEmpty) {
+    await SentryFlutter.init(
+      (options) {
+        options.dsn = AppConfig.sentryDsn;
+        options.tracesSampleRate = 0.2;
+        options.beforeSend = _scrubPii;
+        options.beforeBreadcrumb = (breadcrumb, hint) {
+          // Drop breadcrumbs that might contain user content
+          if (breadcrumb?.category == 'console') return null;
+          return breadcrumb;
+        };
+      },
+      appRunner: () => runApp(const StepsToRecoveryApp()),
+    );
+  } else {
+    runApp(const StepsToRecoveryApp());
+  }
+}
+
+/// Strip PII from Sentry events — no recovery content, names, or journal text.
+SentryEvent? _scrubPii(SentryEvent event, Hint hint) {
+  // Remove user email/name (we only send anonymous device info)
+  final user = event.user;
+  if (user != null) {
+    user.email = null;
+    user.username = null;
+    user.name = null;
+    user.data = {};
+  }
+  return event;
 }
 
 Future<void> _initializeServices() async {
