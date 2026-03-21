@@ -8,6 +8,7 @@ import 'core/services/logger_service.dart';
 import 'core/services/connectivity_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/preferences_service.dart';
+import 'core/services/sync_service.dart';
 import 'navigation/app_router.dart';
 
 void main() async {
@@ -64,6 +65,12 @@ Future<void> _initializeServices() async {
     await NotificationService().initialize();
     await AppStateService.instance.syncReminderPreferences();
     logger.debug('Notification service initialized');
+
+    // Initialize Supabase sync (if configured via dart-defines)
+    if (SyncService().isAvailable) {
+      await SyncService().initialize();
+      logger.debug('Sync service initialized');
+    }
 
     // AI service is initialized on-demand
     logger.debug('AI service ready');

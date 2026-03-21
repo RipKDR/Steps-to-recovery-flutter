@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../app_config.dart';
 import '../models/database_models.dart';
 
@@ -24,7 +25,9 @@ class AiService implements CompanionResponder {
   final String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
   final String _apiKey = AppConfig.resolvedGoogleAiApiKey;
 
-  bool get isEnabled => _apiKey.isNotEmpty;
+  bool get isEnabled =>
+      _apiKey.isNotEmpty || AppConfig.aiChatEdgeFunctionUrl.isNotEmpty;
+  bool get _useEdgeFunction => AppConfig.aiChatEdgeFunctionUrl.isNotEmpty;
   @override
   bool get isCloudAvailable => isEnabled;
 
@@ -55,6 +58,14 @@ class AiService implements CompanionResponder {
     }
 
     try {
+      if (_useEdgeFunction) {
+        return await _chatViaEdgeFunction(
+          message: message,
+          conversationHistory: conversationHistory,
+          recoveryContext: recoveryContext,
+        );
+      }
+
       final prompt = buildChatPrompt(
         message: message,
         conversationHistory: conversationHistory,
@@ -161,6 +172,56 @@ class AiService implements CompanionResponder {
         .where((item) => item.trim().isNotEmpty)
         .map((item) => '- ${item.trim()}')
         .join('\n');
+  }
+
+  /// Route chat through Supabase Edge Function (API key stays server-side).
+  Future<String> _chatViaEdgeFunction({
+    required String message,
+    List<ChatMessage>? conversationHistory,
+    List<String>? recoveryContext,
+  }) async {
+    final history = conversationHistory
+            ?.map((m) => {
+                  'role': m.isUser ? 'User' : 'Assistant',
+                  'content': m.content,
+                })
+            .toList() ??
+        [];
+
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+    };
+
+    // Add Supabase auth token if available
+    try {
+      final token =
+          Supabase.instance.client.auth.currentSession?.accessToken;
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+    } catch (_) {
+      // Supabase not initialized — send without auth
+    }
+
+    final response = await http.post(
+      Uri.parse(AppConfig.aiChatEdgeFunctionUrl),
+      headers: headers,
+      body: jsonEncode({
+        'message': message.trim(),
+        'conversationHistory': history,
+        'recoveryContext': recoveryContext ?? [],
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['response'] as String? ??
+          'I\'m here for you. Tell me more about how you\'re feeling.';
+    }
+
+    debugPrint(
+        'Edge function error: ${response.statusCode} - ${response.body}');
+    return 'I\'m having trouble connecting right now. Please know that I\'m here for you when I\'m back online.';
   }
 
   /// Detect if a message indicates crisis
