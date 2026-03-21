@@ -1,0 +1,23 @@
+{
+  "skill_name": "flutter-enhancement-mvp-planner",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Plan an MVP for adding sponsor check-in reminders to an existing Flutter recovery app that already has feature folders, go_router, local notifications, and shared services. Keep it small and tell me what to defer.",
+      "expected_output": "A scoped MVP plan that reuses existing routes and services, covers notification and persistence impact, and avoids forcing a new state-management package.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I want to add habit tracking, rewards, social sharing, badges, streak rescue, Apple Watch sync, and AI coaching to my Flutter app. Break this into a phase-1 MVP and later phases.",
+      "expected_output": "A phase-1 MVP plan that explicitly cuts scope, names later phases, and identifies the smallest shippable release.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Figure out how a new crisis support flow should fit into my Flutter app. I need screens, state flow, test coverage, accessibility, and any refactors that are actually worth doing now.",
+      "expected_output": "A structured plan with UI states, state/data flow, tests, accessibility guidance, and minimal justified refactors.",
+      "files": []
+    }
+  ]
+}
