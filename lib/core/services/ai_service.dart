@@ -1,49 +1,76 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../app_config.dart';
 import '../models/database_models.dart';
 
+abstract class CompanionResponder {
+  bool get isCloudAvailable;
+
+  Future<String> respond({
+    required String message,
+    required String userId,
+    List<ChatMessage>? conversationHistory,
+    List<String>? recoveryContext,
+  });
+}
+
 /// AI service for chat and memory extraction
-class AiService {
+class AiService implements CompanionResponder {
   static final AiService _instance = AiService._internal();
   factory AiService() => _instance;
   AiService._internal();
 
   final String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
-  final String _apiKey = ''; // Configure your API key
+  final String _apiKey = AppConfig.resolvedGoogleAiApiKey;
 
-  bool get isEnabled => _apiKey.isNotEmpty;
+  bool get isEnabled =>
+      _apiKey.isNotEmpty || AppConfig.aiChatEdgeFunctionUrl.isNotEmpty;
+  bool get _useEdgeFunction => AppConfig.aiChatEdgeFunctionUrl.isNotEmpty;
+  @override
+  bool get isCloudAvailable => isEnabled;
+
+  @override
+  Future<String> respond({
+    required String message,
+    required String userId,
+    List<ChatMessage>? conversationHistory,
+    List<String>? recoveryContext,
+  }) {
+    return chat(
+      message: message,
+      userId: userId,
+      conversationHistory: conversationHistory,
+      recoveryContext: recoveryContext,
+    );
+  }
 
   /// Send a message to the AI and get a response
   Future<String> chat({
     required String message,
     required String userId,
     List<ChatMessage>? conversationHistory,
+    List<String>? recoveryContext,
   }) async {
     if (!isEnabled) {
       return 'AI companion is not configured. Please add your API key in settings.';
     }
 
     try {
-      // Build conversation context
-      final context = _buildContext(conversationHistory);
-      
-      // Build the prompt with recovery-focused system message
-      final prompt = '''
-You are a supportive recovery companion. Your role is to:
-- Provide encouragement and support for someone in recovery
-- Help with step work questions and reflections
-- Offer coping strategies for cravings and difficult emotions
-- Remember that you are a friend, not a therapist
-- Detect crisis situations and suggest professional help when needed
-- Be warm, empathetic, and non-judgmental
+      if (_useEdgeFunction) {
+        return await _chatViaEdgeFunction(
+          message: message,
+          conversationHistory: conversationHistory,
+          recoveryContext: recoveryContext,
+        );
+      }
 
-User's message: $message
-
-$context
-
-Please respond in a helpful, supportive manner.
-''';
+      final prompt = buildChatPrompt(
+        message: message,
+        conversationHistory: conversationHistory,
+        recoveryContext: recoveryContext,
+      );
 
       final response = await http.post(
         Uri.parse('$_baseUrl/models/gemini-pro:generateContent?key=$_apiKey'),
@@ -52,14 +79,11 @@ Please respond in a helpful, supportive manner.
           'contents': [
             {
               'parts': [
-                {'text': prompt}
-              ]
-            }
+                {'text': prompt},
+              ],
+            },
           ],
-          'generationConfig': {
-            'temperature': 0.7,
-            'maxOutputTokens': 1024,
-          }
+          'generationConfig': {'temperature': 0.7, 'maxOutputTokens': 1024},
         }),
       );
 
@@ -77,20 +101,127 @@ Please respond in a helpful, supportive manner.
     }
   }
 
-  String _buildContext(List<ChatMessage>? history) {
-    if (history == null || history.isEmpty) return '';
-    
-    // Get last 10 messages
-    final recentMessages = history.length > 10 
-        ? history.sublist(history.length - 10) 
+  @visibleForTesting
+  String buildChatPrompt({
+    required String message,
+    List<ChatMessage>? conversationHistory,
+    List<String>? recoveryContext,
+  }) {
+    final buffer = StringBuffer()
+      ..writeln('Role and goal')
+      ..writeln(
+        'You are a recovery companion for a privacy-first 12-step app. '
+        'Be warm, calm, practical, and non-judgmental.',
+      )
+      ..writeln()
+      ..writeln('Safety rules')
+      ..writeln(
+        '- Do not claim to be a therapist, sponsor, clinician, or emergency service.',
+      )
+      ..writeln(
+        '- If the user suggests imminent self-harm, overdose, or unsafe relapse risk, tell them to contact emergency or crisis support immediately and keep the rest of the answer short.',
+      )
+      ..writeln(
+        '- Prefer concrete, local next steps such as sponsor contact, meetings, breathing, journaling, or safety-plan actions.',
+      )
+      ..writeln()
+      ..writeln('Conversation context')
+      ..writeln(_buildConversationContext(conversationHistory))
+      ..writeln()
+      ..writeln('Recovery context')
+      ..writeln(_buildRecoveryContext(recoveryContext))
+      ..writeln()
+      ..writeln('User message')
+      ..writeln(message.trim())
+      ..writeln()
+      ..writeln('Response contract')
+      ..writeln('- Start with one sentence of empathy.')
+      ..writeln('- Give 2-4 concrete next steps.')
+      ..writeln('- Reference sponsor, meeting, or program context when useful.')
+      ..writeln('- Keep the answer under 170 words.')
+      ..writeln(
+        '- If information is missing, say what is missing briefly and continue with the safest useful guidance.',
+      );
+
+    return buffer.toString().trim();
+  }
+
+  String _buildConversationContext(List<ChatMessage>? history) {
+    if (history == null || history.isEmpty) {
+      return 'No prior conversation provided.';
+    }
+
+    final recentMessages = history.length > 8
+        ? history.sublist(history.length - 8)
         : history;
-    final buffer = StringBuffer('Recent conversation:\n');
-    
+    final buffer = StringBuffer();
+
     for (final msg in recentMessages) {
       buffer.writeln('${msg.isUser ? "User" : "Assistant"}: ${msg.content}');
     }
-    
-    return buffer.toString();
+
+    return buffer.toString().trim();
+  }
+
+  String _buildRecoveryContext(List<String>? recoveryContext) {
+    if (recoveryContext == null || recoveryContext.isEmpty) {
+      return 'No extra recovery context provided.';
+    }
+
+    return recoveryContext
+        .where((item) => item.trim().isNotEmpty)
+        .map((item) => '- ${item.trim()}')
+        .join('\n');
+  }
+
+  /// Route chat through Supabase Edge Function (API key stays server-side).
+  Future<String> _chatViaEdgeFunction({
+    required String message,
+    List<ChatMessage>? conversationHistory,
+    List<String>? recoveryContext,
+  }) async {
+    final history = conversationHistory
+            ?.map((m) => {
+                  'role': m.isUser ? 'User' : 'Assistant',
+                  'content': m.content,
+                })
+            .toList() ??
+        [];
+
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+    };
+
+    // Add Supabase auth token if available
+    try {
+      final token =
+          Supabase.instance.client.auth.currentSession?.accessToken;
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+    } catch (_) {
+      // Supabase not initialized — send without auth
+    }
+
+    final response = await http.post(
+      Uri.parse(AppConfig.aiChatEdgeFunctionUrl),
+      headers: headers,
+      body: jsonEncode({
+        'message': message.trim(),
+        'conversationHistory': history,
+        'recoveryContext': recoveryContext ?? [],
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['response'] as String? ??
+          'I\'m here for you. Tell me more about how you\'re feeling.';
+    }
+
+    debugPrint(
+        'Edge function error: ${response.statusCode} - ${response.body}');
+    return 'I\'m having trouble connecting right now. Please know that I\'m here for you when I\'m back online.';
   }
 
   /// Detect if a message indicates crisis
@@ -114,10 +245,7 @@ Please respond in a helpful, supportive manner.
   }
 
   /// Extract memories from journal/check-in for AI context
-  List<String> extractMemories({
-    String? journalEntry,
-    DailyCheckIn? checkIn,
-  }) {
+  List<String> extractMemories({String? journalEntry, DailyCheckIn? checkIn}) {
     final memories = <String>[];
 
     if (journalEntry != null && journalEntry.isNotEmpty) {
@@ -155,7 +283,8 @@ Please respond in a helpful, supportive manner.
     }
 
     try {
-      final prompt = '''
+      final prompt =
+          '''
 You are helping someone work through Step $stepNumber of the 12-step program.
 
 ${question != null ? 'Question: $question' : 'Provide general guidance for Step $stepNumber.'}
@@ -165,15 +294,15 @@ Keep the response focused and practical.
 ''';
 
       final response = await http.post(
-        Uri.parse('$_baseUrl/models/gemini-pro:generateContent?key=_apiKey'),
+        Uri.parse('$_baseUrl/models/gemini-pro:generateContent?key=$_apiKey'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'contents': [
             {
               'parts': [
-                {'text': prompt}
-              ]
-            }
+                {'text': prompt},
+              ],
+            },
           ],
         }),
       );
@@ -191,9 +320,7 @@ Keep the response focused and practical.
   }
 
   /// Get coping strategies for cravings
-  Future<String> getCopingStrategies({
-    required int cravingLevel,
-  }) async {
+  Future<String> getCopingStrategies({required int cravingLevel}) async {
     final strategies = [
       'Take 10 deep breaths. Focus on breathing in slowly through your nose, out through your mouth.',
       'Call your sponsor or a trusted friend in recovery.',

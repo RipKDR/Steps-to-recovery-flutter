@@ -3,14 +3,186 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 
+abstract class ReminderScheduler {
+  Future<void> syncDailyCheckInReminders({
+    required bool enabled,
+    required String morningTime,
+    required String eveningTime,
+  });
+}
+
+/// Thin wrapper around [FlutterLocalNotificationsPlugin] so that
+/// [NotificationService] can be unit-tested without platform channels.
+abstract class NotificationsPluginWrapper {
+  Future<bool?> initialize({
+    required InitializationSettings settings,
+    DidReceiveNotificationResponseCallback? onDidReceiveNotificationResponse,
+  });
+
+  Future<void> show({
+    required int id,
+    String? title,
+    String? body,
+    NotificationDetails? notificationDetails,
+    String? payload,
+  });
+
+  Future<void> zonedSchedule({
+    required int id,
+    required tz.TZDateTime scheduledDate,
+    required NotificationDetails notificationDetails,
+    required AndroidScheduleMode androidScheduleMode,
+    required UILocalNotificationDateInterpretation
+        uiLocalNotificationDateInterpretation,
+    String? title,
+    String? body,
+    String? payload,
+    DateTimeComponents? matchDateTimeComponents,
+  });
+
+  Future<void> cancel({required int id});
+
+  Future<void> cancelAll();
+
+  Future<bool?> requestAndroidPermission();
+
+  Future<bool?> requestIOSPermission({
+    bool alert = false,
+    bool badge = false,
+    bool sound = false,
+  });
+
+  Future<void> createAndroidNotificationChannel(
+      AndroidNotificationChannel channel);
+}
+
+/// Default implementation that delegates to the real plugin singleton.
+class _RealNotificationsPluginWrapper implements NotificationsPluginWrapper {
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
+
+  @override
+  Future<bool?> initialize({
+    required InitializationSettings settings,
+    DidReceiveNotificationResponseCallback? onDidReceiveNotificationResponse,
+  }) {
+    return _plugin.initialize(
+      settings,
+      onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
+    );
+  }
+
+  @override
+  Future<void> show({
+    required int id,
+    String? title,
+    String? body,
+    NotificationDetails? notificationDetails,
+    String? payload,
+  }) {
+    return _plugin.show(
+      id,
+      title,
+      body,
+      notificationDetails,
+      payload: payload,
+    );
+  }
+
+  @override
+  Future<void> zonedSchedule({
+    required int id,
+    required tz.TZDateTime scheduledDate,
+    required NotificationDetails notificationDetails,
+    required AndroidScheduleMode androidScheduleMode,
+    required UILocalNotificationDateInterpretation
+        uiLocalNotificationDateInterpretation,
+    String? title,
+    String? body,
+    String? payload,
+    DateTimeComponents? matchDateTimeComponents,
+  }) {
+    return _plugin.zonedSchedule(
+      id,
+      title,
+      body,
+      scheduledDate,
+      notificationDetails,
+      uiLocalNotificationDateInterpretation:
+          uiLocalNotificationDateInterpretation,
+      matchDateTimeComponents: matchDateTimeComponents,
+      androidScheduleMode: androidScheduleMode,
+      payload: payload,
+    );
+  }
+
+  @override
+  Future<void> cancel({required int id}) {
+    return _plugin.cancel(id);
+  }
+
+  @override
+  Future<void> cancelAll() {
+    return _plugin.cancelAll();
+  }
+
+  @override
+  Future<bool?> requestAndroidPermission() {
+    return _plugin
+            .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin>()
+            ?.requestNotificationsPermission() ??
+        Future.value(null);
+  }
+
+  @override
+  Future<bool?> requestIOSPermission({
+    bool alert = false,
+    bool badge = false,
+    bool sound = false,
+  }) {
+    return _plugin
+            .resolvePlatformSpecificImplementation<
+                IOSFlutterLocalNotificationsPlugin>()
+            ?.requestPermissions(
+              alert: alert,
+              badge: badge,
+              sound: sound,
+            ) ??
+        Future.value(null);
+  }
+
+  @override
+  Future<void> createAndroidNotificationChannel(
+      AndroidNotificationChannel channel) async {
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+  }
+}
+
 /// Notification service for local notifications
-class NotificationService {
+class NotificationService implements ReminderScheduler {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
-  NotificationService._internal();
+  NotificationService._internal()
+      : _notifications = _RealNotificationsPluginWrapper();
 
-  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  /// Constructor exposed for unit testing with a mock plugin wrapper.
+  @visibleForTesting
+  NotificationService.forTesting(this._notifications);
+
+  final NotificationsPluginWrapper _notifications;
   bool _isInitialized = false;
+
+  /// Expose [_parseTimeOfDay] for unit testing.
+  @visibleForTesting
+  TimeOfDay parseTimeOfDay(String value, {required TimeOfDay fallback}) =>
+      _parseTimeOfDay(value, fallback: fallback);
+
+  static const int morningCheckInReminderId = 1001;
+  static const int eveningCheckInReminderId = 1002;
 
   /// Initialize notification service
   Future<void> initialize() async {
@@ -20,8 +192,10 @@ class NotificationService {
     tz.initializeTimeZones();
 
     // Android settings
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
+
     // iOS settings
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -35,13 +209,13 @@ class NotificationService {
     );
 
     await _notifications.initialize(
-      settings,
+      settings: settings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
     // Create notification channels
     await _createChannels();
-    
+
     _isInitialized = true;
   }
 
@@ -73,23 +247,15 @@ class NotificationService {
     ];
 
     for (final channel in channels) {
-      await _notifications
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-          ?.createNotificationChannel(channel);
+      await _notifications.createAndroidNotificationChannel(channel);
     }
   }
 
   /// Request notification permissions
   Future<bool> requestPermissions() async {
-    final androidImpl = _notifications.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    
-    final androidGranted = await androidImpl?.requestNotificationsPermission();
-    
-    final iosImpl = _notifications.resolvePlatformSpecificImplementation<
-        IOSFlutterLocalNotificationsPlugin>();
-    
-    final iosGranted = await iosImpl?.requestPermissions(
+    final androidGranted = await _notifications.requestAndroidPermission();
+
+    final iosGranted = await _notifications.requestIOSPermission(
       alert: true,
       badge: true,
       sound: true,
@@ -129,10 +295,10 @@ class NotificationService {
     );
 
     await _notifications.show(
-      id,
-      title,
-      body,
-      details,
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: details,
       payload: payload,
     );
   }
@@ -168,14 +334,14 @@ class NotificationService {
     );
 
     await _notifications.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(scheduledDate, tz.local),
-      details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
+      notificationDetails: details,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
   }
 
@@ -223,21 +389,81 @@ class NotificationService {
     );
 
     await _notifications.zonedSchedule(
-      id,
-      title,
-      body,
-      scheduledDate,
-      details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: scheduledDate,
+      notificationDetails: details,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 
+  @override
+  Future<void> syncDailyCheckInReminders({
+    required bool enabled,
+    required String morningTime,
+    required String eveningTime,
+  }) async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+
+    await cancelNotification(morningCheckInReminderId);
+    await cancelNotification(eveningCheckInReminderId);
+
+    if (!enabled) {
+      return;
+    }
+
+    final permissionsGranted = await requestPermissions();
+    if (!permissionsGranted) {
+      return;
+    }
+
+    await scheduleDailyCheckIn(
+      id: morningCheckInReminderId,
+      title: 'Morning intention',
+      body: 'Start the day with a quick recovery check-in.',
+      time: _parseTimeOfDay(
+        morningTime,
+        fallback: const TimeOfDay(hour: 8, minute: 0),
+      ),
+    );
+    await scheduleDailyCheckIn(
+      id: eveningCheckInReminderId,
+      title: 'Evening pulse',
+      body: 'Take a minute to reflect before the day ends.',
+      time: _parseTimeOfDay(
+        eveningTime,
+        fallback: const TimeOfDay(hour: 20, minute: 0),
+      ),
+    );
+  }
+
+  TimeOfDay _parseTimeOfDay(String value, {required TimeOfDay fallback}) {
+    final parts = value.trim().split(':');
+    if (parts.length != 2) {
+      return fallback;
+    }
+
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) {
+      return fallback;
+    }
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+      return fallback;
+    }
+
+    return TimeOfDay(hour: hour, minute: minute);
+  }
+
   /// Cancel a notification
   Future<void> cancelNotification(int id) async {
-    await _notifications.cancel(id);
+    await _notifications.cancel(id: id);
   }
 
   /// Cancel all notifications
