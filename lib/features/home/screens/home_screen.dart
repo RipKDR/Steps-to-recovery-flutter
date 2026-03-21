@@ -1,95 +1,127 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/models/database_models.dart';
 import '../../../core/services/app_state_service.dart';
 import '../../../core/services/database_service.dart';
+import '../../../core/services/logger_service.dart';
+import '../../../core/services/preferences_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/achievement_share_utils.dart';
 
 /// Home dashboard with dynamic sobriety, check-ins, and quick actions.
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late Future<_HomeSnapshot> _snapshotFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _snapshotFuture = _loadSnapshot();
+    AppStateService.instance.addListener(_refreshSnapshot);
+    DatabaseService().addListener(_refreshSnapshot);
+  }
+
+  @override
+  void dispose() {
+    AppStateService.instance.removeListener(_refreshSnapshot);
+    DatabaseService().removeListener(_refreshSnapshot);
+    super.dispose();
+  }
+
+  void _refreshSnapshot() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _snapshotFuture = _loadSnapshot();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: Listenable.merge(<Listenable>[
-        AppStateService.instance,
-        DatabaseService(),
-      ]),
-      builder: (context, _) {
-        return FutureBuilder<_HomeSnapshot>(
-          future: _loadSnapshot(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return const Scaffold(
+    return FutureBuilder<_HomeSnapshot>(
+      future: _snapshotFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(
+              child: CircularProgressIndicator(color: AppColors.primaryAmber),
+            ),
+          );
+        }
+
+        final data = snapshot.data ?? const _HomeSnapshot.empty();
+
+        return Scaffold(
+          body: CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                floating: true,
                 backgroundColor: AppColors.background,
-                body: Center(
-                  child: CircularProgressIndicator(color: AppColors.primaryAmber),
-                ),
-              );
-            }
-
-            final data = snapshot.data ?? const _HomeSnapshot.empty();
-
-            return Scaffold(
-              body: CustomScrollView(
-                slivers: [
-                  SliverAppBar(
-                    floating: true,
-                    backgroundColor: AppColors.background,
-                    title: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Steps to Recovery',
-                          style: AppTypography.headlineMedium,
-                        ),
-                        Text(
-                          'Welcome back, ${AppStateService.instance.userLabel}',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                      ],
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Steps to Recovery',
+                      style: AppTypography.headlineMedium,
                     ),
-                    actions: [
-                      IconButton(
-                        icon: const Icon(Icons.bar_chart_outlined),
-                        onPressed: () => context.push('/home/progress'),
+                    Text(
+                      'Welcome back, ${AppStateService.instance.userLabel}',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textMuted,
                       ),
-                    ],
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    sliver: SliverList(
-                      delegate: SliverChildListDelegate([
-                        _SobrietyCard(snapshot: data),
-                        const SizedBox(height: AppSpacing.lg),
-                        _SupportStrip(snapshot: data),
-                        const SizedBox(height: AppSpacing.xl),
-                        _QuickActions(snapshot: data),
-                        const SizedBox(height: AppSpacing.xxl),
-                        const Text('Today', style: AppTypography.headlineSmall),
-                        const SizedBox(height: AppSpacing.md),
-                        _CheckInCards(snapshot: data),
-                      ]),
                     ),
+                  ],
+                ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.bar_chart_outlined),
+                    onPressed: () => context.push('/home/progress'),
                   ),
                 ],
               ),
-              floatingActionButton: FloatingActionButton.extended(
-                onPressed: () => context.push('/journal/editor?mode=create'),
-                icon: const Icon(Icons.add),
-                label: const Text('Quick Journal'),
-                backgroundColor: AppColors.primaryAmber,
-                foregroundColor: AppColors.textOnDark,
+              SliverPadding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    _SobrietyCard(
+                      snapshot: data,
+                      onShareMilestone: data.featuredShareContent == null
+                          ? null
+                          : () => _shareMilestone(context, data),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    _SupportStrip(snapshot: data),
+                    const SizedBox(height: AppSpacing.xl),
+                    _QuickActions(snapshot: data),
+                    const SizedBox(height: AppSpacing.xxl),
+                    const Text('Today', style: AppTypography.headlineSmall),
+                    const SizedBox(height: AppSpacing.md),
+                    _CheckInCards(snapshot: data),
+                  ]),
+                ),
               ),
-            );
-          },
+            ],
+          ),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () => context.push('/journal/editor?mode=create'),
+            icon: const Icon(Icons.add),
+            label: const Text('Quick Journal'),
+            backgroundColor: AppColors.primaryAmber,
+            foregroundColor: AppColors.textOnDark,
+          ),
         );
       },
     );
@@ -102,6 +134,11 @@ class HomeScreen extends StatelessWidget {
     final evening = await database.getTodayCheckIn(CheckInType.evening);
     final sponsor = await database.getSponsor(database.activeUserId ?? '');
     final achievements = await database.getAchievements(isViewed: false);
+    final unreadShareableMilestones =
+        sortShareableMilestoneAchievements(achievements);
+    final featuredAchievement = unreadShareableMilestones.isEmpty
+        ? null
+        : unreadShareableMilestones.first;
 
     return _HomeSnapshot(
       user: currentUser,
@@ -109,7 +146,72 @@ class HomeScreen extends StatelessWidget {
       eveningCheckIn: evening,
       sponsor: sponsor,
       unreadAchievements: achievements.length,
+      unreadShareableMilestones: unreadShareableMilestones,
+      featuredShareContent: featuredAchievement == null
+          ? null
+          : milestoneShareContentForAchievement(featuredAchievement),
     );
+  }
+
+  Future<void> _shareMilestone(
+    BuildContext context,
+    _HomeSnapshot snapshot,
+  ) async {
+    final featuredAchievement = snapshot.featuredShareAchievement;
+    final shareContent = snapshot.featuredShareContent;
+    if (featuredAchievement == null || shareContent == null) {
+      return;
+    }
+
+    final preferences = PreferencesService();
+    final logger = LoggerService();
+    await preferences.incrementAchievementShareTapped();
+    logger.info(
+      'event=achievement_share_tapped achievementKey=${featuredAchievement.achievementKey}',
+    );
+
+    final result = await Share.share(
+      shareContent.shareText,
+      subject: shareContent.shareSubject,
+    );
+
+    if (!context.mounted) {
+      return;
+    }
+
+    switch (result.status) {
+      case ShareResultStatus.success:
+        await preferences.incrementAchievementShareCompleted();
+        logger.info(
+          'event=achievement_share_completed achievementKey=${featuredAchievement.achievementKey}',
+        );
+        final database = DatabaseService();
+        for (final achievement in snapshot.unreadShareableMilestones) {
+          await database.markAchievementViewed(achievement.id);
+        }
+        if (!context.mounted) {
+          return;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${shareContent.milestoneTitle} shared.')),
+        );
+        return;
+      case ShareResultStatus.dismissed:
+        logger.info(
+          'event=achievement_share_dismissed achievementKey=${featuredAchievement.achievementKey}',
+        );
+        return;
+      case ShareResultStatus.unavailable:
+        logger.warning(
+          'event=achievement_share_unavailable achievementKey=${featuredAchievement.achievementKey}',
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sharing is not available on this device.'),
+          ),
+        );
+        return;
+    }
   }
 }
 
@@ -120,6 +222,8 @@ class _HomeSnapshot {
     required this.eveningCheckIn,
     required this.sponsor,
     required this.unreadAchievements,
+    required this.unreadShareableMilestones,
+    required this.featuredShareContent,
   });
 
   const _HomeSnapshot.empty()
@@ -127,19 +231,34 @@ class _HomeSnapshot {
         morningCheckIn = null,
         eveningCheckIn = null,
         sponsor = null,
-        unreadAchievements = 0;
+        unreadAchievements = 0,
+        unreadShareableMilestones = const <Achievement>[],
+        featuredShareContent = null;
 
   final UserProfile? user;
   final DailyCheckIn? morningCheckIn;
   final DailyCheckIn? eveningCheckIn;
   final Contact? sponsor;
   final int unreadAchievements;
+  final List<Achievement> unreadShareableMilestones;
+  final MilestoneShareContent? featuredShareContent;
+
+  Achievement? get featuredShareAchievement {
+    if (unreadShareableMilestones.isEmpty) {
+      return null;
+    }
+    return unreadShareableMilestones.first;
+  }
 }
 
 class _SobrietyCard extends StatelessWidget {
-  const _SobrietyCard({required this.snapshot});
+  const _SobrietyCard({
+    required this.snapshot,
+    required this.onShareMilestone,
+  });
 
   final _HomeSnapshot snapshot;
+  final VoidCallback? onShareMilestone;
 
   @override
   Widget build(BuildContext context) {
@@ -185,6 +304,20 @@ class _SobrietyCard extends StatelessWidget {
               '${snapshot.unreadAchievements} new achievement${snapshot.unreadAchievements == 1 ? '' : 's'} waiting',
               style: AppTypography.labelMedium.copyWith(
                 color: AppColors.textOnDark,
+              ),
+            ),
+          ],
+          if (snapshot.featuredShareContent != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            OutlinedButton.icon(
+              onPressed: onShareMilestone,
+              icon: const Icon(Icons.share_outlined),
+              label: Text(snapshot.featuredShareContent!.buttonLabel),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.textOnDark,
+                side: BorderSide(
+                  color: AppColors.textOnDark.withValues(alpha: 0.72),
+                ),
               ),
             ),
           ],
