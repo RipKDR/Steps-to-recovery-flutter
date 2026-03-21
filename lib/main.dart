@@ -1,89 +1,93 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'core/theme/app_theme.dart';
+import 'core/services/encryption_service.dart';
+import 'core/services/database_service.dart';
+import 'core/services/logger_service.dart';
+import 'core/services/connectivity_service.dart';
+import 'core/services/notification_service.dart';
+import 'core/services/preferences_service.dart';
+import 'core/services/ai_service.dart';
+import 'navigation/app_router.dart';
 
-import 'app_config.dart';
-import 'background_sync.dart';
-import 'app_router.dart';
-import 'local_store.dart';
-import 'notification_service.dart';
-import 'recovery_controller.dart';
-import 'sync.dart';
-
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final backgroundSync = BackgroundSyncService();
-  await backgroundSync.initialize();
-  await backgroundSync.registerPeriodicSync();
+  // Set preferred orientations
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
-  runApp(const StepsRecoveryApp());
+  // Set system UI overlay style
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+    systemNavigationBarColor: Colors.black,
+    systemNavigationBarIconBrightness: Brightness.light,
+  ));
+
+  // Initialize all services
+  await _initializeServices();
+
+  runApp(const StepsToRecoveryApp());
 }
 
-class StepsRecoveryApp extends StatefulWidget {
-  const StepsRecoveryApp({super.key});
+Future<void> _initializeServices() async {
+  final logger = LoggerService();
+  logger.info('Initializing services...');
 
-  @override
-  State<StepsRecoveryApp> createState() => _StepsRecoveryAppState();
-}
+  try {
+    // Initialize preferences first (needed by other services)
+    await PreferencesService().initialize();
+    logger.debug('Preferences service initialized');
 
-class _StepsRecoveryAppState extends State<StepsRecoveryApp> {
-  late final RecoveryController _controller;
+    // Initialize encryption service
+    await EncryptionService().initialize();
+    logger.debug('Encryption service initialized');
 
-  @override
-  void initState() {
-    super.initState();
-    final remote = AppConfig.hasRemoteSync
-        ? RemoteRecoveryRepository(
-            RecoveryApiClient(
-              baseUrl: AppConfig.apiBaseUrl,
-              authToken: AppConfig.apiAuthToken.isEmpty
-                  ? null
-                  : AppConfig.apiAuthToken,
-            ),
-          )
-        : null;
+    // Initialize database
+    await DatabaseService().initialize();
+    logger.debug('Database service initialized');
 
-    _controller = RecoveryController(
-      store: LocalStore(),
-      notifications: NotificationService(),
-      remote: remote,
-    );
-    _controller.init();
+    // Initialize connectivity monitoring
+    await ConnectivityService().initialize();
+    logger.debug('Connectivity service initialized');
+
+    // Initialize notifications
+    await NotificationService().initialize();
+    await NotificationService().requestPermissions();
+    logger.debug('Notification service initialized');
+
+    // AI service is initialized on-demand
+    logger.debug('AI service ready');
+
+    logger.info('All services initialized successfully');
+  } catch (e, stackTrace) {
+    logger.error('Failed to initialize services', error: e, stackTrace: stackTrace);
+    // Continue anyway - app can function with limited services
   }
+}
+
+class StepsToRecoveryApp extends StatelessWidget {
+  const StepsToRecoveryApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        if (_controller.loading) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            home: const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            ),
-            theme: _theme(),
-          );
-        }
-
-        return MaterialApp.router(
-          debugShowCheckedModeBanner: false,
-          title: 'Steps to Recovery',
-          theme: _theme(),
-          routerConfig: buildRouter(_controller),
+    return MaterialApp.router(
+      title: 'Steps to Recovery',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.darkTheme,
+      routerConfig: AppRouter.router,
+      builder: (context, child) {
+        // Ensure text scale factor is reasonable
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: const TextScaler.linear(1.0),
+          ),
+          child: child!,
         );
       },
-    );
-  }
-
-  ThemeData _theme() {
-    return ThemeData(
-      brightness: Brightness.dark,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF2B8CC4),
-        brightness: Brightness.dark,
-      ),
-      scaffoldBackgroundColor: const Color(0xFF0B1B24),
-      useMaterial3: true,
     );
   }
 }
