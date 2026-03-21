@@ -1,4 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_secure_storage/test/test_flutter_secure_storage_platform.dart';
+// ignore: depend_on_referenced_packages
+import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:steps_recovery_flutter/core/services/app_state_service.dart';
@@ -8,6 +11,8 @@ import 'package:steps_recovery_flutter/core/services/encryption_service.dart';
 Future<void> prepareTestState() async {
   TestWidgetsFlutterBinding.ensureInitialized();
   SharedPreferences.setMockInitialValues(<String, Object>{});
+  FlutterSecureStoragePlatform.instance =
+      TestFlutterSecureStoragePlatform(<String, String>{});
   await EncryptionService().initialize();
   await DatabaseService().initialize();
   await AppStateService.instance.initialize();
