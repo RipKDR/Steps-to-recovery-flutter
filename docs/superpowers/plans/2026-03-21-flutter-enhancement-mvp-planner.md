@@ -72,7 +72,7 @@ Write-Host "Installed flutter-enhancement-mvp-planner to $Destination"
 Run:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -Command "[void][System.Management.Automation.Language.Parser]::ParseFile('tool/install_flutter_enhancement_mvp_planner_skill.ps1',[ref]$null,[ref]$null)"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$tokens = $null; $errors = $null; [void][System.Management.Automation.Language.Parser]::ParseFile((Join-Path (Get-Location) 'tool/install_flutter_enhancement_mvp_planner_skill.ps1'), [ref]$tokens, [ref]$errors); if ($errors.Count -gt 0) { $errors | ForEach-Object { Write-Error $_.Message }; exit 1 }"
 ```
 
 Expected: no output and exit code `0`.
@@ -155,12 +155,23 @@ Add a workflow section that instructs the skill to:
 7. If the request is too broad, split it into phase 1 and later phases.
 ```
 
-- [ ] **Step 4: Verify the draft contains the core sections**
+- [ ] **Step 4: Add the chat-first planning style guardrail**
+
+Add:
+
+```md
+## Planning Style
+- Default to a complete planning response in chat.
+- Only suggest or generate a file when the user explicitly asks for one.
+- Keep the plan pragmatic, repo-aware, and specific enough to implement without drifting into greenfield advice.
+```
+
+- [ ] **Step 5: Verify the draft contains the core sections**
 
 Run:
 
 ```powershell
-rg "^## (Overview|When to Use|Workflow)$" `
+rg "^## (Overview|When to Use|Workflow|Planning Style)$" `
   docs/superpowers/skills/flutter-enhancement-mvp-planner/SKILL.md
 ```
 
@@ -170,9 +181,10 @@ Expected:
 ## Overview
 ## When to Use
 ## Workflow
+## Planning Style
 ```
 
-- [ ] **Step 5: Commit the planning workflow draft**
+- [ ] **Step 6: Commit the planning workflow draft**
 
 Run:
 
@@ -207,6 +219,17 @@ Always structure the response with these sections when enough context exists:
 - Deferred backlog
 
 If repository context is incomplete, state assumptions explicitly.
+
+- Feature summary: explain what is being built, who it serves, and the user or product problem it solves.
+- MVP scope: separate in-scope behavior, out-of-scope behavior, and explicitly deferred follow-ups; explain why the cuts are being made when that is not obvious.
+- Existing-code fit: map the change onto the current repo's feature folders, routes, services, models, widgets, and tests; state assumptions instead of inventing certainty.
+- UI and interaction plan: cover affected screens or widgets, loading, empty, error, and success states, navigation changes, validation or form needs, and responsive or platform-specific considerations when relevant.
+- State and data flow: describe the source of truth, async boundaries, persistence and sync touchpoints, transformation points, error propagation, and retry or offline behavior when relevant.
+- Platform and cross-cutting impact: cover only what applies from storage, sync, notifications, permissions, analytics or telemetry, accessibility, performance, privacy, and security.
+- Refactors worth doing now: recommend only changes that materially reduce MVP delivery risk; include a short reason for each refactor, or explicitly say none are justified.
+- Test plan: describe the smallest effective mix of unit tests for logic and transformations, widget tests for UI states and interactions, and targeted integration coverage for high-risk flows.
+- Execution slices: break the work into small vertical slices that are independently deliverable and verifiable.
+- Deferred backlog: capture intentionally cut work so it is not lost.
 ```
 
 - [ ] **Step 2: Add Flutter planning heuristics**
@@ -215,11 +238,13 @@ Append guidance like:
 
 ```md
 ## Flutter Heuristics
-- Prefer extending existing feature modules before creating new top-level layers.
-- Keep screens thin when a feature would otherwise make them hard to reason about.
-- Use feature-facing adapters, controllers, or repositories only when they reduce coupling to broad services.
-- Prefer typed state and explicit loading, empty, and error handling.
-- Treat accessibility, privacy, and performance as MVP concerns when the feature touches high-frequency or sensitive flows.
+- Prefer extending existing feature modules before creating new top-level architecture layers unless the current boundaries are clearly failing.
+- Keep screens thin when possible; move orchestration out of large UI widgets when a feature would otherwise expand complexity sharply.
+- Add a feature-specific adapter, controller, or repository when it reduces coupling to broad app services.
+- Prefer typed state and explicit loading, empty, and error handling over implicit UI assumptions.
+- Preserve platform support expectations already present in the project unless the user explicitly narrows scope.
+- Account for offline-first behavior when the app already has local-first or sync-related patterns.
+- Treat accessibility and performance as MVP concerns when the feature directly affects interaction-heavy or high-frequency surfaces.
 ```
 
 - [ ] **Step 3: Add service-first adaptation guidance**
@@ -229,10 +254,11 @@ Append:
 ```md
 ## Adapting to Service-First Codebases
 - Reuse existing services where possible.
-- Do not introduce a new state-management framework for one feature.
-- Wrap broad services behind narrower feature-facing interfaces if that improves boundaries.
+- Avoid introducing a new state-management framework just for one feature.
+- Wrap broad services behind narrower feature-facing interfaces if the feature needs clearer boundaries.
+- Split overly large screens only when the requested enhancement would otherwise make them harder to reason about or test.
 - Borrow Flutter's view/view-model/repository/service separation as a planning lens, not as a forced renaming exercise.
-- Split large screens only when the requested feature would otherwise make them harder to test or maintain.
+- Reuse existing routing, persistence, notification, and service patterns before proposing new layers.
 ```
 
 - [ ] **Step 4: Add non-goals and anti-patterns**
@@ -245,6 +271,7 @@ Append:
 - Speculative abstractions
 - Generic plans that ignore the actual repo
 - Output that skips tests, accessibility, privacy, or performance when they are relevant
+- Recommending Riverpod, Bloc, Provider, or another state-management package unless the repo already uses it or the user explicitly asks for it
 ```
 
 - [ ] **Step 5: Verify the critical headings are present**
@@ -292,20 +319,29 @@ Create `docs/superpowers/skills/flutter-enhancement-mvp-planner/evals/evals.json
     {
       "id": 1,
       "prompt": "Plan an MVP for adding sponsor check-in reminders to an existing Flutter recovery app that already has feature folders, go_router, local notifications, and shared services. Keep it small and tell me what to defer.",
-      "expected_output": "A scoped MVP plan that reuses existing routes and services, covers notification and persistence impact, and avoids forcing a new state-management package.",
-      "files": []
+      "expected_output": "A chat-first MVP plan with the sections Feature summary, MVP scope, Existing-code fit, UI and interaction plan, State and data flow, Platform and cross-cutting impact, Refactors worth doing now, Test plan, Execution slices, and Deferred backlog. MVP scope should separate in-scope, out-of-scope, and deferred work. Existing-code fit should reuse current routes and services. Platform and cross-cutting impact should cover notifications, permissions, and persistence touchpoints. The plan must avoid forcing a new state-management package.",
+      "files": [
+        "lib/features/sponsor/screens/sponsor_screen.dart",
+        "lib/core/services/notification_service.dart",
+        "lib/navigation/app_router.dart"
+      ]
     },
     {
       "id": 2,
       "prompt": "I want to add habit tracking, rewards, social sharing, badges, streak rescue, Apple Watch sync, and AI coaching to my Flutter app. Break this into a phase-1 MVP and later phases.",
-      "expected_output": "A phase-1 MVP plan that explicitly cuts scope, names later phases, and identifies the smallest shippable release.",
-      "files": []
+      "expected_output": "A chat-first plan that explicitly separates phase 1 from later phases, identifies the smallest shippable release, and uses the MVP scope plus Deferred backlog sections to show what was cut. The response should avoid architecture churn and keep phase 1 materially smaller than the original request.",
+      "files": [
+        "lib/features/home/screens/home_screen.dart"
+      ]
     },
     {
       "id": 3,
       "prompt": "Figure out how a new crisis support flow should fit into my Flutter app. I need screens, state flow, test coverage, accessibility, and any refactors that are actually worth doing now.",
-      "expected_output": "A structured plan with UI states, state/data flow, tests, accessibility guidance, and minimal justified refactors.",
-      "files": []
+      "expected_output": "A structured chat-first plan with UI and interaction states including loading, empty, error, and success, explicit state and data flow, a test plan using unit, widget, and targeted integration coverage, accessibility guidance, platform and cross-cutting notes, and only minimal refactors with short reasons or an explicit statement that none are needed.",
+      "files": [
+        "lib/features/crisis/screens/emergency_screen.dart",
+        "lib/navigation/app_router.dart"
+      ]
     }
   ]
 }
@@ -393,8 +429,10 @@ Plan an MVP for adding sponsor check-in reminders to an existing Flutter recover
 
 Expected:
 
-- output includes `MVP scope`, `Existing-code fit`, `Platform and cross-cutting impact`, `Test plan`, and `Deferred backlog`
+- output includes `Feature summary`, `MVP scope`, `Existing-code fit`, `Platform and cross-cutting impact`, `Test plan`, and `Deferred backlog`
+- `MVP scope` separates in-scope, out-of-scope, and deferred work
 - plan reuses existing services and routes
+- plan covers notification, permission, and persistence touchpoints
 - plan does not force Riverpod, Bloc, or another new state-management stack
 
 - [ ] **Step 5: Run smoke prompt 2 in a fresh session**
@@ -410,6 +448,7 @@ Expected:
 - output clearly separates phase 1 from later phases
 - phase 1 is materially smaller than the original request
 - deferred items are explicit, not implied
+- response stays chat-first and avoids unnecessary architecture churn
 
 - [ ] **Step 6: Run smoke prompt 3 in a fresh session**
 
@@ -421,7 +460,7 @@ Figure out how a new crisis support flow should fit into my Flutter app. I need 
 
 Expected:
 
-- output includes screen states, data flow, tests, accessibility, and minimal refactors
+- output includes loading, empty, error, and success states, explicit data flow, test mix, accessibility, cross-cutting impact, and minimal refactors with reasons
 - plan is specific to the repo context if run inside a repo
 - refactors are justified, not speculative
 
