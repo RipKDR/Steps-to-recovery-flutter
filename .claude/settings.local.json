@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter analyze:*)",
+      "Bash(flutter pub:*)",
+      "Bash(grep -r \"BMAD\\\\|bmad\" /c/Users/H/Steps-to-recovery-flutter --include=*.dart --include=*.md --include=*.json)",
+      "Bash(wc:*)",
+      "Bash(flutter test:*)",
+      "Bash(cd:*)",
+      "Bash(dart:*)",
+      "Bash(dart analyze:*)",
+      "Bash(for wt:*)",
+      "Bash(do git:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
+}

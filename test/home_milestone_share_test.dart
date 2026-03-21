@@ -1,8 +1,9 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:steps_recovery_flutter/core/services/preferences_service.dart';
-import 'package:steps_recovery_flutter/features/home/screens/home_screen.dart';
+import 'package:steps_recovery_flutter/main.dart';
 
 import 'test_helpers.dart';
 
@@ -26,28 +27,20 @@ void main() {
         .setMockMethodCallHandler(shareChannel, null);
   });
 
-  testWidgets('share milestone CTA stays hidden without unread milestones', (
-    tester,
-  ) async {
-    print('diag:first:start');
+  testWidgets('share milestone CTA stays hidden without unread milestones', (tester) async {
     await createSignedInUser(sobrietyDate: DateTime.now());
-    print('diag:first:after-signup');
 
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: HomeScreen(),
-      ),
-    );
-    print('diag:first:after-pump-widget');
+    await tester.pumpWidget(const StepsToRecoveryApp());
+    await tester.pumpAndSettle();
+    await tester.pumpAndSettle();
+
     await _pumpHomeScreen(tester);
-    print('diag:first:after-pump-home');
+    await _pumpHomeScreen(tester);
 
     expect(find.textContaining('Share '), findsNothing);
-    print('diag:first:after-expect');
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
-    print('diag:first:after-dispose');
   });
 
   testWidgets(
@@ -60,10 +53,10 @@ void main() {
       );
 
       await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
+        const StepsToRecoveryApp(),
       );
+      await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
       await _pumpHomeScreen(tester);
 
       expect(find.text('Share 1 Month'), findsOneWidget);
@@ -102,10 +95,11 @@ void main() {
     );
 
     await tester.pumpWidget(
-      const MaterialApp(
-        home: HomeScreen(),
+      const StepsToRecoveryApp(
       ),
     );
+    await tester.pumpAndSettle();
+    await tester.pumpAndSettle();
     await _pumpHomeScreen(tester);
 
     expect(find.text('Share 1 Week'), findsOneWidget);

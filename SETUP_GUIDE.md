@@ -2,120 +2,147 @@
 
 ## Prerequisites
 
-Before running this Flutter project, ensure you have the following installed:
+Before running this Flutter project, make sure the following tools are installed.
 
 ### 1. Flutter SDK
 
 **Windows:**
+
 ```powershell
-# Download Flutter from https://docs.flutter.dev/get-started/install/windows
+# Download Flutter: https://docs.flutter.dev/get-started/install/windows
 # Extract to C:\src\flutter (or your preferred location)
-# Add Flutter to PATH
+# Add Flutter to PATH (new terminals only)
 setx PATH "%PATH%;C:\src\flutter\bin"
 ```
 
 **Verify installation:**
-```bash
+
+```powershell
 flutter doctor
 ```
 
 ### 2. Android Studio (for Android development)
 
-1. Download from https://developer.android.com/studio
+1. Download: <https://developer.android.com/studio>
 2. Install Android Studio
-3. Open Android Studio → Tools → SDK Manager
+3. Open **Android Studio → Tools → SDK Manager**
 4. Install:
    - Android SDK Platform (API 33 or higher)
    - Android SDK Build-Tools
    - Android Emulator
+5. Accept Android licenses:
 
-4. Accept Android licenses:
-```bash
+```powershell
 flutter doctor --android-licenses
 ```
 
-### 3. VS Code (Recommended IDE)
+### 3. VS Code (recommended IDE)
 
-1. Download from https://code.visualstudio.com/
-2. Install Flutter extension
-3. Install Dart extension
+1. Download: <https://code.visualstudio.com/>
+2. Install the **Flutter** extension
+3. Install the **Dart** extension
 
 ## Project Setup
 
-### 1. Navigate to project directory
-```bash
+### 1. Navigate to the project directory
+
+```powershell
 cd C:\Users\H\Steps-to-recovery-flutter
 ```
 
 ### 2. Get dependencies
-```bash
+
+```powershell
 flutter pub get
 ```
 
 ### 3. Run the app
-```bash
+
+```powershell
 # Run on connected device or emulator
 flutter run
 
-# Run in debug mode
+# Debug mode
 flutter run --debug
 
-# Run in release mode (for testing production build)
+# Release mode (for production-like testing)
 flutter run --release
 ```
 
-## Building APK
+## Build Outputs
 
 ### Debug APK
-```bash
+
+```powershell
 flutter build apk --debug
 ```
+
 Output: `build/app/outputs/flutter-apk/app-debug.apk`
 
 ### Release APK
-```bash
+
+```powershell
 flutter build apk --release
 ```
+
 Output: `build/app/outputs/flutter-apk/app-release.apk`
 
-### Split APKs (smaller file size)
-```bash
+### Split APKs (smaller APKs per ABI)
+
+```powershell
+flutter build apk --release --split-per-abi
+```
+
+Output: `build/app/outputs/flutter-apk/` (multiple ABI-specific APK files)
+
+### Android App Bundle (Play Store upload)
+
+```powershell
 flutter build appbundle --release
 ```
+
 Output: `build/app/outputs/bundle/release/app-release.aab`
 
-## Running on Different Platforms
+## Run on Different Platforms
 
 ### Android
-```bash
+
+```powershell
 flutter run -d android
 ```
 
-### iOS (requires Mac)
-```bash
+### iOS (macOS only)
+
+```powershell
 flutter run -d ios
 ```
 
 ### Web
-```bash
+
+```powershell
 flutter run -d chrome
 ```
 
 ### Windows
-```bash
+
+```powershell
 flutter run -d windows
 ```
 
 ## Common Issues & Solutions
 
 ### Issue: No devices found
-**Solution:** 
-- Connect an Android device via USB with USB debugging enabled
+
+**Solution:**
+
+- Connect an Android device via USB and enable USB debugging
 - Or start an Android emulator from Android Studio
 
 ### Issue: Gradle build failed
-**Solution:**
-```bash
+
+**Solution (macOS/Linux):**
+
+```powershell
 cd android
 ./gradlew clean
 cd ..
@@ -124,15 +151,30 @@ flutter pub get
 flutter run
 ```
 
+**Solution (Windows):**
+
+```powershell
+cd android
+gradlew.bat clean
+cd ..
+flutter clean
+flutter pub get
+flutter run
+```
+
 ### Issue: Package conflicts
+
 **Solution:**
-```bash
+
+```powershell
 flutter clean
 flutter pub get
 ```
 
 ### Issue: Android licenses not accepted
+
 **Solution:**
+
 ```bash
 flutter doctor --android-licenses
 ```
@@ -140,28 +182,32 @@ flutter doctor --android-licenses
 ## Development Tips
 
 ### Hot Reload
-Press `r` in the terminal while the app is running to hot reload changes.
+
+Press `r` in the terminal while the app is running.
 
 ### Hot Restart
-Press `R` in the terminal to hot restart the app.
 
-### Debug Console
-Press `p` to toggle the debug console overlay.
+Press `R` in the terminal.
 
-### Quit
-Press `q` to quit the running app.
+### Toggle debug paint / console overlay
+
+Press `p` in the terminal.
+
+### Quit app
+
+Press `q` in the terminal.
 
 ## Project Structure
 
-```
+```text
 lib/
-├── core/                    # Core functionality
+├── core/                   # Core functionality
 │   ├── constants/          # App constants and step prompts
 │   ├── models/             # Data models
 │   ├── services/           # Services (DB, encryption, etc.)
 │   ├── theme/              # Design system
 │   └── utils/              # Utility functions
-├── features/                # Feature modules
+├── features/               # Feature modules
 │   ├── ai_companion/       # AI chat
 │   ├── auth/               # Login/signup
 │   ├── challenges/         # Recovery challenges
@@ -180,40 +226,45 @@ lib/
 │   ├── safety_plan/        # Safety plan
 │   ├── sponsor/            # Sponsor management
 │   └── steps/              # 12-step work
-├── navigation/              # Routing
-├── widgets/                 # Reusable widgets
+├── navigation/             # Routing
+├── widgets/                # Reusable widgets
 └── main.dart               # App entry point
 ```
 
 ## Testing
 
 ### Run all tests
-```bash
+
+```powershell
 flutter test
 ```
 
-### Run specific test file
-```bash
+### Run a specific test file
+
+```powershell
 flutter test test/my_test.dart
 ```
 
 ### Run with coverage
-```bash
+
+```powershell
 flutter test --coverage
 ```
 
 ## Code Generation
 
-If using code generation (freezed, json_serializable, etc.):
-```bash
-flutter pub run build_runner build
-flutter pub run build_runner watch
+If using code generation (`freezed`, `json_serializable`, etc.):
+
+```powershell
+dart run build_runner build
+dart run build_runner watch
 ```
 
 ## Environment Configuration
 
-Create a `.env` file for API keys (not committed to git):
-```
+Create a `.env` file for API keys (do not commit it to git):
+
+```env
 GOOGLE_AI_API_KEY=your_key_here
 SUPABASE_URL=your_url_here
 SUPABASE_ANON_KEY=your_key_here
@@ -223,9 +274,13 @@ SUPABASE_ANON_KEY=your_key_here
 
 1. Use `const` constructors where possible
 2. Use `Key` for list items that can be reordered
-3. Avoid rebuilding widgets unnecessarily
+3. Avoid unnecessary widget rebuilds
 4. Use `ListView.builder` for long lists
-5. Profile with `flutter run --profile`
+5. Profile with:
+
+```powershell
+flutter run --profile
+```
 
 ## Resources
 
