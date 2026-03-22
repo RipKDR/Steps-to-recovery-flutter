@@ -114,4 +114,43 @@ void main() {
     await store.distillToLongTerm();
     expect(store.longterm.length, lessThanOrEqualTo(50));
   });
+
+  test('distillToLongTerm sets distilledAt on promoted entries', () async {
+    await store.addToSession(SponsorMemory(
+      id: 'dt1',
+      category: MemoryCategory.whatWorks,
+      summary: 'Something that helped.',
+      createdAt: DateTime.now(),
+    ));
+    await store.digestSession();
+    await store.distillToLongTerm();
+    expect(store.longterm, hasLength(1));
+    expect(store.longterm.first.distilledAt, isNotNull);
+  });
+
+  test('deleteMemory removes from digest and longterm tiers', () async {
+    // Add to session, digest it, distill to longterm
+    await store.addToSession(SponsorMemory(
+      id: 'tier_test',
+      category: MemoryCategory.recoveryPattern,
+      summary: 'A pattern.',
+      createdAt: DateTime.now(),
+    ));
+    await store.digestSession();
+    // Now in digest — delete from digest
+    await store.deleteMemory('tier_test');
+    expect(store.digest.any((m) => m.id == 'tier_test'), isFalse);
+
+    // Add another, distill to longterm, then delete
+    await store.addToSession(SponsorMemory(
+      id: 'lt_test',
+      category: MemoryCategory.hardMoment,
+      summary: 'Hard moment.',
+      createdAt: DateTime.now(),
+    ));
+    await store.digestSession();
+    await store.distillToLongTerm();
+    await store.deleteMemory('lt_test');
+    expect(store.longterm.any((m) => m.id == 'lt_test'), isFalse);
+  });
 }
