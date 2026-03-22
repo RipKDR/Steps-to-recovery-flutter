@@ -1,0 +1,268 @@
+// lib/core/services/sponsor_service.dart
+import 'dart:convert';
+import 'dart:math';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../constants/crisis_constants.dart';
+import '../constants/sponsor_soul.dart';
+import '../models/database_models.dart';
+import '../models/sponsor_models.dart';
+import '../services/app_state_service.dart';
+import '../services/connectivity_service.dart';
+import '../services/encryption_service.dart';
+import '../services/sponsor_memory_store.dart';
+import '../utils/context_assembler.dart';
+import '../../app_config.dart';
+
+class SponsorService extends ChangeNotifier {
+  SponsorService._internal();
+  static final SponsorService instance = SponsorService._internal();
+
+  /// Test constructor — creates a fresh instance not shared as singleton.
+  @visibleForTesting
+  static SponsorService createForTest() => SponsorService._internal();
+
+  static const String _identityKey = 'sponsor_identity';
+  static const String _stageKey = 'sponsor_stage';
+
+  SponsorIdentity? _identity;
+  SponsorStageData _stageData = SponsorStageData(
+    stage: SponsorStage.new_,
+    engagementScore: 0,
+    lastInteraction: DateTime.fromMillisecondsSinceEpoch(0),
+  );
+  final SponsorMemoryStore _memoryStore = SponsorMemoryStore();
+  bool _initialized = false;
+
+  // ── Public getters ────────────────────────────────────────────────────────
+
+  SponsorIdentity? get identity => _identity;
+  bool get hasIdentity => _identity != null;
+
+  SponsorStage get stage => _stageData.stage;
+  int get engagementScore => _stageData.engagementScore;
+
+  List<SponsorMemory> get sessionMemory => _memoryStore.session;
+  List<SponsorMemory> get digestMemory => _memoryStore.digest;
+  List<SponsorMemory> get longTermMemory => _memoryStore.longterm;
+
+  bool get isCloudAvailable => ConnectivityService().isConnected;
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+
+  Future<void> initialize() async {
+    if (_initialized) return;
+    _initialized = true;
+    await _memoryStore.initialize();
+    await _loadIdentity();
+    await _loadStage();
+  }
+
+  // ── Identity ──────────────────────────────────────────────────────────────
+
+  Future<void> setupIdentity(String name, SponsorVibe vibe) async {
+    _identity = SponsorIdentity(
+      name: name.trim(),
+      vibe: vibe,
+      createdAt: DateTime.now(),
+    );
+    await _saveIdentity();
+    notifyListeners();
+  }
+
+  // ── Memory ────────────────────────────────────────────────────────────────
+
+  Future<void> addSessionMemory(SponsorMemory memory) async {
+    await _memoryStore.addToSession(memory);
+    notifyListeners();
+  }
+
+  Future<void> digestSession() async {
+    await _memoryStore.digestSession();
+    notifyListeners();
+  }
+
+  Future<void> distillToLongTerm() async {
+    await _memoryStore.distillToLongTerm();
+    notifyListeners();
+  }
+
+  Future<void> deleteMemory(String id) async {
+    await _memoryStore.deleteMemory(id);
+    notifyListeners();
+  }
+
+  // ── Relationship ──────────────────────────────────────────────────────────
+
+  Future<void> bumpEngagement({
+    int checkInDays = 0,
+    int chatDays = 0,
+    int journalDays = 0,
+  }) async {
+    final delta = (checkInDays * 2) + (chatDays * 3) + (journalDays * 1);
+    if (delta == 0) return;
+    final newScore = _stageData.engagementScore + delta;
+    final now = DateTime.now();
+    final sobrietyDays = AppStateService.instance.sobrietyDays;
+    final newStage = _stageData
+        .copyWith(engagementScore: newScore, lastInteraction: now)
+        .computeStage(sobrietyDays: sobrietyDays);
+    _stageData = SponsorStageData(
+      stage: newStage,
+      engagementScore: newScore,
+      lastInteraction: now,
+    );
+    await _saveStage();
+    notifyListeners();
+  }
+
+  Future<void> recalculateEngagement() async {
+    // Resets score to 0 and re-bumps — caller supplies actuals from DatabaseService
+    _stageData = SponsorStageData(
+      stage: SponsorStage.new_,
+      engagementScore: 0,
+      lastInteraction: DateTime.now(),
+    );
+    await _saveStage();
+    notifyListeners();
+  }
+
+  // ── Chat ──────────────────────────────────────────────────────────────────
+
+  /// [isOnline] is injectable for testing. Defaults to ConnectivityService.
+  Future<String> respond({
+    required String message,
+    required String userId,
+    List<ChatMessage>? conversationHistory,
+    List<String>? recoveryContext,
+    bool? isOnline,
+  }) async {
+    final online = isOnline ?? ConnectivityService().isConnected;
+    final isCrisis = CrisisConstants.detect(message);
+
+    if (!online) {
+      return _offlineResponse(isCrisis);
+    }
+
+    if (_identity == null) {
+      return _genericFallbackResponse(message);
+    }
+
+    // Build signals (simplified — real implementation reads DatabaseService)
+    final signals = SponsorSignals.empty();
+
+    final systemPrompt = ContextAssembler.build(
+      identity: _identity!,
+      stageData: _stageData,
+      sobrietyDays: AppStateService.instance.sobrietyDays,
+      memories: [..._memoryStore.longterm, ..._memoryStore.digest],
+      signals: signals,
+      userMessage: message,
+      isCrisis: isCrisis,
+    );
+
+    return await _callEdgeFunction(
+      systemPrompt: systemPrompt,
+      message: message,
+      conversationHistory: conversationHistory,
+    );
+  }
+
+  // ── Private ───────────────────────────────────────────────────────────────
+
+  String _offlineResponse(bool isCrisis) {
+    final opener = SponsorSoul.offlineOpeners[
+      Random().nextInt(SponsorSoul.offlineOpeners.length)
+    ];
+    if (isCrisis) {
+      return "$opener\n\nIf you're in crisis right now — 988 is there. Real people, right now.";
+    }
+    final relevantMemories = _memoryStore.longterm
+        .where((m) => m.category == MemoryCategory.whatWorks)
+        .take(1)
+        .toList();
+    if (relevantMemories.isNotEmpty) {
+      return "$opener\n\nLast time we talked about this, you mentioned: '${relevantMemories.first.summary}'. Still true?";
+    }
+    return opener;
+  }
+
+  String _genericFallbackResponse(String message) =>
+      "I'm here for you. Tell me more about how you're feeling.";
+
+  Future<String> _callEdgeFunction({
+    required String systemPrompt,
+    required String message,
+    List<ChatMessage>? conversationHistory,
+  }) async {
+    final edgeFunctionUrl = AppConfig.aiChatEdgeFunctionUrl;
+    if (edgeFunctionUrl.isEmpty) {
+      return _genericFallbackResponse(message);
+    }
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    try {
+      final token = Supabase.instance.client.auth.currentSession?.accessToken;
+      if (token != null) headers['Authorization'] = 'Bearer $token';
+    } catch (_) {}
+
+    final history = conversationHistory
+        ?.map((m) => {'role': m.isUser ? 'User' : 'Assistant', 'content': m.content})
+        .toList() ?? [];
+
+    try {
+      final response = await http.post(
+        Uri.parse(edgeFunctionUrl),
+        headers: headers,
+        body: jsonEncode({
+          'message': message.trim(),
+          'systemPrompt': systemPrompt,
+          'conversationHistory': history,
+        }),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['response'] as String? ??
+            "I'm here for you. Tell me more about how you're feeling.";
+      }
+    } catch (e) {
+      debugPrint('SponsorService edge function error: $e');
+    }
+    return "I'm having trouble connecting right now. I'm still here for you when I'm back.";
+  }
+
+  Future<void> _loadIdentity() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_identityKey);
+    if (raw == null) return;
+    try {
+      final decrypted = EncryptionService().decrypt(raw);
+      _identity = SponsorIdentity.fromJsonString(decrypted);
+    } catch (_) {}
+  }
+
+  Future<void> _saveIdentity() async {
+    if (_identity == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    final encrypted = EncryptionService().encrypt(_identity!.toJsonString());
+    await prefs.setString(_identityKey, encrypted);
+  }
+
+  Future<void> _loadStage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_stageKey);
+    if (raw == null) return;
+    try {
+      final decrypted = EncryptionService().decrypt(raw);
+      _stageData = SponsorStageData.fromJsonString(decrypted);
+    } catch (_) {}
+  }
+
+  Future<void> _saveStage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final encrypted = EncryptionService().encrypt(_stageData.toJsonString());
+    await prefs.setString(_stageKey, encrypted);
+  }
+}
