@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../app_config.dart';
+import '../constants/crisis_constants.dart';
 import '../models/database_models.dart';
 
 abstract class CompanionResponder {
@@ -225,24 +226,7 @@ class AiService implements CompanionResponder {
   }
 
   /// Detect if a message indicates crisis
-  bool detectCrisis(String message) {
-    final crisisKeywords = [
-      'suicide',
-      'kill myself',
-      'end it all',
-      'give up',
-      'can\'t go on',
-      'want to die',
-      'use again',
-      'relapse',
-      'overdose',
-      'hurt myself',
-      'self harm',
-    ];
-
-    final lowerMessage = message.toLowerCase();
-    return crisisKeywords.any((keyword) => lowerMessage.contains(keyword));
-  }
+  bool detectCrisis(String message) => CrisisConstants.detect(message);
 
   /// Extract memories from journal/check-in for AI context
   List<String> extractMemories({String? journalEntry, DailyCheckIn? checkIn}) {
