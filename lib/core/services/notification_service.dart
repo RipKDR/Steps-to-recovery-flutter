@@ -3,6 +3,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 
+import '../constants/app_constants.dart';
+
 abstract class ReminderScheduler {
   Future<void> syncDailyCheckInReminders({
     required bool enabled,
@@ -177,10 +179,10 @@ class NotificationService implements ReminderScheduler {
 
   static const int morningCheckInReminderId = 1001;
   static const int eveningCheckInReminderId = 1002;
-  static const int milestoneReminder1Id = 2001;
-  static const int milestoneReminder2Id = 2002;
-  static const int milestoneReminder3Id = 2003;
-  static const int milestoneReminder4Id = 2004;
+  static const int milestoneReminder1Id = NotificationIds.milestoneApproachBase + 1;
+  static const int milestoneReminder2Id = NotificationIds.milestoneApproachBase + 2;
+  static const int milestoneReminder3Id = NotificationIds.milestoneApproachBase + 3;
+  static const int milestoneReminder4Id = NotificationIds.milestoneApproachBase + 4;
 
   /// Initialize notification service
   Future<void> initialize() async {
