@@ -325,5 +325,27 @@ void main() {
         expect(await svc.getAchievementShareCompletedCount(), equals(0));
       });
     });
+
+    // ── milestone celebration gate ──────────────────────────────────────────
+
+    group('milestone celebration gate', () {
+      test('hasMilestoneCelebrationShown returns false by default', () async {
+        final svc = await _freshService();
+        final shown = await svc.hasMilestoneCelebrationShown('milestone_7');
+        expect(shown, isFalse);
+      });
+
+      test('markMilestoneCelebrationShown persists across reads', () async {
+        final svc = await _freshService();
+        await svc.markMilestoneCelebrationShown('milestone_7');
+        expect(await svc.hasMilestoneCelebrationShown('milestone_7'), isTrue);
+      });
+
+      test('different keys are independent', () async {
+        final svc = await _freshService();
+        await svc.markMilestoneCelebrationShown('milestone_7');
+        expect(await svc.hasMilestoneCelebrationShown('milestone_30'), isFalse);
+      });
+    });
   });
 }

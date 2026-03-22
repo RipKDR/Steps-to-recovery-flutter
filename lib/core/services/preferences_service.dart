@@ -53,6 +53,17 @@ class PreferencesService {
     await _prefs?.setBool('biometric_enabled', value);
   }
 
+  // Milestone celebration gate
+  Future<bool> hasMilestoneCelebrationShown(String achievementKey) async {
+    await initialize();
+    return _prefs?.getBool('celebration_shown_$achievementKey') ?? false;
+  }
+
+  Future<void> markMilestoneCelebrationShown(String achievementKey) async {
+    await initialize();
+    await _prefs?.setBool('celebration_shown_$achievementKey', true);
+  }
+
   // Sobriety date
   DateTime? get sobrietyDate {
     final dateString = _prefs?.getString('sobriety_date');
