@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
@@ -8,6 +9,7 @@ import 'package:uuid/uuid.dart';
 import '../models/database_models.dart';
 import 'database_service.dart';
 import 'encryption_service.dart';
+import 'milestone_service.dart';
 import 'notification_service.dart';
 
 /// Shared app state for onboarding, local auth/session, and user preferences.
@@ -133,6 +135,12 @@ class AppStateService extends ChangeNotifier {
       await _ensureCurrentUserProfile();
     } else {
       await DatabaseService().setActiveUser(null);
+    }
+
+    if (_sobrietyDate != null) {
+      unawaited(
+        MilestoneService().checkAndScheduleApproachNotifications(_sobrietyDate!),
+      );
     }
 
     _ready = true;
@@ -341,6 +349,11 @@ class AppStateService extends ChangeNotifier {
       await _prefs?.remove(_keySobrietyDate);
     } else {
       await _prefs?.setString(_keySobrietyDate, value.toIso8601String());
+    }
+    if (value != null) {
+      unawaited(
+        MilestoneService().checkAndScheduleApproachNotifications(value),
+      );
     }
     await _syncCurrentUserProfile();
     notifyListeners();
