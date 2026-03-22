@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../constants/crisis_constants.dart';
 import '../constants/sponsor_soul.dart';
 import '../models/database_models.dart';
+export '../models/database_models.dart' show ChatMessage;
 import '../models/sponsor_models.dart';
 import '../services/app_state_service.dart';
 import '../services/connectivity_service.dart';
@@ -16,7 +17,28 @@ import '../services/sponsor_memory_store.dart';
 import '../utils/context_assembler.dart';
 import '../../app_config.dart';
 
-class SponsorService extends ChangeNotifier {
+/// Abstract interface for testing SponsorChatScreen in isolation.
+abstract class SponsorResponder {
+  SponsorIdentity? get identity;
+  bool get hasIdentity;
+  SponsorStage get stage;
+  bool get isCloudAvailable;
+  List<SponsorMemory> get longTermMemory;
+  Future<String> respond({
+    required String message,
+    required String userId,
+    List<ChatMessage>? conversationHistory,
+    List<String>? recoveryContext,
+    bool? isOnline,
+  });
+  Future<void> digestSession();
+  Future<void> bumpEngagement({int checkInDays, int chatDays, int journalDays});
+  Future<void> addSessionMemory(SponsorMemory memory);
+  void addListener(VoidCallback listener);
+  void removeListener(VoidCallback listener);
+}
+
+class SponsorService extends ChangeNotifier implements SponsorResponder {
   SponsorService._internal();
   static final SponsorService instance = SponsorService._internal();
 
@@ -38,16 +60,21 @@ class SponsorService extends ChangeNotifier {
 
   // ── Public getters ────────────────────────────────────────────────────────
 
+  @override
   SponsorIdentity? get identity => _identity;
+  @override
   bool get hasIdentity => _identity != null;
 
+  @override
   SponsorStage get stage => _stageData.stage;
   int get engagementScore => _stageData.engagementScore;
 
   List<SponsorMemory> get sessionMemory => _memoryStore.session;
   List<SponsorMemory> get digestMemory => _memoryStore.digest;
+  @override
   List<SponsorMemory> get longTermMemory => _memoryStore.longterm;
 
+  @override
   bool get isCloudAvailable => ConnectivityService().isConnected;
 
   // ── Init ──────────────────────────────────────────────────────────────────
@@ -74,11 +101,13 @@ class SponsorService extends ChangeNotifier {
 
   // ── Memory ────────────────────────────────────────────────────────────────
 
+  @override
   Future<void> addSessionMemory(SponsorMemory memory) async {
     await _memoryStore.addToSession(memory);
     notifyListeners();
   }
 
+  @override
   Future<void> digestSession() async {
     await _memoryStore.digestSession();
     notifyListeners();
@@ -96,6 +125,7 @@ class SponsorService extends ChangeNotifier {
 
   // ── Relationship ──────────────────────────────────────────────────────────
 
+  @override
   Future<void> bumpEngagement({
     int checkInDays = 0,
     int chatDays = 0,
@@ -132,6 +162,7 @@ class SponsorService extends ChangeNotifier {
   // ── Chat ──────────────────────────────────────────────────────────────────
 
   /// [isOnline] is injectable for testing. Defaults to ConnectivityService.
+  @override
   Future<String> respond({
     required String message,
     required String userId,
