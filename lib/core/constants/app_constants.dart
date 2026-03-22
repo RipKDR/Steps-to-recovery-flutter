@@ -111,6 +111,20 @@ class AppConstants {
   ];
 }
 
+abstract final class AppStoreLinks {
+  static const String appStore =
+      'https://apps.apple.com/app/steps-to-recovery/idXXXXXXXXX';
+  static const String playStore =
+      'https://play.google.com/store/apps/details?id=com.stepstorecovery.app';
+  static const String shareUrl = 'https://stepstorecovery.app';
+}
+
+abstract final class NotificationIds {
+  // Daily check-in reminders use IDs < 1000
+  static const int milestoneApproachBase = 2000;
+  // 2001 = 7-day approach, 2002 = 30-day, 2003 = 90-day, 2004 = 1-year
+}
+
 /// Achievement keys
 class AchievementKeys {
   AchievementKeys._();
