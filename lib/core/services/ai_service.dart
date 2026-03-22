@@ -27,8 +27,12 @@ class AiService implements CompanionResponder {
   final String _apiKey = AppConfig.resolvedGoogleAiApiKey;
 
   bool get isEnabled =>
-      _apiKey.isNotEmpty || AppConfig.aiChatEdgeFunctionUrl.isNotEmpty;
+      _apiKey.isNotEmpty ||
+      AppConfig.aiChatEdgeFunctionUrl.isNotEmpty ||
+      AppConfig.hasOpenClaw;
   bool get _useEdgeFunction => AppConfig.aiChatEdgeFunctionUrl.isNotEmpty;
+  bool get _useOpenClaw =>
+      !_useEdgeFunction && AppConfig.hasOpenClaw;
   @override
   bool get isCloudAvailable => isEnabled;
 
@@ -61,6 +65,14 @@ class AiService implements CompanionResponder {
     try {
       if (_useEdgeFunction) {
         return await _chatViaEdgeFunction(
+          message: message,
+          conversationHistory: conversationHistory,
+          recoveryContext: recoveryContext,
+        );
+      }
+
+      if (_useOpenClaw) {
+        return await _chatViaOpenClaw(
           message: message,
           conversationHistory: conversationHistory,
           recoveryContext: recoveryContext,
@@ -173,6 +185,74 @@ class AiService implements CompanionResponder {
         .where((item) => item.trim().isNotEmpty)
         .map((item) => '- ${item.trim()}')
         .join('\n');
+  }
+
+  /// Route chat directly through OpenClaw gateway (dev / no-Supabase path).
+  /// In production, prefer the edge function so the token stays off-device.
+  Future<String> _chatViaOpenClaw({
+    required String message,
+    List<ChatMessage>? conversationHistory,
+    List<String>? recoveryContext,
+  }) async {
+    String systemContent =
+        'You are a recovery companion for a privacy-first 12-step app. '
+        'Be warm, calm, practical, and non-judgmental.\n\n'
+        'Safety rules:\n'
+        '- Do not claim to be a therapist, sponsor, clinician, or emergency service.\n'
+        '- If the user suggests imminent self-harm or unsafe relapse risk, direct them to emergency or crisis support immediately.\n'
+        '- Prefer concrete next steps: sponsor contact, meetings, breathing, journaling.\n\n'
+        'Response contract:\n'
+        '- Start with one sentence of empathy.\n'
+        '- Give 2-4 concrete next steps.\n'
+        '- Keep the answer under 170 words.';
+
+    if (recoveryContext != null && recoveryContext.isNotEmpty) {
+      systemContent +=
+          '\n\nRecovery context:\n${recoveryContext.map((c) => '- $c').join('\n')}';
+    }
+
+    final messages = <Map<String, String>>[
+      {'role': 'system', 'content': systemContent},
+    ];
+
+    final recent = conversationHistory != null && conversationHistory.length > 8
+        ? conversationHistory.sublist(conversationHistory.length - 8)
+        : conversationHistory ?? [];
+    for (final msg in recent) {
+      messages.add({
+        'role': msg.isUser ? 'user' : 'assistant',
+        'content': msg.content,
+      });
+    }
+    messages.add({'role': 'user', 'content': message.trim()});
+
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.openclawGatewayUrl}/v1/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${AppConfig.openclawGatewayToken}',
+          'x-openclaw-agent-id': 'main',
+        },
+        body: jsonEncode({
+          'model': 'openclaw',
+          'messages': messages,
+          'temperature': 0.7,
+          'max_tokens': 1024,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['choices']?[0]?['message']?['content'] ??
+            "I'm here for you. Tell me more about how you're feeling.";
+      }
+      debugPrint('OpenClaw error: ${response.statusCode} - ${response.body}');
+    } catch (e) {
+      debugPrint('OpenClaw connection error: $e');
+    }
+
+    return "I'm having trouble connecting right now. Please know that I'm here for you when I'm back online.";
   }
 
   /// Route chat through Supabase Edge Function (API key stays server-side).
