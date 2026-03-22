@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/recovery_content.dart';
 import '../../../core/models/database_models.dart';
 import '../../../core/services/database_service.dart';
@@ -70,6 +72,17 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                               daysLeft: _daysLeft(challenge),
                               isActive: true,
                               reward: '${challenge.durationDays} day challenge',
+                              onShare: () async {
+                                final shareText =
+                                    "I'm doing a ${challenge.durationDays}-day "
+                                    '${challenge.title} challenge in my recovery. '
+                                    'One day at a time. '
+                                    '${AppStoreLinks.shareUrl}';
+                                await SharePlus.instance.share(ShareParams(
+                                  text: shareText,
+                                  subject: 'Recovery Challenge',
+                                ));
+                              },
                             ),
                           ),
                         )
@@ -184,6 +197,7 @@ class _ChallengeCard extends StatelessWidget {
   final int daysLeft;
   final bool isActive;
   final String reward;
+  final VoidCallback? onShare;
 
   const _ChallengeCard({
     required this.title,
@@ -192,6 +206,7 @@ class _ChallengeCard extends StatelessWidget {
     required this.daysLeft,
     required this.isActive,
     required this.reward,
+    this.onShare,
   });
 
   @override
@@ -238,6 +253,13 @@ class _ChallengeCard extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (onShare != null)
+                  IconButton(
+                    icon: const Icon(Icons.share_outlined),
+                    tooltip: 'Share this challenge',
+                    color: AppColors.textMuted,
+                    onPressed: onShare,
+                  ),
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
