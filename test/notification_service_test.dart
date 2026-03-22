@@ -390,4 +390,46 @@ void main() {
       expect(result, const TimeOfDay(hour: 8, minute: 0));
     });
   });
+
+  group('scheduleMilestoneApproachReminder', () {
+    test('schedules notification when trigger date is in the future', () async {
+      await service.initialize();
+      final future = DateTime.now().add(const Duration(days: 5));
+      final milestoneDate = future.add(const Duration(days: 5));
+
+      await service.scheduleMilestoneApproachReminder(
+        id: 2001,
+        milestoneTitle: '1 Week',
+        milestoneDate: milestoneDate,
+      );
+
+      expect(fakePlugin.zonedScheduleCalls, hasLength(1));
+      final call = fakePlugin.zonedScheduleCalls.first;
+      expect(call.id, 2001);
+      expect(call.title, contains('5 days'));
+      expect(call.title, contains('1 Week'));
+    });
+
+    test('skips scheduling when trigger date is in the past', () async {
+      await service.initialize();
+      final past = DateTime.now().subtract(const Duration(days: 10));
+
+      await service.scheduleMilestoneApproachReminder(
+        id: 2001,
+        milestoneTitle: '1 Week',
+        milestoneDate: past,
+      );
+
+      expect(fakePlugin.zonedScheduleCalls, isEmpty);
+    });
+  });
+
+  group('cancelMilestoneApproachReminders', () {
+    test('cancels IDs 2001 through 2004', () async {
+      await service.initialize();
+      await service.cancelMilestoneApproachReminders();
+
+      expect(fakePlugin.cancelledIds, containsAll([2001, 2002, 2003, 2004]));
+    });
+  });
 }

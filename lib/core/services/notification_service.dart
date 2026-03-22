@@ -177,6 +177,10 @@ class NotificationService implements ReminderScheduler {
 
   static const int morningCheckInReminderId = 1001;
   static const int eveningCheckInReminderId = 1002;
+  static const int milestoneReminder1Id = 2001;
+  static const int milestoneReminder2Id = 2002;
+  static const int milestoneReminder3Id = 2003;
+  static const int milestoneReminder4Id = 2004;
 
   /// Initialize notification service
   Future<void> initialize() async {
@@ -459,5 +463,42 @@ class NotificationService implements ReminderScheduler {
   /// Cancel all notifications
   Future<void> cancelAllNotifications() async {
     await _notifications.cancelAll();
+  }
+
+  /// Schedule a "approaching milestone" reminder.
+  ///
+  /// Schedules a notification to fire [daysWarning] days before [milestoneDate].
+  /// If the trigger date is already in the past, no-ops silently.
+  ///
+  /// Typical usage: Schedule a "5 days to your 30-day milestone" notification.
+  Future<void> scheduleMilestoneApproachReminder({
+    required int id,
+    required String milestoneTitle,
+    required DateTime milestoneDate,
+    int daysWarning = 5,
+  }) async {
+    final triggerDate = milestoneDate.subtract(Duration(days: daysWarning));
+
+    // Skip if trigger date is in the past
+    if (triggerDate.isBefore(DateTime.now())) {
+      return;
+    }
+
+    await scheduleNotification(
+      id: id,
+      title: '$daysWarning days to your $milestoneTitle milestone!',
+      body: "Keep going. You're almost there.",
+      scheduledDate: triggerDate,
+    );
+  }
+
+  /// Cancel all milestone approach reminder notifications.
+  ///
+  /// Cancels the four standard milestone reminder IDs (2001–2004).
+  Future<void> cancelMilestoneApproachReminders() async {
+    await _notifications.cancel(id: milestoneReminder1Id);
+    await _notifications.cancel(id: milestoneReminder2Id);
+    await _notifications.cancel(id: milestoneReminder3Id);
+    await _notifications.cancel(id: milestoneReminder4Id);
   }
 }
