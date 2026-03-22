@@ -97,7 +97,70 @@ void main() {
         summary: long,
         createdAt: DateTime.now(),
       );
-      expect(memory.summary.length, lessThanOrEqualTo(500));
+      expect(memory.summary.length, equals(500));
+    });
+
+    test('distilledAt is preserved in toJson / fromJson roundtrip', () {
+      final distilledTime = DateTime(2026, 3, 22, 10, 30);
+      final memory = SponsorMemory(
+        id: 'mem456',
+        category: MemoryCategory.whatWorks,
+        summary: 'Meeting after work helps.',
+        createdAt: DateTime(2026, 3, 22),
+        distilledAt: distilledTime,
+      );
+      final json = memory.toJson();
+      final restored = SponsorMemory.fromJson(json);
+      expect(restored.id, 'mem456');
+      expect(restored.distilledAt, distilledTime);
+      expect(restored.summary, 'Meeting after work helps.');
+    });
+  });
+
+  group('SponsorMemoryFile', () {
+    test('toJson / fromJson roundtrip with non-empty content', () {
+      final memoryFile = SponsorMemoryFile(
+        session: [
+          SponsorMemory(
+            id: 'sess1',
+            category: MemoryCategory.lifeContext,
+            summary: 'User mentioned work stress today.',
+            createdAt: DateTime(2026, 3, 22, 9, 0),
+          ),
+        ],
+        digest: [
+          SponsorMemory(
+            id: 'digest1',
+            category: MemoryCategory.recoveryPattern,
+            summary: 'Pattern: anxiety peaks on Monday mornings.',
+            createdAt: DateTime(2026, 3, 21),
+            distilledAt: DateTime(2026, 3, 22),
+          ),
+        ],
+        longterm: [
+          SponsorMemory(
+            id: 'longterm1',
+            category: MemoryCategory.keyRelationship,
+            summary: 'Mother is a trusted support figure.',
+            createdAt: DateTime(2026, 3, 20),
+            distilledAt: DateTime(2026, 3, 22),
+          ),
+        ],
+      );
+      final json = memoryFile.toJson();
+      final restored = SponsorMemoryFile.fromJson(json);
+
+      expect(restored.session.length, 1);
+      expect(restored.session[0].id, 'sess1');
+      expect(restored.session[0].summary, 'User mentioned work stress today.');
+
+      expect(restored.digest.length, 1);
+      expect(restored.digest[0].category, MemoryCategory.recoveryPattern);
+      expect(restored.digest[0].distilledAt, DateTime(2026, 3, 22));
+
+      expect(restored.longterm.length, 1);
+      expect(restored.longterm[0].id, 'longterm1');
+      expect(restored.longterm[0].summary, 'Mother is a trusted support figure.');
     });
   });
 }
