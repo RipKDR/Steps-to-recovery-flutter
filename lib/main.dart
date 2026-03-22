@@ -14,6 +14,7 @@ import 'core/services/connectivity_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/preferences_service.dart';
 import 'core/services/sync_service.dart';
+import 'core/services/sponsor_service.dart';
 import 'navigation/app_router.dart';
 
 void main() async {
@@ -110,6 +111,10 @@ Future<void> _initializeServices() async {
       await SyncService().initialize();
       logger.debug('Sync service initialized');
     }
+
+    // Initialize sponsor service
+    await SponsorService.instance.initialize();
+    logger.debug('Sponsor service initialized');
 
     // AI service is initialized on-demand
     logger.debug('AI service ready');

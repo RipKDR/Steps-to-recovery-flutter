@@ -20,7 +20,9 @@ import '../features/progress/screens/progress_dashboard_screen.dart';
 import '../features/gratitude/screens/gratitude_screen.dart';
 import '../features/inventory/screens/inventory_screen.dart';
 import '../features/safety_plan/screens/safety_plan_screen.dart';
-import '../features/ai_companion/screens/companion_chat_screen.dart';
+import '../features/ai_companion/screens/sponsor_chat_screen.dart';
+import '../features/ai_companion/screens/sponsor_intro_screen.dart';
+import '../core/services/sponsor_service.dart';
 import '../features/readings/screens/daily_reading_screen.dart';
 import '../features/emergency/screens/danger_zone_screen.dart';
 import '../features/sponsor/screens/sponsor_screen.dart';
@@ -40,27 +42,29 @@ class AppRouter {
 
   static final GoRouter router = GoRouter(
     initialLocation: '/bootstrap',
-    refreshListenable: AppStateService.instance,
+    refreshListenable: Listenable.merge([
+      AppStateService.instance,
+      SponsorService.instance,
+    ]),
     redirect: (context, state) {
       final service = AppStateService.instance;
+      final sponsor = SponsorService.instance;
       final location = state.uri.path;
       final isBootstrap = location == '/bootstrap';
       final isAuthRoute =
           location == AppRoutes.onboarding ||
           location == AppRoutes.login ||
           location == AppRoutes.signup;
+      final isSponsorIntro = location == '/sponsor-intro';
 
       if (!service.isReady) {
         return isBootstrap ? null : '/bootstrap';
       }
 
       if (isBootstrap) {
-        if (!service.onboardingComplete) {
-          return AppRoutes.onboarding;
-        }
-        if (!service.isAuthenticated) {
-          return AppRoutes.login;
-        }
+        if (!service.onboardingComplete) return AppRoutes.onboarding;
+        if (!service.isAuthenticated) return AppRoutes.login;
+        if (!sponsor.hasIdentity) return '/sponsor-intro';
         return AppRoutes.home;
       }
 
@@ -72,7 +76,12 @@ class AppRouter {
         return isAuthRoute ? null : AppRoutes.login;
       }
 
-      if (isAuthRoute || location == '/') {
+      // After auth: gate on sponsor identity
+      if (!sponsor.hasIdentity) {
+        return isSponsorIntro ? null : '/sponsor-intro';
+      }
+
+      if (isAuthRoute || isSponsorIntro || location == '/') {
         return AppRoutes.home;
       }
 
@@ -100,6 +109,15 @@ class AppRouter {
         path: AppRoutes.signup,
         name: 'signup',
         builder: (context, state) => const SignupScreen(),
+      ),
+
+      // NEW: Sponsor intro (post-auth gate — outside ShellRoute)
+      GoRoute(
+        path: '/sponsor-intro',
+        name: 'sponsorIntro',
+        builder: (context, state) => SponsorIntroScreen(
+          onComplete: () => context.go(AppRoutes.home),
+        ),
       ),
 
       // Main app shell with bottom navigation
@@ -161,7 +179,7 @@ class AppRouter {
               GoRoute(
                 path: 'companion-chat',
                 name: 'companionChat',
-                builder: (context, state) => const CompanionChatScreen(),
+                builder: (context, state) => const SponsorChatScreen(),
               ),
               GoRoute(
                 path: 'danger-zone',
