@@ -1,12 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/services/app_state_service.dart';
+import '../../../core/services/biometric_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 
-class SecuritySettingsScreen extends StatelessWidget {
+class SecuritySettingsScreen extends StatefulWidget {
   const SecuritySettingsScreen({super.key});
+
+  @override
+  State<SecuritySettingsScreen> createState() => _SecuritySettingsScreenState();
+}
+
+class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
+  bool _biometricAvailable = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometricAvailability();
+  }
+
+  Future<void> _checkBiometricAvailability() async {
+    final available = await BiometricService().isAvailable();
+    if (mounted) {
+      setState(() => _biometricAvailable = available);
+    }
+  }
+
+  Future<void> _toggleBiometric(bool value) async {
+    if (value) {
+      // Verify hardware works before enabling
+      final result = await BiometricService().authenticate(
+        reason: 'Confirm biometrics to enable app lock',
+      );
+      if (result != BiometricResult.success) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Biometric authentication failed')),
+          );
+        }
+        return;
+      }
+    }
+    await AppStateService.instance.setBiometricEnabled(value);
+  }
 
   Future<void> _resetApp(BuildContext context) async {
     final shouldReset = await showDialog<bool>(
@@ -64,9 +103,13 @@ class SecuritySettingsScreen extends StatelessWidget {
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Biometric lock'),
-                subtitle: const Text('Require device unlock for recovery data'),
+                subtitle: Text(
+                  _biometricAvailable
+                      ? 'Require device unlock for recovery data'
+                      : 'Biometric authentication is not available on this device',
+                ),
                 value: AppStateService.instance.biometricEnabled,
-                onChanged: (value) => AppStateService.instance.setBiometricEnabled(value),
+                onChanged: _biometricAvailable ? _toggleBiometric : null,
               ),
               const SizedBox(height: AppSpacing.xl),
               Text(

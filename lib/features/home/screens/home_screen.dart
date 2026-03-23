@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -70,24 +71,29 @@ class _HomeScreenState extends State<HomeScreen> {
               SliverAppBar(
                 floating: true,
                 backgroundColor: AppColors.background,
-                title: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Steps to Recovery',
-                      style: AppTypography.headlineMedium,
-                    ),
-                    Text(
-                      'Welcome back, ${AppStateService.instance.userLabel}',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textMuted,
+                title: Semantics(
+                  sortKey: const OrdinalSortKey(0),
+                  header: true,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Steps to Recovery',
+                        style: AppTypography.headlineMedium,
                       ),
-                    ),
-                  ],
+                      Text(
+                        'Welcome back, ${AppStateService.instance.userLabel}',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.bar_chart_outlined),
+                    tooltip: 'View progress dashboard',
                     onPressed: () => context.push('/home/progress'),
                   ),
                 ],
@@ -96,31 +102,52 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    _SobrietyCard(
-                      snapshot: data,
-                      onShareMilestone: data.featuredShareContent == null
-                          ? null
-                          : () => _shareMilestone(context, data),
+                    Semantics(
+                      sortKey: const OrdinalSortKey(1),
+                      child: _SobrietyCard(
+                        snapshot: data,
+                        onShareMilestone: data.featuredShareContent == null
+                            ? null
+                            : () => _shareMilestone(context, data),
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    _SupportStrip(snapshot: data),
+                    Semantics(
+                      sortKey: const OrdinalSortKey(2),
+                      child: _SupportStrip(snapshot: data),
+                    ),
                     const SizedBox(height: AppSpacing.xl),
-                    _QuickActions(snapshot: data),
+                    Semantics(
+                      sortKey: const OrdinalSortKey(3),
+                      child: _QuickActions(snapshot: data),
+                    ),
                     const SizedBox(height: AppSpacing.xxl),
-                    const Text('Today', style: AppTypography.headlineSmall),
+                    Semantics(
+                      sortKey: const OrdinalSortKey(4),
+                      header: true,
+                      child: Text('Today', style: AppTypography.headlineSmall),
+                    ),
                     const SizedBox(height: AppSpacing.md),
-                    _CheckInCards(snapshot: data),
+                    Semantics(
+                      sortKey: const OrdinalSortKey(5),
+                      child: _CheckInCards(snapshot: data),
+                    ),
                   ]),
                 ),
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => context.push('/journal/editor?mode=create'),
-            icon: const Icon(Icons.add),
-            label: const Text('Quick Journal'),
-            backgroundColor: AppColors.primaryAmber,
-            foregroundColor: AppColors.textOnDark,
+          floatingActionButton: Semantics(
+            sortKey: const OrdinalSortKey(6),
+            button: true,
+            label: 'Create a new journal entry',
+            child: FloatingActionButton.extended(
+              onPressed: () => context.push('/journal/editor?mode=create'),
+              icon: const Icon(Icons.add),
+              label: const Text('Quick Journal'),
+              backgroundColor: AppColors.primaryAmber,
+              foregroundColor: AppColors.textOnDark,
+            ),
           ),
         );
       },
@@ -170,9 +197,11 @@ class _HomeScreenState extends State<HomeScreen> {
       'event=achievement_share_tapped achievementKey=${featuredAchievement.achievementKey}',
     );
 
-    final result = await Share.share(
-      shareContent.shareText,
-      subject: shareContent.shareSubject,
+    final result = await SharePlus.instance.share(
+      ShareParams(
+        text: shareContent.shareText,
+        subject: shareContent.shareSubject,
+      ),
     );
 
     if (!context.mounted) {
@@ -264,64 +293,81 @@ class _SobrietyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = snapshot.user;
     final soberLabel = user == null ? 'Recovery starts now' : user.sobrietyMilestone;
+    final days = AppStateService.instance.sobrietyDays;
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: AppColors.primaryGradient,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    return Semantics(
+      label: '$days days clean. $soberLabel',
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: AppColors.primaryGradient,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
         ),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Clean Time',
-            style: AppTypography.labelMedium.copyWith(
-              color: AppColors.textOnDark,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            '${AppStateService.instance.sobrietyDays} days',
-            style: AppTypography.displayLarge.copyWith(
-              color: AppColors.textOnDark,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            soberLabel,
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textOnDark.withValues(alpha: 0.84),
-            ),
-          ),
-          if (snapshot.unreadAchievements > 0) ...[
-            const SizedBox(height: AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(
-              '${snapshot.unreadAchievements} new achievement${snapshot.unreadAchievements == 1 ? '' : 's'} waiting',
+              'Clean Time',
               style: AppTypography.labelMedium.copyWith(
                 color: AppColors.textOnDark,
               ),
             ),
-          ],
-          if (snapshot.featuredShareContent != null) ...[
-            const SizedBox(height: AppSpacing.md),
-            OutlinedButton.icon(
-              onPressed: onShareMilestone,
-              icon: const Icon(Icons.share_outlined),
-              label: Text(snapshot.featuredShareContent!.buttonLabel),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.textOnDark,
-                side: BorderSide(
-                  color: AppColors.textOnDark.withValues(alpha: 0.72),
-                ),
+            const SizedBox(height: AppSpacing.sm),
+            TweenAnimationBuilder<int>(
+              tween: IntTween(begin: 0, end: days),
+              duration: MediaQuery.of(context).disableAnimations
+                  ? Duration.zero
+                  : const Duration(milliseconds: 1200),
+              curve: Curves.easeOut,
+              builder: (context, value, child) {
+                return Text(
+                  '$value days',
+                  style: AppTypography.displayLarge.copyWith(
+                    color: AppColors.textOnDark,
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              soberLabel,
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textOnDark.withValues(alpha: 0.84),
               ),
             ),
+            if (snapshot.unreadAchievements > 0) ...[
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                '${snapshot.unreadAchievements} new achievement${snapshot.unreadAchievements == 1 ? '' : 's'} waiting',
+                style: AppTypography.labelMedium.copyWith(
+                  color: AppColors.textOnDark,
+                ),
+              ),
+            ],
+            if (snapshot.featuredShareContent != null) ...[
+              const SizedBox(height: AppSpacing.md),
+              Semantics(
+                button: true,
+                label: 'Share milestone: ${snapshot.featuredShareContent!.buttonLabel}',
+                child: OutlinedButton.icon(
+                  onPressed: onShareMilestone,
+                  icon: const Icon(Icons.share_outlined),
+                  label: Text(snapshot.featuredShareContent!.buttonLabel),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textOnDark,
+                    side: BorderSide(
+                      color: AppColors.textOnDark.withValues(alpha: 0.72),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -334,32 +380,39 @@ class _SupportStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _InfoColumn(
-              label: 'Sponsor',
-              value: snapshot.sponsor?.name ?? 'Not added',
+    return Semantics(
+      label: 'Support info. Sponsor: ${snapshot.sponsor?.name ?? 'Not added'}. Program: ${AppStateService.instance.programType ?? 'Not set'}',
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceCard,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: _InfoColumn(
+                label: 'Sponsor',
+                value: snapshot.sponsor?.name ?? 'Not added',
+              ),
             ),
-          ),
-          Expanded(
-            child: _InfoColumn(
-              label: 'Program',
-              value: AppStateService.instance.programType ?? 'Choose in settings',
+            Expanded(
+              child: _InfoColumn(
+                label: 'Program',
+                value: AppStateService.instance.programType ?? 'Choose in settings',
+              ),
             ),
-          ),
-          TextButton(
-            onPressed: () => context.push(AppRoutes.sponsor),
-            child: const Text('Manage'),
-          ),
-        ],
+            Semantics(
+              button: true,
+              label: 'Manage sponsor and support network',
+              child: TextButton(
+                onPressed: () => context.push(AppRoutes.sponsor),
+                child: const Text('Manage'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -402,7 +455,7 @@ class _QuickActions extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Quick Actions', style: AppTypography.headlineSmall),
+        Text('Quick Actions', style: AppTypography.headlineSmall),
         const SizedBox(height: AppSpacing.md),
         Wrap(
           spacing: AppSpacing.sm,
@@ -411,31 +464,37 @@ class _QuickActions extends StatelessWidget {
             _ActionButton(
               icon: Icons.self_improvement,
               label: 'Step Work',
+              semanticLabel: 'Navigate to step work',
               onTap: () => context.go(AppRoutes.steps),
             ),
             _ActionButton(
               icon: Icons.edit_note,
               label: 'Journal',
+              semanticLabel: 'Navigate to journal',
               onTap: () => context.go(AppRoutes.journal),
             ),
             _ActionButton(
               icon: Icons.favorite,
               label: 'Gratitude',
+              semanticLabel: 'Navigate to gratitude entries',
               onTap: () => context.push('/home/gratitude'),
             ),
             _ActionButton(
               icon: Icons.menu_book_outlined,
               label: 'Reading',
+              semanticLabel: 'Navigate to daily reading',
               onTap: () => context.push('/home/daily-reading'),
             ),
             _ActionButton(
               icon: Icons.people_alt_outlined,
               label: 'Meetings',
+              semanticLabel: 'Navigate to meetings',
               onTap: () => context.go(AppRoutes.meetings),
             ),
             _ActionButton(
               icon: Icons.crisis_alert,
               label: 'Emergency',
+              semanticLabel: 'Navigate to emergency crisis support',
               onTap: () => context.push('/home/emergency'),
             ),
           ],
@@ -450,34 +509,43 @@ class _ActionButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.semanticLabel,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceCard,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: AppSpacing.iconMd, color: AppColors.primaryAmber),
-            const SizedBox(width: AppSpacing.sm),
-            Text(label, style: AppTypography.labelMedium),
-          ],
+    return Semantics(
+      button: true,
+      label: semanticLabel ?? label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: AppSpacing.touchTargetComfortable),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.md,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceCard,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: AppSpacing.iconMd, color: AppColors.primaryAmber),
+                const SizedBox(width: AppSpacing.sm),
+                Text(label, style: AppTypography.labelMedium),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -534,58 +602,67 @@ class _CheckInCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryAmber.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+    return Semantics(
+      button: true,
+      label: '$title. ${isComplete ? 'Completed' : 'Not completed'}. $subtitle',
+      child: Card(
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryAmber.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: AppColors.primaryAmber,
+                    size: AppSpacing.iconLg,
+                  ),
                 ),
-                child: Icon(
-                  icon,
-                  color: AppColors.primaryAmber,
-                  size: AppSpacing.iconLg,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.lg),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(title, style: AppTypography.titleMedium),
-                        ),
-                        if (isComplete)
-                          const Icon(
-                            Icons.check_circle,
-                            color: AppColors.success,
-                            size: AppSpacing.iconMd,
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(title, style: AppTypography.titleMedium),
                           ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      subtitle,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textMuted,
+                          if (isComplete)
+                            Semantics(
+                              label: 'Completed',
+                              child: const Icon(
+                                Icons.check_circle,
+                                color: AppColors.success,
+                                size: AppSpacing.iconMd,
+                              ),
+                            ),
+                        ],
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        subtitle,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textMuted,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const Icon(Icons.chevron_right, color: AppColors.textMuted),
-            ],
+                const ExcludeSemantics(
+                  child: Icon(Icons.chevron_right, color: AppColors.textMuted),
+                ),
+              ],
+            ),
           ),
         ),
       ),

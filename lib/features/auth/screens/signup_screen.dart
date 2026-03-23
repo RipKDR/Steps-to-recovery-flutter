@@ -58,11 +58,12 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.xxl),
-              
+
               // Email field
               TextField(
                 controller: _emailController,
                 style: AppTypography.bodyMedium,
+                autofillHints: const [AutofillHints.email],
                 decoration: const InputDecoration(
                   labelText: 'Email',
                   prefixIcon: Icon(Icons.email_outlined),
@@ -70,16 +71,18 @@ class _SignupScreenState extends State<SignupScreen> {
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
               ),
-              const SizedBox(height: AppSpacing.lg),
-              
+              const SizedBox(height: AppSpacing.xl),
+
               // Password field
               TextField(
                 controller: _passwordController,
                 style: AppTypography.bodyMedium,
+                autofillHints: const [AutofillHints.newPassword],
                 decoration: InputDecoration(
                   labelText: 'Password',
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
+                    tooltip: _obscurePassword ? 'Show password' : 'Hide password',
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility
@@ -95,12 +98,13 @@ class _SignupScreenState extends State<SignupScreen> {
                 obscureText: _obscurePassword,
                 textInputAction: TextInputAction.next,
               ),
-              const SizedBox(height: AppSpacing.lg),
-              
+              const SizedBox(height: AppSpacing.xl),
+
               // Confirm password
               TextField(
                 controller: _confirmPasswordController,
                 style: AppTypography.bodyMedium,
+                autofillHints: const [AutofillHints.newPassword],
                 decoration: const InputDecoration(
                   labelText: 'Confirm Password',
                   prefixIcon: Icon(Icons.lock_outline),
@@ -108,36 +112,42 @@ class _SignupScreenState extends State<SignupScreen> {
                 obscureText: _obscurePassword,
                 textInputAction: TextInputAction.next,
               ),
-              const SizedBox(height: AppSpacing.lg),
-              
+              const SizedBox(height: AppSpacing.xl),
+
               // Sobriety date
-              TextField(
-                controller: _sobrietyDateController,
-                style: AppTypography.bodyMedium,
-                decoration: const InputDecoration(
-                  labelText: 'Sobriety Date (optional)',
-                  prefixIcon: Icon(Icons.calendar_today),
-                  hintText: 'MM/DD/YYYY',
+              Semantics(
+                label: _sobrietyDate == null
+                    ? 'Select sobriety date, optional, tap to open date picker'
+                    : 'Sobriety date: ${_sobrietyDateController.text}, tap to change',
+                button: true,
+                child: TextField(
+                  controller: _sobrietyDateController,
+                  style: AppTypography.bodyMedium,
+                  decoration: const InputDecoration(
+                    labelText: 'Sobriety Date (optional)',
+                    prefixIcon: Icon(Icons.calendar_today),
+                    hintText: 'MM/DD/YYYY',
+                  ),
+                  readOnly: true,
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime.now(),
+                      initialDate: _sobrietyDate ?? DateTime.now().subtract(const Duration(days: 30)),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        _sobrietyDate = picked;
+                        _sobrietyDateController.text =
+                            '${picked.month.toString().padLeft(2, '0')}/${picked.day.toString().padLeft(2, '0')}/${picked.year}';
+                      });
+                    }
+                  },
                 ),
-                readOnly: true,
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime.now(),
-                    initialDate: _sobrietyDate ?? DateTime.now().subtract(const Duration(days: 30)),
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      _sobrietyDate = picked;
-                      _sobrietyDateController.text =
-                          '${picked.month.toString().padLeft(2, '0')}/${picked.day.toString().padLeft(2, '0')}/${picked.year}';
-                    });
-                  }
-                },
               ),
-              const SizedBox(height: AppSpacing.lg),
-              
+              const SizedBox(height: AppSpacing.xl),
+
               // Terms agreement
               Row(
                 children: [
@@ -186,20 +196,24 @@ class _SignupScreenState extends State<SignupScreen> {
                 ],
               ),
               const SizedBox(height: AppSpacing.xxl),
-              
+
               // Sign up button
-              ElevatedButton(
-                onPressed: (_agreeToTerms && !_isLoading) ? _signup : null,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: AppSpacing.iconLg,
-                        width: AppSpacing.iconLg,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Create Account'),
+              Semantics(
+                label: 'Create your account',
+                button: true,
+                child: ElevatedButton(
+                  onPressed: (_agreeToTerms && !_isLoading) ? _signup : null,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: AppSpacing.iconLg,
+                          width: AppSpacing.iconLg,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Create Account'),
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              
+
               // Login link
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

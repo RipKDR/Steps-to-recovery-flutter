@@ -20,11 +20,28 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
+    // Load signing properties from key.properties file (local) or environment variables (CI)
+    val keystorePropertiesFile = rootProject.file("key.properties")
+    val hasKeystoreFile = keystorePropertiesFile.exists()
+    val keystoreProperties = if (hasKeystoreFile) {
+        java.util.Properties().apply { load(keystorePropertiesFile.inputStream()) }
+    } else null
+
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties?.getProperty("keyAlias")
+                ?: System.getenv("KEY_ALIAS") ?: ""
+            keyPassword = keystoreProperties?.getProperty("keyPassword")
+                ?: System.getenv("KEY_PASSWORD") ?: ""
+            storeFile = (keystoreProperties?.getProperty("storeFile")
+                ?: System.getenv("KEY_STORE_FILE"))?.let { file(it) }
+            storePassword = keystoreProperties?.getProperty("storePassword")
+                ?: System.getenv("KEY_STORE_PASSWORD") ?: ""
+        }
+    }
+
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.steps_recovery_flutter"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -34,9 +51,16 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            val releaseConfig = signingConfigs.getByName("release")
+            // Use release signing if keystore is configured, otherwise fall back to debug for local dev
+            signingConfig = if (releaseConfig.storeFile != null) releaseConfig
+                            else signingConfigs.getByName("debug")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
@@ -47,4 +71,18 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+
+// Copy APK to Flutter's expected output location
+afterEvaluate {
+    tasks.named<com.android.build.gradle.tasks.PackageApplication>("packageDebug") {
+        doLast {
+            val flutterApkDir = file("${rootProject.projectDir}/../build/app/outputs/flutter-apk")
+            flutterApkDir.mkdirs()
+            val apkFile = file("${project.buildDir}/outputs/apk/debug/app-debug.apk")
+            if (apkFile.exists()) {
+                apkFile.copyTo(file("${flutterApkDir}/app-debug.apk"), overwrite = true)
+            }
+        }
+    }
 }

@@ -5,7 +5,7 @@ import '../../../core/theme/app_typography.dart';
 /// Reusable craving level slider widget
 class CravingSlider extends StatelessWidget {
   final int value;
-  final Function(int) onChanged;
+  final ValueChanged<int> onChanged;
   final bool showLabels;
 
   const CravingSlider({
@@ -43,14 +43,24 @@ class CravingSlider extends StatelessWidget {
               ),
             ],
           ),
-        Slider(
-          value: value.toDouble(),
-          min: 0,
-          max: 10,
-          divisions: 10,
-          activeColor: AppColors.primaryAmber,
-          inactiveColor: AppColors.surfaceInteractive,
-          onChanged: (value) => onChanged(value.round()),
+        Semantics(
+          label: 'Craving level slider',
+          value: '$value out of 10',
+          child: Slider(
+            value: value.toDouble(),
+            min: 0,
+            max: 10,
+            divisions: 10,
+            activeColor: AppColors.primaryAmber,
+            inactiveColor: AppColors.surfaceInteractive,
+            onChanged: (value) => onChanged(value.round()),
+            semanticFormatterCallback: (double value) {
+              final level = value.round();
+              if (level <= 3) return '$level — low craving';
+              if (level <= 6) return '$level — moderate craving';
+              return '$level — severe craving';
+            },
+          ),
         ),
       ],
     );

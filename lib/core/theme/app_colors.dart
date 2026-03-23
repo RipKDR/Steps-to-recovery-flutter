@@ -15,7 +15,12 @@ class AppColors {
   static const Color surface = Color(0xFF141414);
   static const Color surfaceElevated = Color(0xFF1A1A1A);
   static const Color surfaceCard = Color(0xFF1E1E1E);
+  static const Color surfaceBubble = Color(0xFF1E1E1E); // Chat message bubbles
   static const Color surfaceInteractive = Color(0xFF2A2A2A);
+
+  // Glass effect colors (for premium frosted glass cards)
+  static const Color glassSurface = Color(0x1AFFFFFF); // 10% white overlay
+  static const Color glassBorder = Color(0x33FFFFFF); // 20% white edge highlight
 
   // Text colors
   static const Color textPrimary = Color(0xFFFFFFFF);
@@ -54,4 +59,20 @@ class AppColors {
   static const Color transparent = Colors.transparent;
   static const Color white = Colors.white;
   static const Color black = Colors.black;
+
+  // ── Light theme tokens ──────────────────────────────────────
+  // Off-white base — easier on the eyes than pure white
+  static const Color lightBackground = Color(0xFFF8F8F8);
+  static const Color lightSurface = Color(0xFFFFFFFF);
+  static const Color lightSurfaceElevated = Color(0xFFF2F2F2);
+  static const Color lightSurfaceCard = Color(0xFFFFFFFF);
+  static const Color lightSurfaceInteractive = Color(0xFFEFEFEF);
+
+  static const Color lightTextPrimary = Color(0xFF0A0A0A);
+  static const Color lightTextSecondary = Color(0xFF3F3F46);
+  static const Color lightTextMuted = Color(0xFF71717A);
+  static const Color lightTextOnAmber = Color(0xFF0A0A0A);
+
+  static const Color lightBorder = Color(0xFFE4E4E7);
+  static const Color lightBorderLight = Color(0xFFF4F4F5);
 }

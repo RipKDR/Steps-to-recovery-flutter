@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/recovery_content.dart';
 import '../../../core/models/database_models.dart';
 import '../../../core/services/database_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/app_utils.dart';
+import '../../../widgets/empty_state.dart';
+import '../../../widgets/loading_state.dart';
 
 /// Challenges screen - Recovery challenges
 class ChallengesScreen extends StatefulWidget {
@@ -34,7 +39,7 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
         future: _challengeFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const LoadingState();
           }
 
           final challenges = snapshot.data ?? const <Challenge>[];
@@ -52,9 +57,10 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 if (active.isEmpty)
-                  _EmptyChallengesState(
+                  const EmptyState(
+                    icon: Icons.local_fire_department,
                     title: 'No active challenges yet',
-                    description:
+                    message:
                         'Choose a recovery challenge to build consistency in journaling, meetings, or step work.',
                   )
                 else
@@ -70,6 +76,17 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                               daysLeft: _daysLeft(challenge),
                               isActive: true,
                               reward: '${challenge.durationDays} day challenge',
+                              onShare: () async {
+                                final shareText =
+                                    "I'm doing a ${challenge.durationDays}-day "
+                                    '${challenge.title} challenge in my recovery. '
+                                    'One day at a time. '
+                                    '${AppStoreLinks.shareUrl}';
+                                await SharePlus.instance.share(ShareParams(
+                                  text: shareText,
+                                  subject: 'Recovery Challenge',
+                                ));
+                              },
                             ),
                           ),
                         )
@@ -94,9 +111,10 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 if (completed.isEmpty)
-                  _EmptyChallengesState(
+                  const EmptyState(
+                    icon: Icons.emoji_events_outlined,
                     title: 'No completed challenges yet',
-                    description:
+                    message:
                         'Finished challenges will show up here once the local database starts recording progress.',
                   )
                 else
@@ -108,7 +126,7 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                             child: _CompletedChallengeCard(
                               title: challenge.title,
                               description: challenge.description,
-                              completedDate: challenge.endDate?.toIso8601String().split('T').first ?? 'completed',
+                              completedDate: challenge.endDate != null ? AppUtils.formatDate(challenge.endDate!) : 'completed',
                             ),
                           ),
                         )
@@ -184,6 +202,7 @@ class _ChallengeCard extends StatelessWidget {
   final int daysLeft;
   final bool isActive;
   final String reward;
+  final VoidCallback? onShare;
 
   const _ChallengeCard({
     required this.title,
@@ -192,52 +211,65 @@ class _ChallengeCard extends StatelessWidget {
     required this.daysLeft,
     required this.isActive,
     required this.reward,
+    this.onShare,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? AppColors.primaryAmber.withValues(alpha: 0.2)
-                        : AppColors.surfaceInteractive,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+    return Semantics(
+      label: '$title challenge, ${(progress * 100).round()}% complete, $daysLeft days left',
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: isActive
+                          ? AppColors.primaryAmber.withValues(alpha: 0.2)
+                          : AppColors.surfaceInteractive,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    ),
+                    child: Icon(
+                      isActive
+                          ? Icons.local_fire_department
+                          : Icons.emoji_events_outlined,
+                      color: isActive
+                          ? AppColors.primaryAmber
+                          : AppColors.textMuted,
+                      size: AppSpacing.iconLg,
+                    ),
                   ),
-                  child: Icon(
-                    isActive
-                        ? Icons.local_fire_department
-                        : Icons.emoji_events_outlined,
-                    color: isActive
-                        ? AppColors.primaryAmber
-                        : AppColors.textMuted,
-                    size: AppSpacing.iconLg,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.lg),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(title, style: AppTypography.titleMedium),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        description,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textMuted,
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(title, style: AppTypography.titleMedium),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          description,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textMuted,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                  if (onShare != null)
+                    Semantics(
+                      label: 'Share $title challenge',
+                      child: IconButton(
+                        icon: const Icon(Icons.share_outlined),
+                        tooltip: 'Share this challenge',
+                        color: AppColors.textMuted,
+                        onPressed: onShare,
+                      ),
+                    ),
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -280,6 +312,7 @@ class _ChallengeCard extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -479,42 +512,6 @@ class _CrisisResourceCard extends StatelessWidget {
             resource.phone,
             style: AppTypography.labelMedium.copyWith(
               color: resource.isEmergency ? AppColors.danger : AppColors.primaryAmber,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EmptyChallengesState extends StatelessWidget {
-  final String title;
-  final String description;
-
-  const _EmptyChallengesState({
-    required this.title,
-    required this.description,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: AppTypography.titleMedium),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            description,
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textMuted,
             ),
           ),
         ],

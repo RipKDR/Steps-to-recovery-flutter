@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/services/app_state_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -25,7 +27,7 @@ class ProfileScreen extends StatelessWidget {
               // Profile header
               Container(
                 padding: const EdgeInsets.all(AppSpacing.xxl),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.surfaceCard,
                   border: Border(
                     bottom: BorderSide(color: AppColors.border),
@@ -36,7 +38,7 @@ class ProfileScreen extends StatelessWidget {
                     Container(
                       width: AppSpacing.sext,
                       height: AppSpacing.sext,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           colors: AppColors.primaryGradient,
                           begin: Alignment.topLeft,
@@ -145,6 +147,21 @@ class ProfileScreen extends StatelessWidget {
                     title: 'Terms of Service',
                     onTap: () {},
                   ),
+                  _SettingsTile(
+                    icon: Icons.group_add_outlined,
+                    title: 'Invite Someone to Recovery',
+                    subtitle: 'Share the app with someone who might need it',
+                    onTap: () async {
+                      await SharePlus.instance.share(ShareParams(
+                        text:
+                            'I use Steps to Recovery to stay accountable in my '
+                            'sobriety. It\'s private, works offline, and '
+                            'completely free. '
+                            '${AppStoreLinks.shareUrl}',
+                        subject: 'A recovery app worth trying',
+                      ));
+                    },
+                  ),
                 ],
               ),
 
@@ -247,7 +264,7 @@ class _SettingsTile extends StatelessWidget {
               ),
             )
           : null,
-      trailing: Icon(
+      trailing: const Icon(
         Icons.chevron_right,
         color: AppColors.textMuted,
       ),

@@ -7,6 +7,9 @@ import '../../../core/services/database_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/app_utils.dart';
+import '../../../widgets/empty_state.dart';
+import '../../../widgets/loading_state.dart';
 
 /// Progress Dashboard screen - Shows recovery progress and insights
 class ProgressDashboardScreen extends StatefulWidget {
@@ -60,7 +63,7 @@ class _ProgressDashboardScreenState extends State<ProgressDashboardScreen> {
         future: _snapshotFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const LoadingState();
           }
 
           final data = snapshot.data ??
@@ -146,12 +149,13 @@ class _ProgressDashboardScreenState extends State<ProgressDashboardScreen> {
                 Text('Milestones', style: AppTypography.headlineSmall),
                 const SizedBox(height: AppSpacing.md),
                 if (achievedMilestones.isEmpty)
-                  _EmptyMilestoneState(
+                  EmptyState(
+                    icon: Icons.flag_outlined,
                     title: 'No milestones yet',
-                    description:
+                    message:
                         'Start with a clean day and the milestones will follow.',
                     actionLabel: 'Do a check-in',
-                    onTap: () => context.push('/home/morning-intention'),
+                    onAction: () => context.push('/home/morning-intention'),
                   )
                 else
                   Column(
@@ -178,12 +182,13 @@ class _ProgressDashboardScreenState extends State<ProgressDashboardScreen> {
                 Text('Recent Achievements', style: AppTypography.headlineSmall),
                 const SizedBox(height: AppSpacing.md),
                 if (data.achievements.isEmpty)
-                  _EmptyMilestoneState(
+                  EmptyState(
+                    icon: Icons.emoji_events_outlined,
                     title: 'No achievements yet',
-                    description:
+                    message:
                         'Your first completed check-in, journal entry, or step answer will show up here.',
                     actionLabel: 'Open journal',
-                    onTap: () => context.push('/journal'),
+                    onAction: () => context.push('/journal'),
                   )
                 else
                   Column(
@@ -195,7 +200,7 @@ class _ProgressDashboardScreenState extends State<ProgressDashboardScreen> {
                               title: achievement.achievementKey,
                               description: achievement.type.name,
                               icon: Icons.emoji_events,
-                              date: achievement.earnedAt.toLocal().toIso8601String().split('T').first,
+                              date: AppUtils.formatDate(achievement.earnedAt.toLocal()),
                             ),
                           ),
                         )
@@ -263,7 +268,7 @@ class _SobrietyCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: AppColors.primaryGradient,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -311,12 +316,13 @@ class _MoodTrendCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (checkIns.isEmpty) {
-      return _EmptyMilestoneState(
+      return EmptyState(
+        icon: Icons.track_changes,
         title: 'No check-in data yet',
-        description:
+        message:
             'Morning and evening check-ins will build your mood trend automatically.',
         actionLabel: 'Do morning check-in',
-        onTap: () => context.push('/home/morning-intention'),
+        onAction: () => context.push('/home/morning-intention'),
       );
     }
 
@@ -384,27 +390,30 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, size: AppSpacing.iconLg, color: color),
-          const SizedBox(height: AppSpacing.md),
-          Text(value, style: AppTypography.headlineMedium),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            title,
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textMuted,
+    return Semantics(
+      label: '$title: $value',
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceCard,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: AppSpacing.iconLg, color: color),
+            const SizedBox(height: AppSpacing.md),
+            Text(value, style: AppTypography.headlineMedium),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              title,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textMuted,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -517,51 +526,6 @@ class _MilestoneCard extends StatelessWidget {
           Icon(
             achieved ? Icons.check_circle : Icons.flag_outlined,
             color: achieved ? AppColors.success : AppColors.primaryAmber,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EmptyMilestoneState extends StatelessWidget {
-  final String title;
-  final String description;
-  final String actionLabel;
-  final VoidCallback onTap;
-
-  const _EmptyMilestoneState({
-    required this.title,
-    required this.description,
-    required this.actionLabel,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: AppTypography.titleMedium),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            description,
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textMuted,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          OutlinedButton(
-            onPressed: onTap,
-            child: Text(actionLabel),
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../widgets/empty_state.dart';
 
 /// Gratitude screen - Gratitude journal
 class GratitudeScreen extends StatefulWidget {
@@ -28,12 +29,13 @@ class _GratitudeScreenState extends State<GratitudeScreen> {
         title: const Text('Gratitude'),
         backgroundColor: AppColors.background,
       ),
-      body: Column(
+      body: SafeArea(
+        child: Column(
         children: [
           // Input area
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.surfaceCard,
               border: Border(
                 bottom: BorderSide(color: AppColors.border),
@@ -54,11 +56,15 @@ class _GratitudeScreenState extends State<GratitudeScreen> {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
-                IconButton(
-                  icon: const Icon(Icons.add_circle),
-                  color: AppColors.primaryAmber,
-                  iconSize: AppSpacing.iconLg,
-                  onPressed: _addEntry,
+                Semantics(
+                  label: 'Add gratitude entry',
+                  button: true,
+                  child: IconButton(
+                    icon: const Icon(Icons.add_circle),
+                    color: AppColors.primaryAmber,
+                    iconSize: AppSpacing.iconLg,
+                    onPressed: _addEntry,
+                  ),
                 ),
               ],
             ),
@@ -67,7 +73,11 @@ class _GratitudeScreenState extends State<GratitudeScreen> {
           // Entries list
           Expanded(
             child: _entries.isEmpty
-                ? _EmptyGratitudeState()
+                ? const EmptyState(
+                    icon: Icons.favorite_border,
+                    title: 'No gratitude entries yet',
+                    message: 'Start by adding something you\'re grateful for',
+                  )
                 : ListView.builder(
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     itemCount: _entries.length,
@@ -85,6 +95,7 @@ class _GratitudeScreenState extends State<GratitudeScreen> {
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -95,37 +106,6 @@ class _GratitudeScreenState extends State<GratitudeScreen> {
         _entryController.clear();
       });
     }
-  }
-}
-
-class _EmptyGratitudeState extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.favorite_border,
-            size: AppSpacing.sext,
-            color: AppColors.textMuted,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            'No gratitude entries yet',
-            style: AppTypography.headlineSmall,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Start by adding something you\'re grateful for',
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textMuted,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
   }
 }
 
@@ -158,11 +138,15 @@ class _GratitudeEntry extends StatelessWidget {
                 style: AppTypography.bodyMedium,
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline),
-              iconSize: AppSpacing.iconSm,
-              color: AppColors.textMuted,
-              onPressed: onDelete,
+            Semantics(
+              label: 'Delete gratitude entry',
+              button: true,
+              child: IconButton(
+                icon: const Icon(Icons.delete_outline),
+                iconSize: AppSpacing.iconSm,
+                color: AppColors.textMuted,
+                onPressed: onDelete,
+              ),
             ),
           ],
         ),

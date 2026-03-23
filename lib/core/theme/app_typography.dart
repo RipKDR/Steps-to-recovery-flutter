@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
 /// Design system typography tokens
-/// Uses the platform default font until custom font assets are added.
+/// Uses Nunito — warm, rounded, and highly readable for a recovery app.
 class AppTypography {
   AppTypography._();
 
-  static const String? fontFamily = null;
+  static const String fontFamily = 'Nunito';
 
   // Display styles
-  static const TextStyle displayLarge = TextStyle(
+  static TextStyle get displayLarge => const TextStyle(
     fontFamily: fontFamily,
     fontSize: 32,
     fontWeight: FontWeight.bold,
@@ -16,7 +16,7 @@ class AppTypography {
     letterSpacing: -0.5,
   );
 
-  static const TextStyle displayMedium = TextStyle(
+  static TextStyle get displayMedium => const TextStyle(
     fontFamily: fontFamily,
     fontSize: 28,
     fontWeight: FontWeight.bold,
@@ -24,7 +24,7 @@ class AppTypography {
     letterSpacing: -0.25,
   );
 
-  static const TextStyle displaySmall = TextStyle(
+  static TextStyle get displaySmall => const TextStyle(
     fontFamily: fontFamily,
     fontSize: 24,
     fontWeight: FontWeight.bold,
@@ -32,21 +32,21 @@ class AppTypography {
   );
 
   // Headline styles
-  static const TextStyle headlineLarge = TextStyle(
+  static TextStyle get headlineLarge => const TextStyle(
     fontFamily: fontFamily,
     fontSize: 22,
     fontWeight: FontWeight.w600,
     height: 1.35,
   );
 
-  static const TextStyle headlineMedium = TextStyle(
+  static TextStyle get headlineMedium => const TextStyle(
     fontFamily: fontFamily,
     fontSize: 20,
     fontWeight: FontWeight.w600,
     height: 1.4,
   );
 
-  static const TextStyle headlineSmall = TextStyle(
+  static TextStyle get headlineSmall => const TextStyle(
     fontFamily: fontFamily,
     fontSize: 18,
     fontWeight: FontWeight.w600,
@@ -54,21 +54,21 @@ class AppTypography {
   );
 
   // Title styles
-  static const TextStyle titleLarge = TextStyle(
+  static TextStyle get titleLarge => const TextStyle(
     fontFamily: fontFamily,
     fontSize: 17,
     fontWeight: FontWeight.w600,
     height: 1.45,
   );
 
-  static const TextStyle titleMedium = TextStyle(
+  static TextStyle get titleMedium => const TextStyle(
     fontFamily: fontFamily,
     fontSize: 16,
     fontWeight: FontWeight.w500,
     height: 1.5,
   );
 
-  static const TextStyle titleSmall = TextStyle(
+  static TextStyle get titleSmall => const TextStyle(
     fontFamily: fontFamily,
     fontSize: 14,
     fontWeight: FontWeight.w500,
@@ -76,21 +76,21 @@ class AppTypography {
   );
 
   // Body styles
-  static const TextStyle bodyLarge = TextStyle(
+  static TextStyle get bodyLarge => const TextStyle(
     fontFamily: fontFamily,
     fontSize: 16,
     fontWeight: FontWeight.normal,
     height: 1.5,
   );
 
-  static const TextStyle bodyMedium = TextStyle(
+  static TextStyle get bodyMedium => const TextStyle(
     fontFamily: fontFamily,
     fontSize: 14,
     fontWeight: FontWeight.normal,
     height: 1.5,
   );
 
-  static const TextStyle bodySmall = TextStyle(
+  static TextStyle get bodySmall => const TextStyle(
     fontFamily: fontFamily,
     fontSize: 12,
     fontWeight: FontWeight.normal,
@@ -98,7 +98,7 @@ class AppTypography {
   );
 
   // Label styles
-  static const TextStyle labelLarge = TextStyle(
+  static TextStyle get labelLarge => const TextStyle(
     fontFamily: fontFamily,
     fontSize: 14,
     fontWeight: FontWeight.w500,
@@ -106,7 +106,7 @@ class AppTypography {
     letterSpacing: 0.1,
   );
 
-  static const TextStyle labelMedium = TextStyle(
+  static TextStyle get labelMedium => const TextStyle(
     fontFamily: fontFamily,
     fontSize: 12,
     fontWeight: FontWeight.w500,
@@ -114,7 +114,7 @@ class AppTypography {
     letterSpacing: 0.5,
   );
 
-  static const TextStyle labelSmall = TextStyle(
+  static TextStyle get labelSmall => const TextStyle(
     fontFamily: fontFamily,
     fontSize: 11,
     fontWeight: FontWeight.w500,

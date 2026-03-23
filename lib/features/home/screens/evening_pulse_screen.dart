@@ -173,36 +173,42 @@ class _MoodSelector extends StatelessWidget {
         final mood = index + 1;
         final isSelected = selectedMood == mood;
 
-        return GestureDetector(
-          onTap: () => onMoodSelected(mood),
-          child: Column(
-            children: [
-              Container(
-                width: AppSpacing.quint,
-                height: AppSpacing.quint,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primaryAmber
-                      : AppColors.surfaceInteractive,
-                  shape: BoxShape.circle,
+        return Semantics(
+          button: true,
+          label: 'Mood $mood',
+          selected: isSelected,
+          child: InkWell(
+            onTap: () => onMoodSelected(mood),
+            customBorder: const CircleBorder(),
+            child: Column(
+              children: [
+                Container(
+                  width: AppSpacing.quint,
+                  height: AppSpacing.quint,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.primaryAmber
+                        : AppColors.surfaceInteractive,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _getMoodIcon(mood),
+                    color: isSelected
+                        ? AppColors.textOnDark
+                        : AppColors.textSecondary,
+                  ),
                 ),
-                child: Icon(
-                  _getMoodIcon(mood),
-                  color: isSelected
-                      ? AppColors.textOnDark
-                      : AppColors.textSecondary,
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  '$mood',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: isSelected
+                        ? AppColors.primaryAmber
+                        : AppColors.textMuted,
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                '$mood',
-                style: AppTypography.labelSmall.copyWith(
-                  color: isSelected
-                      ? AppColors.primaryAmber
-                      : AppColors.textMuted,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       }),

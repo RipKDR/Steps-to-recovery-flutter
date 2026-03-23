@@ -1,13 +1,17 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/database_models.dart';
 import 'database_service.dart';
 import 'encryption_service.dart';
+import 'milestone_service.dart';
+import 'notification_service.dart';
 
 /// Shared app state for onboarding, local auth/session, and user preferences.
 ///
@@ -31,9 +35,11 @@ class AppStateService extends ChangeNotifier {
   static const String _keyAiProxyEnabled = 'ai_proxy_enabled';
   static const String _keyMorningReminder = 'morning_reminder';
   static const String _keyEveningReminder = 'evening_reminder';
+  static const String _keyThemeMode = 'app_theme_mode';
   static const String _keyAccounts = 'app_accounts_v1';
 
   final Uuid _uuid = const Uuid();
+  ReminderScheduler _reminderScheduler = NotificationService();
 
   SharedPreferences? _prefs;
   bool _ready = false;
@@ -52,6 +58,7 @@ class AppStateService extends ChangeNotifier {
   bool _aiProxyEnabled = false;
   String _morningReminderTime = '08:00';
   String _eveningReminderTime = '20:00';
+  ThemeMode _themeMode = ThemeMode.dark;
 
   List<_LocalAccount> _accounts = <_LocalAccount>[];
 
@@ -69,6 +76,7 @@ class AppStateService extends ChangeNotifier {
   bool get aiProxyEnabled => _aiProxyEnabled;
   String get morningReminderTime => _morningReminderTime;
   String get eveningReminderTime => _eveningReminderTime;
+  ThemeMode get appThemeMode => _themeMode;
 
   String get userLabel {
     if (_displayName != null && _displayName!.trim().isNotEmpty) {
@@ -133,6 +141,12 @@ class AppStateService extends ChangeNotifier {
       await DatabaseService().setActiveUser(null);
     }
 
+    if (_sobrietyDate != null) {
+      unawaited(
+        MilestoneService().checkAndScheduleApproachNotifications(_sobrietyDate!),
+      );
+    }
+
     _ready = true;
     _initializing = false;
     notifyListeners();
@@ -152,13 +166,22 @@ class AppStateService extends ChangeNotifier {
     _userId = prefs.getString(_keyUserId);
 
     final sobrietyDate = prefs.getString(_keySobrietyDate);
-    _sobrietyDate = sobrietyDate == null ? null : DateTime.tryParse(sobrietyDate);
+    _sobrietyDate = sobrietyDate == null
+        ? null
+        : DateTime.tryParse(sobrietyDate);
     _programType = prefs.getString(_keyProgramType);
     _notificationsEnabled = prefs.getBool(_keyNotificationsEnabled) ?? true;
     _biometricEnabled = prefs.getBool(_keyBiometricEnabled) ?? false;
     _aiProxyEnabled = prefs.getBool(_keyAiProxyEnabled) ?? false;
     _morningReminderTime = prefs.getString(_keyMorningReminder) ?? '08:00';
     _eveningReminderTime = prefs.getString(_keyEveningReminder) ?? '20:00';
+
+    final themeModeStr = prefs.getString(_keyThemeMode);
+    _themeMode = themeModeStr == 'light'
+        ? ThemeMode.light
+        : themeModeStr == 'system'
+            ? ThemeMode.system
+            : ThemeMode.dark;
 
     _accounts = _readAccounts();
   }
@@ -308,6 +331,7 @@ class AppStateService extends ChangeNotifier {
     await _prefs?.remove(_keyEmail);
     await _prefs?.remove(_keyDisplayName);
     await _prefs?.remove(_keyUserId);
+    await _syncReminderPreferences();
     notifyListeners();
   }
 
@@ -337,6 +361,11 @@ class AppStateService extends ChangeNotifier {
     } else {
       await _prefs?.setString(_keySobrietyDate, value.toIso8601String());
     }
+    if (value != null) {
+      unawaited(
+        MilestoneService().checkAndScheduleApproachNotifications(value),
+      );
+    }
     await _syncCurrentUserProfile();
     notifyListeners();
   }
@@ -357,6 +386,7 @@ class AppStateService extends ChangeNotifier {
     await initialize();
     _notificationsEnabled = value;
     await _prefs?.setBool(_keyNotificationsEnabled, value);
+    await _syncReminderPreferences();
     notifyListeners();
   }
 
@@ -376,15 +406,35 @@ class AppStateService extends ChangeNotifier {
 
   Future<void> setMorningReminderTime(String value) async {
     await initialize();
-    _morningReminderTime = value;
-    await _prefs?.setString(_keyMorningReminder, value);
+    _morningReminderTime = _normalizeReminderTime(
+      value,
+      fallback: _morningReminderTime,
+    );
+    await _prefs?.setString(_keyMorningReminder, _morningReminderTime);
+    await _syncReminderPreferences();
     notifyListeners();
   }
 
   Future<void> setEveningReminderTime(String value) async {
     await initialize();
-    _eveningReminderTime = value;
-    await _prefs?.setString(_keyEveningReminder, value);
+    _eveningReminderTime = _normalizeReminderTime(
+      value,
+      fallback: _eveningReminderTime,
+    );
+    await _prefs?.setString(_keyEveningReminder, _eveningReminderTime);
+    await _syncReminderPreferences();
+    notifyListeners();
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    await initialize();
+    _themeMode = mode;
+    final modeStr = mode == ThemeMode.light
+        ? 'light'
+        : mode == ThemeMode.system
+            ? 'system'
+            : 'dark';
+    await _prefs?.setString(_keyThemeMode, modeStr);
     notifyListeners();
   }
 
@@ -407,10 +457,22 @@ class AppStateService extends ChangeNotifier {
     _aiProxyEnabled = false;
     _morningReminderTime = '08:00';
     _eveningReminderTime = '20:00';
+    _themeMode = ThemeMode.dark;
     _onboardingComplete = false;
     _accounts = <_LocalAccount>[];
 
+    await _syncReminderPreferences();
     notifyListeners();
+  }
+
+  Future<void> syncReminderPreferences() async {
+    await initialize();
+    await _syncReminderPreferences();
+  }
+
+  @visibleForTesting
+  void setReminderSchedulerForTest(ReminderScheduler scheduler) {
+    _reminderScheduler = scheduler;
   }
 
   Future<void> _persistSession() async {
@@ -428,7 +490,10 @@ class AppStateService extends ChangeNotifier {
       await _writeEncryptedString(_keyDisplayName, _displayName!);
     }
     if (_sobrietyDate != null) {
-      await _prefs?.setString(_keySobrietyDate, _sobrietyDate!.toIso8601String());
+      await _prefs?.setString(
+        _keySobrietyDate,
+        _sobrietyDate!.toIso8601String(),
+      );
     }
     if (_programType != null) {
       await _prefs?.setString(_keyProgramType, _programType!);
@@ -436,7 +501,9 @@ class AppStateService extends ChangeNotifier {
   }
 
   Future<void> _persistAccounts() async {
-    final payload = jsonEncode(_accounts.map((account) => account.toJson()).toList());
+    final payload = jsonEncode(
+      _accounts.map((account) => account.toJson()).toList(),
+    );
     final encrypted = EncryptionService().encrypt(payload);
     await _prefs?.setString(_keyAccounts, encrypted);
   }
@@ -455,7 +522,9 @@ class AppStateService extends ChangeNotifier {
       }
       return decoded
           .whereType<Map>()
-          .map((item) => _LocalAccount.fromJson(Map<String, dynamic>.from(item)))
+          .map(
+            (item) => _LocalAccount.fromJson(Map<String, dynamic>.from(item)),
+          )
           .toList();
     } catch (_) {
       return <_LocalAccount>[];
@@ -501,7 +570,10 @@ class AppStateService extends ChangeNotifier {
       _sobrietyDate ??= existing.sobrietyStartDate;
       _programType ??= existing.programType;
       if (_sobrietyDate != null) {
-        await _prefs?.setString(_keySobrietyDate, _sobrietyDate!.toIso8601String());
+        await _prefs?.setString(
+          _keySobrietyDate,
+          _sobrietyDate!.toIso8601String(),
+        );
       }
       if (_programType != null) {
         await _prefs?.setString(_keyProgramType, _programType!);
@@ -547,6 +619,23 @@ class AppStateService extends ChangeNotifier {
       return null;
     }
     return cleaned;
+  }
+
+  String _normalizeReminderTime(String value, {required String fallback}) {
+    final normalized = value.trim();
+    final match = RegExp(r'^([01]\d|2[0-3]):([0-5]\d)$').firstMatch(normalized);
+    if (match != null) {
+      return normalized;
+    }
+    return fallback;
+  }
+
+  Future<void> _syncReminderPreferences() async {
+    await _reminderScheduler.syncDailyCheckInReminders(
+      enabled: _notificationsEnabled,
+      morningTime: _morningReminderTime,
+      eveningTime: _eveningReminderTime,
+    );
   }
 }
 

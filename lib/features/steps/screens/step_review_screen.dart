@@ -115,7 +115,7 @@ class StepReviewScreen extends StatelessWidget {
               ),
               bottomNavigationBar: Container(
                 padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.surface,
                   border: Border(top: BorderSide(color: AppColors.border)),
                 ),
@@ -178,7 +178,7 @@ class StepReviewScreen extends StatelessWidget {
         ..writeln(answer)
         ..writeln();
     }
-    Share.share(buffer.toString());
+    SharePlus.instance.share(ShareParams(text: buffer.toString()));
   }
 
   List<_StepQuestion> _flattenQuestions(StepPrompt step) {

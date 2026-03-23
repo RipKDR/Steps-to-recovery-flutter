@@ -6,6 +6,7 @@ import '../../../core/services/database_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../widgets/app_dialog.dart';
 
 /// Sponsor screen - Manage sponsor connection
 class SponsorScreen extends StatefulWidget {
@@ -45,63 +46,59 @@ class _SponsorScreenState extends State<SponsorScreen> {
     final phoneController = TextEditingController(text: sponsor?.phoneNumber ?? '');
     final emailController = TextEditingController(text: sponsor?.email ?? '');
 
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(sponsor == null ? 'Add Sponsor' : 'Edit Sponsor'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    prefixIcon: Icon(Icons.person_outline),
-                  ),
-                  textInputAction: TextInputAction.next,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextField(
-                  controller: phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone number',
-                    prefixIcon: Icon(Icons.phone_outlined),
-                  ),
-                  keyboardType: TextInputType.phone,
-                  textInputAction: TextInputAction.next,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextField(
-                  controller: emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email (optional)',
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-              ],
+      title: sponsor == null ? 'Add Sponsor' : 'Edit Sponsor',
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Name',
+                prefixIcon: Icon(Icons.person_outline),
+              ),
+              textInputAction: TextInputAction.next,
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: phoneController,
+              decoration: const InputDecoration(
+                labelText: 'Phone number',
+                prefixIcon: Icon(Icons.phone_outlined),
+              ),
+              keyboardType: TextInputType.phone,
+              textInputAction: TextInputAction.next,
             ),
-            ElevatedButton(
-              onPressed: () {
-                if (nameController.text.trim().isEmpty ||
-                    phoneController.text.trim().isEmpty) {
-                  return;
-                }
-                Navigator.pop(dialogContext, true);
-              },
-              child: const Text('Save'),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(
+                labelText: 'Email (optional)',
+                prefixIcon: Icon(Icons.email_outlined),
+              ),
+              keyboardType: TextInputType.emailAddress,
             ),
           ],
-        );
-      },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (nameController.text.trim().isEmpty ||
+                phoneController.text.trim().isEmpty) {
+              return;
+            }
+            Navigator.pop(context, true);
+          },
+          child: const Text('Save'),
+        ),
+      ],
     );
 
     if (saved != true) {
@@ -150,22 +147,12 @@ class _SponsorScreenState extends State<SponsorScreen> {
   }
 
   Future<void> _deleteSponsor(Contact sponsor) async {
-    final confirm = await showDialog<bool>(
+    final confirm = await showAppConfirmDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Remove sponsor?'),
-        content: Text('Remove ${sponsor.name} from your local sponsor list?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
+      title: 'Remove sponsor?',
+      message: 'Remove ${sponsor.name} from your local sponsor list?',
+      confirmLabel: 'Remove',
+      isDangerous: true,
     );
 
     if (confirm != true) {
@@ -274,13 +261,6 @@ class _SponsorScreenState extends State<SponsorScreen> {
                     onPressed: () => _openSponsorEditor(sponsor: sponsor),
                     icon: const Icon(Icons.edit),
                     label: Text(sponsor == null ? 'Add Sponsor' : 'Edit Sponsor'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryAmber,
-                      foregroundColor: AppColors.textOnDark,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: AppSpacing.md,
-                      ),
-                    ),
                   ),
                 ),
               ],
@@ -316,7 +296,7 @@ class _CurrentSponsorCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: AppColors.primaryGradient,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,

@@ -7,6 +7,53 @@ class AppConfig {
     'API_AUTH_TOKEN',
     defaultValue: '',
   );
+  static const googleAiApiKey = String.fromEnvironment(
+    'GOOGLE_AI_API_KEY',
+    defaultValue: '',
+  );
+  static const geminiApiKey = String.fromEnvironment(
+    'GEMINI_API_KEY',
+    defaultValue: '',
+  );
+
+  // Sentry crash reporting
+  static const sentryDsn = String.fromEnvironment(
+    'SENTRY_DSN',
+    defaultValue: '',
+  );
+
+  // Supabase configuration
+  static const supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: '',
+  );
+  static const supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: '',
+  );
+
+  // OpenClaw gateway — direct path when Supabase edge functions are not used.
+  // In production, set OPENCLAW_GATEWAY_URL and OPENCLAW_GATEWAY_TOKEN as
+  // Supabase edge function secrets (not dart-defines) so they stay off-device.
+  static const openclawGatewayUrl = String.fromEnvironment(
+    'OPENCLAW_GATEWAY_URL',
+    defaultValue: '',
+  );
+  static const openclawGatewayToken = String.fromEnvironment(
+    'OPENCLAW_GATEWAY_TOKEN',
+    defaultValue: '',
+  );
 
   static bool get hasRemoteSync => apiBaseUrl.isNotEmpty;
+  static bool get hasSupabase =>
+      supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
+  static bool get hasOpenClaw =>
+      openclawGatewayUrl.isNotEmpty && openclawGatewayToken.isNotEmpty;
+  static String get resolvedGoogleAiApiKey =>
+      googleAiApiKey.isNotEmpty ? googleAiApiKey : geminiApiKey;
+
+  /// Edge function URL for AI chat (avoids shipping API key on device).
+  /// Priority: Supabase edge function → OpenClaw direct → Google AI direct
+  static String get aiChatEdgeFunctionUrl =>
+      hasSupabase ? '$supabaseUrl/functions/v1/chat' : '';
 }
