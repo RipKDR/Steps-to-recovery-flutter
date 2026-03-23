@@ -50,3 +50,4 @@ app.*.map.json
 
 #Ignore vscode AI rules
 .github\instructions\codacy.instructions.md
+/android
