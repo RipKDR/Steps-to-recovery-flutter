@@ -1,9 +1,44 @@
 {
+    "typescript.tsdk": null,
+    "typescript.enablePromptUseWorkspaceTsdk": true,
+    "typescript.tsc.autoDetect": "off",
+    "typescript.validate.enable": true,
     "java.inlayHints.variableTypes.enabled": true,
-    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.configuration.updateBuildConfiguration": "automatic",
     "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx4G -Xms100m -Xlog:disable",
     "yaml.schemas": {
         "https://www.schemastore.org/pubspec.json": "file:///c%3A/Users/H/Steps-to-recovery-flutter/pubspec.yaml"
     },
-    "cmake.ignoreCMakeListsMissing": true
+    "cmake.ignoreCMakeListsMissing": true,
+    "cSpell.words": [
+        "apikey",
+        "Backgrounding",
+        "ciphertext",
+        "dotenvx",
+        "hcaptcha",
+        "inbucket",
+        "journaling",
+        "Kimi",
+        "messagebird",
+        "oneshot",
+        "OPENCLAW",
+        "orioledb",
+        "pgcrypto",
+        "pgdelta",
+        "plpgsql",
+        "pooler",
+        "sendgrid",
+        "signups",
+        "SIWS",
+        "Solana",
+        "sponsee",
+        "Supabase",
+        "textlocal",
+        "timebox",
+        "TOTP",
+        "vonage",
+        "workos",
+        "xcworkspace"
+    ],
+    "deno.enable": true
 }

@@ -345,10 +345,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  SettingsSection(
+                  const SettingsSection(
                     title: 'Appearance',
                     children: [
-                      const _ThemeSelectorTile(),
+                      _ThemeSelectorTile(),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.xl),
