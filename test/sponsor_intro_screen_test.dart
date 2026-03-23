@@ -7,7 +7,6 @@ import 'package:flutter_secure_storage/test/test_flutter_secure_storage_platform
 import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
-import 'package:steps_recovery_flutter/core/models/sponsor_models.dart';
 import 'package:steps_recovery_flutter/core/services/encryption_service.dart';
 import 'package:steps_recovery_flutter/core/services/sponsor_service.dart';
 import 'package:steps_recovery_flutter/features/ai_companion/screens/sponsor_intro_screen.dart';

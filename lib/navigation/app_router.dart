@@ -3,8 +3,6 @@ import 'package:go_router/go_router.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/app_state_service.dart';
 import '../core/theme/app_colors.dart';
-import '../core/theme/app_spacing.dart';
-import '../core/theme/app_typography.dart';
 import '../widgets/empty_state.dart';
 import '../features/home/screens/home_screen.dart';
 import '../features/home/screens/morning_intention_screen.dart';

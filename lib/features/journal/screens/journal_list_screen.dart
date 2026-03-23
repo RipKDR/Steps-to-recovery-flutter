@@ -7,7 +7,6 @@ import '../../../core/services/database_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/utils/app_utils.dart';
 import '../../../widgets/app_filter_chip.dart';
 import '../../../widgets/empty_state.dart';
 import '../../../widgets/loading_state.dart';

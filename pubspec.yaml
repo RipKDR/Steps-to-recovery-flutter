@@ -35,7 +35,7 @@ dependencies:
   supabase_flutter: ^2.8.0
 
   # Typography
-  google_fonts: ^6.2.1
+  google_fonts: ^8.0.2
 
   # UI Components
   cupertino_icons: ^1.0.8
@@ -69,6 +69,7 @@ dependencies:
   sentry_flutter: ^9.15.0
   flutter_native_splash: ^2.4.7
   flutter_launcher_icons: ^0.14.4
+  path_provider_platform_interface: ^2.1.2
 
 dev_dependencies:
   flutter_test:

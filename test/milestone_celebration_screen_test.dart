@@ -41,7 +41,7 @@ void main() {
               context: ctx,
               barrierDismissible: false,
               barrierColor: Colors.transparent,
-              pageBuilder: (c, _, __) => MilestoneCelebrationScreen(
+              pageBuilder: (c, _, _) => MilestoneCelebrationScreen(
                 achievement: _makeAchievement('milestone_7'),
               ),
             );
