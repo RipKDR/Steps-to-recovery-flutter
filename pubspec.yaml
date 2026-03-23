@@ -34,6 +34,9 @@ dependencies:
   http: ^1.2.2
   supabase_flutter: ^2.8.0
 
+  # Typography
+  google_fonts: ^6.2.1
+
   # UI Components
   cupertino_icons: ^1.0.8
   flutter_animate: ^4.5.2

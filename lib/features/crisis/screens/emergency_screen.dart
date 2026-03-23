@@ -18,7 +18,8 @@ class EmergencyScreen extends StatelessWidget {
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.danger,
       ),
-      body: SingleChildScrollView(
+      body: SafeArea(
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: [
@@ -152,6 +153,7 @@ class EmergencyScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

@@ -14,6 +14,15 @@ class AppSpacing {
   static const double quint = 48.0;
   static const double sext = 64.0;
 
+  // Section spacing (gap between major screen sections)
+  static const double sectionGap = 28.0;
+  static const double cardPaddingLg = 20.0;
+
+  // Illustration / hero image sizes
+  static const double illustrationSm = 120.0;
+  static const double illustrationMd = 160.0;
+  static const double illustrationLg = 200.0;
+
   // Border radius scale
   static const double radiusNone = 0.0;
   static const double radiusXs = 2.0;

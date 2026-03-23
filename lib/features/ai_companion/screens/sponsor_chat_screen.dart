@@ -167,6 +167,7 @@ class _SponsorChatScreenState extends State<SponsorChatScreen>
         ),
         actions: [
           IconButton(
+            tooltip: 'View details',
             icon: const Icon(Icons.info_outline),
             color: AppColors.textSecondary,
             onPressed: () => Navigator.push(
@@ -257,14 +258,16 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUser = message.isUser;
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
+    return Semantics(
+      label: isUser ? 'Your message' : 'Message from $sponsorName',
+      child: Align(
+        alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
         margin: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
         constraints: BoxConstraints(
             maxWidth: MediaQuery.of(context).size.width * 0.82),
         decoration: BoxDecoration(
-          color: isUser ? AppColors.primaryAmber : const Color(0xFF1E1E1E),
+          color: isUser ? AppColors.primaryAmber : AppColors.surfaceBubble,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(20),
             topRight: const Radius.circular(20),
@@ -272,12 +275,12 @@ class _MessageBubble extends StatelessWidget {
             bottomRight: Radius.circular(isUser ? 4 : 20),
           ),
           border: isCrisisMode && !isUser
-              ? Border.all(color: Colors.red.withValues(alpha: 0.5), width: 1)
+              ? Border.all(color: AppColors.danger.withValues(alpha: 0.5), width: 1)
               : null,
           boxShadow: isCrisisMode && !isUser
               ? [
                   BoxShadow(
-                      color: Colors.red.withValues(alpha: 0.15),
+                      color: AppColors.danger.withValues(alpha: 0.15),
                       blurRadius: 12)
                 ]
               : null,
@@ -303,24 +306,18 @@ class _QuickChip extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.xs,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.primaryAmber.withValues(alpha: 0.08),
-            border: Border.all(
-                color: AppColors.primaryAmber.withValues(alpha: 0.3)),
-            borderRadius: BorderRadius.circular(100),
-          ),
-          child: Text(
-            label,
-            style: AppTypography.labelSmall
-                .copyWith(color: AppColors.primaryAmber),
-          ),
+  Widget build(BuildContext context) => ActionChip(
+        label: Text(
+          label,
+          style: AppTypography.labelSmall
+              .copyWith(color: AppColors.primaryAmber),
+        ),
+        onPressed: onTap,
+        backgroundColor: AppColors.primaryAmber.withValues(alpha: 0.08),
+        side: BorderSide(
+            color: AppColors.primaryAmber.withValues(alpha: 0.3)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(100),
         ),
       );
 }
@@ -377,19 +374,22 @@ class _InputBar extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-            GestureDetector(
-              onTap: isSending ? null : onSend,
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: isSending
-                      ? AppColors.primaryAmber.withValues(alpha: 0.4)
-                      : AppColors.primaryAmber,
-                  shape: BoxShape.circle,
+            Semantics(
+              label: 'Send message',
+              button: true,
+              child: SizedBox(
+                width: AppSpacing.touchTargetComfortable,
+                height: AppSpacing.touchTargetComfortable,
+                child: IconButton(
+                  onPressed: isSending ? null : onSend,
+                  style: IconButton.styleFrom(
+                    backgroundColor: isSending
+                        ? AppColors.primaryAmber.withValues(alpha: 0.4)
+                        : AppColors.primaryAmber,
+                    shape: const CircleBorder(),
+                  ),
+                  icon: const Icon(Icons.send, color: AppColors.textOnDark, size: 20),
                 ),
-                child:
-                    const Icon(Icons.send, color: Colors.black, size: 20),
               ),
             ),
           ],

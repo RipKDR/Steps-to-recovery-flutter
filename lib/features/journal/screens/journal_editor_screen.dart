@@ -189,7 +189,7 @@ class _JournalEditorScreenState extends State<JournalEditorScreen> {
                   minLines: 12,
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                const Text('Tags', style: AppTypography.titleMedium),
+                Text('Tags', style: AppTypography.titleMedium),
                 const SizedBox(height: AppSpacing.sm),
                 Wrap(
                   spacing: AppSpacing.sm,

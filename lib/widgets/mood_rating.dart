@@ -6,7 +6,7 @@ import '../../../core/theme/app_typography.dart';
 /// Reusable mood rating widget
 class MoodRating extends StatelessWidget {
   final int selectedMood;
-  final Function(int) onMoodSelected;
+  final ValueChanged<int> onMoodSelected;
   final bool showLabels;
 
   const MoodRating({
@@ -24,45 +24,51 @@ class MoodRating extends StatelessWidget {
         final mood = index + 1;
         final isSelected = selectedMood == mood;
         
-        return GestureDetector(
-          onTap: () => onMoodSelected(mood),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: AppSpacing.quint,
-                height: AppSpacing.quint,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primaryAmber
-                      : AppColors.surfaceInteractive,
-                  shape: BoxShape.circle,
-                  border: Border.all(
+        return Semantics(
+          button: true,
+          label: 'Mood ${_getMoodLabel(mood)}',
+          selected: isSelected,
+          child: InkWell(
+            onTap: () => onMoodSelected(mood),
+            customBorder: const CircleBorder(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: AppSpacing.quint,
+                  height: AppSpacing.quint,
+                  decoration: BoxDecoration(
                     color: isSelected
                         ? AppColors.primaryAmber
-                        : AppColors.border,
+                        : AppColors.surfaceInteractive,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isSelected
+                          ? AppColors.primaryAmber
+                          : AppColors.border,
+                    ),
                   ),
-                ),
-                child: Icon(
-                  _getMoodIcon(mood),
-                  color: isSelected
-                      ? AppColors.textOnDark
-                      : AppColors.textSecondary,
-                  size: AppSpacing.iconMd,
-                ),
-              ),
-              if (showLabels) ...[
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  _getMoodLabel(mood),
-                  style: AppTypography.labelSmall.copyWith(
+                  child: Icon(
+                    _getMoodIcon(mood),
                     color: isSelected
-                        ? AppColors.primaryAmber
-                        : AppColors.textMuted,
+                        ? AppColors.textOnDark
+                        : AppColors.textSecondary,
+                    size: AppSpacing.iconMd,
                   ),
                 ),
+                if (showLabels) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    _getMoodLabel(mood),
+                    style: AppTypography.labelSmall.copyWith(
+                      color: isSelected
+                          ? AppColors.primaryAmber
+                          : AppColors.textMuted,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         );
       }),

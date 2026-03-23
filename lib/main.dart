@@ -141,11 +141,14 @@ class StepsToRecoveryApp extends StatelessWidget {
       theme: AppTheme.darkTheme,
       routerConfig: AppRouter.router,
       builder: (context, child) {
-        // Ensure text scale factor is reasonable
+        // Allow system text scaling up to 1.3x for accessibility
+        // Recovery users may need larger text (vision issues, older adults)
+        final systemScale = MediaQuery.of(context).textScaler.scale(1.0);
+        final clampedScale = systemScale.clamp(1.0, 1.3);
         return MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: const TextScaler.linear(1.0)),
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(clampedScale),
+          ),
           child: child!,
         );
       },

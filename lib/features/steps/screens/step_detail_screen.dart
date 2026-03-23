@@ -193,7 +193,7 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xl),
-                      const Text('Your Answer', style: AppTypography.titleMedium),
+                      Text('Your Answer', style: AppTypography.titleMedium),
                       const SizedBox(height: AppSpacing.md),
                       TextField(
                         controller: _answerController,

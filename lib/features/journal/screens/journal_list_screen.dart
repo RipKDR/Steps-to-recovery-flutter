@@ -7,6 +7,10 @@ import '../../../core/services/database_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/app_utils.dart';
+import '../../../widgets/app_filter_chip.dart';
+import '../../../widgets/empty_state.dart';
+import '../../../widgets/loading_state.dart';
 
 /// Journal list with local filtering and edit navigation.
 class JournalListScreen extends StatefulWidget {
@@ -78,16 +82,17 @@ class _JournalListScreenState extends State<JournalListScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                   scrollDirection: Axis.horizontal,
                   children: [
-                    _FilterChip(
+                    AppFilterChip(
                       label: 'All',
                       isSelected: _filter == _JournalFilter.all,
-                      onTap: () => setState(() => _filter = _JournalFilter.all),
+                      onSelected: (_) => setState(() => _filter = _JournalFilter.all),
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    _FilterChip(
+                    AppFilterChip(
                       label: 'Favorites',
                       isSelected: _filter == _JournalFilter.favorites,
-                      onTap: () => setState(() => _filter = _JournalFilter.favorites),
+                      onSelected: (_) => setState(() => _filter = _JournalFilter.favorites),
+                      icon: Icons.star,
                     ),
                   ],
                 ),
@@ -98,15 +103,17 @@ class _JournalListScreenState extends State<JournalListScreen> {
                   future: _loadEntries(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState != ConnectionState.done) {
-                      return const Center(
-                        child: CircularProgressIndicator(color: AppColors.primaryAmber),
-                      );
+                      return const LoadingState();
                     }
 
                     final entries = snapshot.data ?? const <JournalEntry>[];
                     if (entries.isEmpty) {
-                      return _EmptyJournalState(
-                        onCreateEntry: () => context.push('${AppRoutes.journalEditor}?mode=create'),
+                      return EmptyState(
+                        icon: Icons.edit_note,
+                        title: 'No journal entries yet',
+                        message: 'Write a private reflection. Entries are encrypted before they are stored locally.',
+                        actionLabel: 'Create Entry',
+                        onAction: () => context.push('${AppRoutes.journalEditor}?mode=create'),
                       );
                     }
 
@@ -149,85 +156,6 @@ class _JournalListScreenState extends State<JournalListScreen> {
 
 enum _JournalFilter { all, favorites }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryAmber : AppColors.surfaceInteractive,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-        ),
-        child: Text(
-          label,
-          style: AppTypography.labelMedium.copyWith(
-            color: isSelected ? AppColors.textOnDark : AppColors.textSecondary,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyJournalState extends StatelessWidget {
-  const _EmptyJournalState({required this.onCreateEntry});
-
-  final VoidCallback onCreateEntry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.edit_note,
-              size: AppSpacing.sext,
-              color: AppColors.textMuted,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            const Text(
-              'No journal entries yet',
-              style: AppTypography.headlineSmall,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Write a private reflection. Entries are encrypted before they are stored locally.',
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textMuted,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            ElevatedButton.icon(
-              onPressed: onCreateEntry,
-              icon: const Icon(Icons.add),
-              label: const Text('Create Entry'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _JournalCard extends StatelessWidget {
   const _JournalCard({
     required this.entry,
@@ -262,6 +190,7 @@ class _JournalCard extends StatelessWidget {
                     ),
                   ),
                   IconButton(
+                    tooltip: 'Toggle favorite',
                     onPressed: onToggleFavorite,
                     icon: Icon(
                       entry.isFavorite ? Icons.star : Icons.star_border,

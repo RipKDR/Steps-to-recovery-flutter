@@ -4,7 +4,7 @@ import 'app_typography.dart';
 import 'app_spacing.dart';
 
 /// Main theme configuration for the app
-/// Uses dark theme with amber accent colors
+/// Uses dark theme with amber accent colors and Nunito typography
 class AppTheme {
   AppTheme._();
 
@@ -14,6 +14,7 @@ class AppTheme {
       brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.background,
       primaryColor: AppColors.primaryAmber,
+      fontFamily: AppTypography.fontFamily,
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primaryAmber,
         secondary: AppColors.primaryAmberLight,
@@ -27,7 +28,7 @@ class AppTheme {
         onSurface: AppColors.textPrimary,
         onSurfaceVariant: AppColors.textSecondary,
       ),
-      textTheme: const TextTheme(
+      textTheme: TextTheme(
         displayLarge: AppTypography.displayLarge,
         displayMedium: AppTypography.displayMedium,
         displaySmall: AppTypography.displaySmall,
@@ -44,7 +45,7 @@ class AppTheme {
         labelMedium: AppTypography.labelMedium,
         labelSmall: AppTypography.labelSmall,
       ),
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
@@ -174,6 +175,17 @@ class AppTheme {
         titleTextStyle: AppTypography.headlineMedium,
         contentTextStyle: AppTypography.bodyMedium,
       ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.surfaceCard,
+        modalBackgroundColor: AppColors.surfaceCard,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppSpacing.radiusXxl),
+          ),
+        ),
+        showDragHandle: true,
+        dragHandleColor: AppColors.textMuted,
+      ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.surfaceElevated,
         contentTextStyle: AppTypography.bodyMedium,
@@ -192,6 +204,21 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
         ),
+      ),
+      listTileTheme: ListTileThemeData(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.xs,
+        ),
+        iconColor: AppColors.textSecondary,
+        textColor: AppColors.textPrimary,
+        subtitleTextStyle: AppTypography.bodySmall.copyWith(
+          color: AppColors.textMuted,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        ),
+        minVerticalPadding: AppSpacing.sm,
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
@@ -236,6 +263,7 @@ class AppTheme {
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: AppColors.primaryAmber,
         linearTrackColor: AppColors.surfaceInteractive,
+        linearMinHeight: 6.0,
       ),
     );
   }
