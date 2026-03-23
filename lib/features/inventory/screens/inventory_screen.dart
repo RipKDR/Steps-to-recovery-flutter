@@ -64,7 +64,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.calendar_today,
                     size: AppSpacing.iconSm,
                     color: AppColors.textMuted,

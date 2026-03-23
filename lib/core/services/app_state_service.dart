@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
@@ -34,6 +35,7 @@ class AppStateService extends ChangeNotifier {
   static const String _keyAiProxyEnabled = 'ai_proxy_enabled';
   static const String _keyMorningReminder = 'morning_reminder';
   static const String _keyEveningReminder = 'evening_reminder';
+  static const String _keyThemeMode = 'app_theme_mode';
   static const String _keyAccounts = 'app_accounts_v1';
 
   final Uuid _uuid = const Uuid();
@@ -56,6 +58,7 @@ class AppStateService extends ChangeNotifier {
   bool _aiProxyEnabled = false;
   String _morningReminderTime = '08:00';
   String _eveningReminderTime = '20:00';
+  ThemeMode _themeMode = ThemeMode.dark;
 
   List<_LocalAccount> _accounts = <_LocalAccount>[];
 
@@ -73,6 +76,7 @@ class AppStateService extends ChangeNotifier {
   bool get aiProxyEnabled => _aiProxyEnabled;
   String get morningReminderTime => _morningReminderTime;
   String get eveningReminderTime => _eveningReminderTime;
+  ThemeMode get appThemeMode => _themeMode;
 
   String get userLabel {
     if (_displayName != null && _displayName!.trim().isNotEmpty) {
@@ -171,6 +175,13 @@ class AppStateService extends ChangeNotifier {
     _aiProxyEnabled = prefs.getBool(_keyAiProxyEnabled) ?? false;
     _morningReminderTime = prefs.getString(_keyMorningReminder) ?? '08:00';
     _eveningReminderTime = prefs.getString(_keyEveningReminder) ?? '20:00';
+
+    final themeModeStr = prefs.getString(_keyThemeMode);
+    _themeMode = themeModeStr == 'light'
+        ? ThemeMode.light
+        : themeModeStr == 'system'
+            ? ThemeMode.system
+            : ThemeMode.dark;
 
     _accounts = _readAccounts();
   }
@@ -415,6 +426,18 @@ class AppStateService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setThemeMode(ThemeMode mode) async {
+    await initialize();
+    _themeMode = mode;
+    final modeStr = mode == ThemeMode.light
+        ? 'light'
+        : mode == ThemeMode.system
+            ? 'system'
+            : 'dark';
+    await _prefs?.setString(_keyThemeMode, modeStr);
+    notifyListeners();
+  }
+
   Future<void> resetLocalData() async {
     await initialize();
     await DatabaseService().clearAllData();
@@ -434,6 +457,7 @@ class AppStateService extends ChangeNotifier {
     _aiProxyEnabled = false;
     _morningReminderTime = '08:00';
     _eveningReminderTime = '20:00';
+    _themeMode = ThemeMode.dark;
     _onboardingComplete = false;
     _accounts = <_LocalAccount>[];
 

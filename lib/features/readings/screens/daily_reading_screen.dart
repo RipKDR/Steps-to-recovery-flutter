@@ -126,7 +126,7 @@ class _DailyReadingScreenState extends State<DailyReadingScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.calendar_today,
                     color: AppColors.primaryAmber,
                     size: AppSpacing.iconMd,

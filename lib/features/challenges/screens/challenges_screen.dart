@@ -57,7 +57,7 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 if (active.isEmpty)
-                  EmptyState(
+                  const EmptyState(
                     icon: Icons.local_fire_department,
                     title: 'No active challenges yet',
                     message:
@@ -111,7 +111,7 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 if (completed.isEmpty)
-                  EmptyState(
+                  const EmptyState(
                     icon: Icons.emoji_events_outlined,
                     title: 'No completed challenges yet',
                     message:

@@ -1,12 +1,3 @@
-/*
-* Created on Mar 22, 2026
-* Test file for connectivity_service.dart
-* File path: test/connectivity_service_test.dart
-*
-* Author: Abhijeet Pratap Singh - Senior Software Engineer
-* Copyright (c) 2026 Aurigo
-*/
-
 import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -14,12 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:steps_recovery_flutter/core/services/connectivity_service.dart';
 
-// ---------------------------------------------------------------------------
-// Fake Connectivity that we fully control in tests.
-// ---------------------------------------------------------------------------
-
-/// A minimal stand-in for the [Connectivity] plugin that lets tests push
-/// arbitrary result lists without touching platform channels.
 class _FakeConnectivity {
   List<ConnectivityResult> _current = [ConnectivityResult.wifi];
 
@@ -31,7 +16,6 @@ class _FakeConnectivity {
 
   Future<List<ConnectivityResult>> checkConnectivity() async => _current;
 
-  /// Push a new connectivity state to both the current value and the stream.
   void emit(List<ConnectivityResult> results) {
     _current = results;
     _controller.add(results);
@@ -40,63 +24,18 @@ class _FakeConnectivity {
   void dispose() => _controller.close();
 }
 
-// ---------------------------------------------------------------------------
-// Testable subclass — injects the fake instead of the real plugin.
-// ---------------------------------------------------------------------------
-
-/// Thin subclass that accepts a fake [Connectivity]-like object so that no
-/// platform channels are involved during tests.
-class _TestableConnectivityService extends ConnectivityService {
-  _TestableConnectivityService._() : super._internal();
-
-  static _TestableConnectivityService create() =>
-      _TestableConnectivityService._();
-
-  late _FakeConnectivity _fake;
-
-  /// Must be called before [initialize].
-  void injectFake(_FakeConnectivity fake) {
-    _fake = fake;
-  }
-
-  @override
-  Future<void> initialize() async {
-    try {
-      final results = await _fake.checkConnectivity();
-      updateConnectionStatusForTest(results);
-      subscribeForTest(_fake.onConnectivityChanged);
-    } catch (e) {
-      // mirrors production catch block
-    }
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Extension that exposes protected-style helpers for testing only.
-// ---------------------------------------------------------------------------
-
-extension _ConnectivityTestHelpers on ConnectivityService {
-  void updateConnectionStatusForTest(List<ConnectivityResult> results) =>
-      _updateConnectionStatus(results);
-
-  void subscribeForTest(Stream<List<ConnectivityResult>> stream) {
-    _subscription = stream.listen(_updateConnectionStatus);
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 void main() {
   group('ConnectivityService', () {
     late _FakeConnectivity fake;
-    late _TestableConnectivityService svc;
+    late ConnectivityService svc;
 
     setUp(() {
       TestWidgetsFlutterBinding.ensureInitialized();
       fake = _FakeConnectivity();
-      svc = _TestableConnectivityService.create()..injectFake(fake);
+      svc = createConnectivityServiceForTesting(
+        checkConnectivity: fake.checkConnectivity,
+        onConnectivityChanged: fake.onConnectivityChanged,
+      );
     });
 
     tearDown(() {
@@ -104,16 +43,11 @@ void main() {
       fake.dispose();
     });
 
-    // ── initial state ────────────────────────────────────────────────────────
-
     group('initial state', () {
       test('isConnected is true by default before initialize()', () {
-        // The production default is `true` — avoids a false-offline flash.
         expect(svc.isConnected, isTrue);
       });
     });
-
-    // ── initialize ───────────────────────────────────────────────────────────
 
     group('initialize', () {
       test('sets isConnected true when wifi is available', () async {
@@ -147,49 +81,43 @@ void main() {
       });
     });
 
-    // ── _updateConnectionStatus ──────────────────────────────────────────────
-
-    group('_updateConnectionStatus (via public helper)', () {
+    group('applyConnectivityResultsForTest', () {
       test('transitions from connected to disconnected', () {
-        svc.updateConnectionStatusForTest([ConnectivityResult.wifi]);
+        svc.applyConnectivityResultsForTest([ConnectivityResult.wifi]);
         expect(svc.isConnected, isTrue);
 
-        svc.updateConnectionStatusForTest([ConnectivityResult.none]);
+        svc.applyConnectivityResultsForTest([ConnectivityResult.none]);
         expect(svc.isConnected, isFalse);
       });
 
       test('transitions from disconnected to connected', () {
-        svc.updateConnectionStatusForTest([ConnectivityResult.none]);
-        svc.updateConnectionStatusForTest([ConnectivityResult.mobile]);
+        svc.applyConnectivityResultsForTest([ConnectivityResult.none]);
+        svc.applyConnectivityResultsForTest([ConnectivityResult.mobile]);
         expect(svc.isConnected, isTrue);
       });
 
       test('no-op when state does not change (wifi stays wifi)', () {
-        // Emit wifi twice — connectivityStream should only fire once.
         final events = <bool>[];
         svc.connectivityStream.listen(events.add);
 
-        svc.updateConnectionStatusForTest([ConnectivityResult.wifi]);
-        // State was already true (initial default), so no event expected.
+        svc.applyConnectivityResultsForTest([ConnectivityResult.wifi]);
         expect(events, isEmpty);
       });
 
       test('vpn counts as connected', () {
-        svc.updateConnectionStatusForTest([ConnectivityResult.vpn]);
+        svc.applyConnectivityResultsForTest([ConnectivityResult.vpn]);
         expect(svc.isConnected, isTrue);
       });
 
       test('bluetooth counts as connected', () {
-        svc.updateConnectionStatusForTest([ConnectivityResult.bluetooth]);
+        svc.applyConnectivityResultsForTest([ConnectivityResult.bluetooth]);
         expect(svc.isConnected, isTrue);
       });
     });
 
-    // ── connectivityStream ───────────────────────────────────────────────────
-
     group('connectivityStream', () {
       test('emits false when connection is lost', () async {
-        await svc.initialize(); // starts connected (wifi)
+        await svc.initialize();
 
         final completer = Completer<bool>();
         svc.connectivityStream.listen(completer.complete);
@@ -202,7 +130,6 @@ void main() {
       });
 
       test('emits true when connection is restored', () async {
-        // Start disconnected.
         fake._current = [ConnectivityResult.none];
         await svc.initialize();
         expect(svc.isConnected, isFalse);
@@ -224,11 +151,10 @@ void main() {
         final events = <bool>[];
         svc.connectivityStream.listen(events.add);
 
-        fake.emit([ConnectivityResult.none]); // false
-        fake.emit([ConnectivityResult.mobile]); // true
-        fake.emit([ConnectivityResult.none]); // false
+        fake.emit([ConnectivityResult.none]);
+        fake.emit([ConnectivityResult.mobile]);
+        fake.emit([ConnectivityResult.none]);
 
-        // Allow microtasks to flush.
         await Future<void>.delayed(const Duration(milliseconds: 10));
         expect(events, equals([false, true, false]));
       });
@@ -248,24 +174,16 @@ void main() {
       });
     });
 
-    // ── dispose ──────────────────────────────────────────────────────────────
-
     group('dispose', () {
       test('dispose does not throw', () {
         expect(() => svc.dispose(), returnsNormally);
       });
 
-      test('dispose cancels platform subscription — no events after dispose',
-          () async {
+      test('dispose cancels platform subscription', () async {
         await svc.initialize();
-        final events = <bool>[];
-        svc.connectivityStream.listen(events.add);
 
         svc.dispose();
-        // Emit after dispose — nothing should arrive on the closed stream.
-        // (Adding to _controller after close would throw, so we do not emit
-        //  through fake here; we only verify no crash on dispose itself.)
-        expect(events, isEmpty);
+        expect(() => fake.emit([ConnectivityResult.none]), returnsNormally);
       });
     });
   });

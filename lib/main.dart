@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'app_config.dart';
@@ -14,6 +16,7 @@ import 'core/services/connectivity_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/preferences_service.dart';
 import 'core/services/sync_service.dart';
+import 'core/services/biometric_service.dart';
 import 'core/services/sponsor_service.dart';
 import 'navigation/app_router.dart';
 
@@ -39,6 +42,10 @@ void main() async {
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
+
+  // Register Nunito font for download (side effect: schedules async fetch).
+  // Not called in tests (tests don't invoke main), so tests use system font fallback.
+  GoogleFonts.nunito();
 
   // Initialize all services
   await _initializeServices();
@@ -130,26 +137,121 @@ Future<void> _initializeServices() async {
   }
 }
 
-class StepsToRecoveryApp extends StatelessWidget {
+class StepsToRecoveryApp extends StatefulWidget {
   const StepsToRecoveryApp({super.key});
 
   @override
+  State<StepsToRecoveryApp> createState() => _StepsToRecoveryAppState();
+}
+
+class _StepsToRecoveryAppState extends State<StepsToRecoveryApp>
+    with WidgetsBindingObserver {
+  bool _locked = false;
+  bool _prompting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.detached) {
+      ConnectivityService().dispose();
+    }
+    if (state == AppLifecycleState.paused &&
+        AppStateService.instance.biometricEnabled) {
+      setState(() => _locked = true);
+    }
+    if (state == AppLifecycleState.resumed && _locked) {
+      _promptBiometric();
+    }
+  }
+
+  Future<void> _promptBiometric() async {
+    if (_prompting) return;
+    _prompting = true;
+    try {
+      if (!AppStateService.instance.biometricEnabled) {
+        setState(() => _locked = false);
+        return;
+      }
+      final result = await BiometricService().authenticate();
+      if (result == BiometricResult.success) {
+        setState(() => _locked = false);
+      }
+      // On failure the app stays locked — next resume will prompt again.
+    } finally {
+      _prompting = false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Steps to Recovery',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      routerConfig: AppRouter.router,
-      builder: (context, child) {
-        // Allow system text scaling up to 1.3x for accessibility
-        // Recovery users may need larger text (vision issues, older adults)
-        final systemScale = MediaQuery.of(context).textScaler.scale(1.0);
-        final clampedScale = systemScale.clamp(1.0, 1.3);
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(clampedScale),
+    // Show opaque screen while awaiting biometric auth — content must not be visible.
+    if (_locked) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF0A0A0A),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return AnimatedBuilder(
+      animation: AppStateService.instance,
+      builder: (context, _) {
+        final platformBrightness = MediaQuery.platformBrightnessOf(context);
+        final effectiveBrightness =
+            switch (AppStateService.instance.appThemeMode) {
+          ThemeMode.dark => Brightness.dark,
+          ThemeMode.light => Brightness.light,
+          ThemeMode.system => platformBrightness,
+        };
+        final isDark = effectiveBrightness == Brightness.dark;
+        SystemChrome.setSystemUIOverlayStyle(
+          SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness:
+                isDark ? Brightness.light : Brightness.dark,
+            systemNavigationBarColor: Colors.transparent,
+            systemNavigationBarDividerColor: Colors.transparent,
+            systemNavigationBarIconBrightness:
+                isDark ? Brightness.light : Brightness.dark,
           ),
-          child: child!,
+        );
+        return MaterialApp.router(
+          title: 'Steps to Recovery',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: AppStateService.instance.appThemeMode,
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('en'),
+          ],
+          routerConfig: AppRouter.router,
+          builder: (context, child) {
+            // Allow system text scaling up to 1.3x for accessibility
+            // Recovery users may need larger text (vision issues, older adults)
+            final systemScale = MediaQuery.of(context).textScaler.scale(1.0);
+            final clampedScale = systemScale.clamp(1.0, 1.3);
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(clampedScale),
+              ),
+              child: child!,
+            );
+          },
         );
       },
     );

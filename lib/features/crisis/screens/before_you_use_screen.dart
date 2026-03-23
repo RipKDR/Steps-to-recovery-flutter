@@ -114,7 +114,7 @@ class _BeforeYouUseScreenState extends State<BeforeYouUseScreen> {
                 style: AppTypography.headlineSmall,
               ),
               const SizedBox(height: AppSpacing.md),
-              _BreathingCircle(),
+              const _BreathingCircle(),
             ],
 
             const Spacer(),

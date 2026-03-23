@@ -1,22 +1,22 @@
-@Suppress("DSL_SCOPE_VIOLATION") // fix: suppress known scope violation warning in allprojects block
-plugins.withId("com.android.application").apply {
+allprojects {
     repositories {
         google()
         mavenCentral()
     }
 }
 
-// Correct buildDir relocation for root and subprojects
-@Suppress("DSL_SCOPE_VIOLATION") // fix: suppress known scope violation warning in subprojects block
+val newBuildDir = rootProject.layout.buildDirectory.dir("../build").get()
+rootProject.layout.buildDirectory.value(newBuildDir)
+
 subprojects {
-    // Set custom build directory path
-    buildDir = file("${rootProject.rootDir}/../build/${project.name}")
-    // Make sure subprojects depend on ":app" evaluation
+    val projectNewBuildDir = newBuildDir.dir(project.name)
+    layout.buildDirectory.value(projectNewBuildDir)
+}
+
+subprojects {
     evaluationDependsOn(":app")
 }
 
-@Suppress("DSL_SCOPE_VIOLATION") // fix: suppress known scope violation warning in tasks block
 tasks.register<Delete>("clean") {
-    // Delete root build directory, which now contains all subproject build outputs
-    delete(file("${rootProject.rootDir}/../build"))
+    delete(rootProject.layout.buildDirectory)
 }

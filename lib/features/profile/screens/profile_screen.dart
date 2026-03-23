@@ -27,7 +27,7 @@ class ProfileScreen extends StatelessWidget {
               // Profile header
               Container(
                 padding: const EdgeInsets.all(AppSpacing.xxl),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.surfaceCard,
                   border: Border(
                     bottom: BorderSide(color: AppColors.border),
@@ -38,7 +38,7 @@ class ProfileScreen extends StatelessWidget {
                     Container(
                       width: AppSpacing.sext,
                       height: AppSpacing.sext,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           colors: AppColors.primaryGradient,
                           begin: Alignment.topLeft,
@@ -264,7 +264,7 @@ class _SettingsTile extends StatelessWidget {
               ),
             )
           : null,
-      trailing: Icon(
+      trailing: const Icon(
         Icons.chevron_right,
         color: AppColors.textMuted,
       ),

@@ -1,0 +1,11 @@
+# Copy this file to android/key.properties and fill in your keystore details.
+# NEVER commit key.properties to git — it is gitignored.
+#
+# To generate a keystore:
+#   keytool -genkey -v -keystore ~/steps-recovery-release.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias steps-recovery
+#
+storeFile=/path/to/your/steps-recovery-release.jks
+storePassword=your_store_password
+keyAlias=steps-recovery
+keyPassword=your_key_password

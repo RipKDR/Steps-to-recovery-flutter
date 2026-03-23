@@ -52,7 +52,7 @@ class _MemoryTransparencyScreenState extends State<MemoryTransparencyScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        leading: BackButton(color: AppColors.textSecondary),
+        leading: const BackButton(color: AppColors.textSecondary),
         title: Text(widget.sponsorName, style: AppTypography.labelLarge),
       ),
       body: ListView(

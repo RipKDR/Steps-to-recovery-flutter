@@ -4,13 +4,61 @@ import '../../../core/services/analytics_service.dart';
 import '../../../core/services/app_state_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_utils.dart';
 import '../../../widgets/loading_state.dart';
 import '../../../widgets/settings_section.dart';
 
 typedef ReminderTimePicker =
     Future<TimeOfDay?> Function(BuildContext context, TimeOfDay initialTime);
+
+class _ThemeSelectorTile extends StatelessWidget {
+  const _ThemeSelectorTile();
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: AppStateService.instance,
+      builder: (context, _) {
+        final current = AppStateService.instance.appThemeMode;
+        return Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.sm,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Theme', style: Theme.of(context).textTheme.labelMedium),
+              const SizedBox(height: AppSpacing.sm),
+              SegmentedButton<ThemeMode>(
+                segments: const [
+                  ButtonSegment(
+                    value: ThemeMode.system,
+                    label: Text('System'),
+                    icon: Icon(Icons.brightness_auto_outlined),
+                  ),
+                  ButtonSegment(
+                    value: ThemeMode.dark,
+                    label: Text('Dark'),
+                    icon: Icon(Icons.dark_mode_outlined),
+                  ),
+                  ButtonSegment(
+                    value: ThemeMode.light,
+                    label: Text('Light'),
+                    icon: Icon(Icons.light_mode_outlined),
+                  ),
+                ],
+                selected: {current},
+                onSelectionChanged: (modes) =>
+                    AppStateService.instance.setThemeMode(modes.first),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key, this.pickReminderTime});
@@ -294,6 +342,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           setState(() {});
                         },
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  SettingsSection(
+                    title: 'Appearance',
+                    children: [
+                      const _ThemeSelectorTile(),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.xl),

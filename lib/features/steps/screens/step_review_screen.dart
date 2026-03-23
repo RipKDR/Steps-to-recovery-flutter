@@ -115,7 +115,7 @@ class StepReviewScreen extends StatelessWidget {
               ),
               bottomNavigationBar: Container(
                 padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.surface,
                   border: Border(top: BorderSide(color: AppColors.border)),
                 ),

@@ -167,9 +167,17 @@ class NotificationService implements ReminderScheduler {
 
   /// Constructor exposed for unit testing with a mock plugin wrapper.
   @visibleForTesting
-  NotificationService.forTesting(this._notifications);
+  NotificationService.forTesting(NotificationsPluginWrapper plugin)
+      : _notifications = plugin;
 
-  final NotificationsPluginWrapper _notifications;
+  /// Replaces the plugin on the singleton for testing.
+  /// Call in test setup to prevent real platform channel access.
+  @visibleForTesting
+  void setPluginForTest(NotificationsPluginWrapper plugin) {
+    _notifications = plugin;
+  }
+
+  NotificationsPluginWrapper _notifications;
   bool _isInitialized = false;
 
   /// Expose [_parseTimeOfDay] for unit testing.

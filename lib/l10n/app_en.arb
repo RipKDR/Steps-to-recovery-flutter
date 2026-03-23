@@ -1,0 +1,71 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Steps to Recovery",
+  "@appTitle": {
+    "description": "Application title shown in the app bar and system"
+  },
+
+  "navHome": "Home",
+  "@navHome": { "description": "Bottom nav tab label for home" },
+
+  "navProgress": "Progress",
+  "@navProgress": { "description": "Bottom nav tab label for progress" },
+
+  "navSteps": "Steps",
+  "@navSteps": { "description": "Bottom nav tab label for 12-step work" },
+
+  "navJournal": "Journal",
+  "@navJournal": { "description": "Bottom nav tab label for journal" },
+
+  "navProfile": "Profile",
+  "@navProfile": { "description": "Bottom nav tab label for profile" },
+
+  "crisisCallNow": "Call 988",
+  "@crisisCallNow": { "description": "Crisis screen primary CTA — calls 988 Suicide & Crisis Lifeline" },
+
+  "crisisTextNow": "Text HOME to 741741",
+  "@crisisTextNow": { "description": "Crisis screen secondary CTA — texts Crisis Text Line" },
+
+  "crisisTitle": "You are not alone",
+  "@crisisTitle": { "description": "Crisis screen headline" },
+
+  "checkInMorning": "Morning check-in",
+  "@checkInMorning": { "description": "Label for morning check-in button" },
+
+  "checkInEvening": "Evening check-in",
+  "@checkInEvening": { "description": "Label for evening check-in button" },
+
+  "checkInButton": "Check in",
+  "@checkInButton": { "description": "Generic check-in action button label" },
+
+  "settingsTitle": "Settings",
+  "@settingsTitle": { "description": "Settings screen title" },
+
+  "settingsAccount": "Account",
+  "@settingsAccount": { "description": "Settings section header for account info" },
+
+  "settingsReminders": "Reminders",
+  "@settingsReminders": { "description": "Settings section header for reminder preferences" },
+
+  "settingsPrivacy": "Privacy",
+  "@settingsPrivacy": { "description": "Settings section header for privacy options" },
+
+  "settingsAppearance": "Appearance",
+  "@settingsAppearance": { "description": "Settings section header for theme/appearance" },
+
+  "themeDark": "Dark",
+  "@themeDark": { "description": "Theme selector option: dark mode" },
+
+  "themeLight": "Light",
+  "@themeLight": { "description": "Theme selector option: light mode (accessibility)" },
+
+  "themeSystem": "System",
+  "@themeSystem": { "description": "Theme selector option: follow system preference" },
+
+  "saveChanges": "Save changes",
+  "@saveChanges": { "description": "Settings save button label" },
+
+  "saving": "Saving...",
+  "@saving": { "description": "Settings save button label while saving is in progress" }
+}

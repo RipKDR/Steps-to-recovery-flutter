@@ -242,7 +242,7 @@ class _SafetyPlanScreenState extends State<SafetyPlanScreen> {
               ),
               Container(
                 padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.surface,
                   border: Border(top: BorderSide(color: AppColors.border)),
                 ),

@@ -135,10 +135,12 @@ class _JournalEditorScreenState extends State<JournalEditorScreen> {
             backgroundColor: AppColors.background,
             actions: [
               IconButton(
+                tooltip: _isFavorite ? 'Remove from favorites' : 'Add to favorites',
                 icon: Icon(_isFavorite ? Icons.star : Icons.star_border),
                 onPressed: () => setState(() => _isFavorite = !_isFavorite),
               ),
               IconButton(
+                tooltip: 'Save entry',
                 icon: const Icon(Icons.save),
                 onPressed: _saving ? null : _saveEntry,
               ),
@@ -162,7 +164,7 @@ class _JournalEditorScreenState extends State<JournalEditorScreen> {
                 const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.calendar_today,
                       size: AppSpacing.iconSm,
                       color: AppColors.textMuted,
@@ -251,7 +253,7 @@ class _JournalEditorScreenState extends State<JournalEditorScreen> {
           ),
           bottomNavigationBar: Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.surface,
               border: Border(top: BorderSide(color: AppColors.border)),
             ),
@@ -284,26 +286,30 @@ class _TagChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.xs,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primaryAmber.withValues(alpha: 0.2)
-              : AppColors.surfaceInteractive,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-          border: Border.all(
-            color: isSelected ? AppColors.primaryAmber : AppColors.border,
+    return Semantics(
+      label: '$label, ${isSelected ? 'selected' : 'not selected'}',
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.xs,
           ),
-        ),
-        child: Text(
-          label,
-          style: AppTypography.labelSmall.copyWith(
-            color: isSelected ? AppColors.primaryAmber : AppColors.textSecondary,
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primaryAmber.withValues(alpha: 0.2)
+                : AppColors.surfaceInteractive,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            border: Border.all(
+              color: isSelected ? AppColors.primaryAmber : AppColors.border,
+            ),
+          ),
+          child: Text(
+            label,
+            style: AppTypography.labelSmall.copyWith(
+              color: isSelected ? AppColors.primaryAmber : AppColors.textSecondary,
+            ),
           ),
         ),
       ),

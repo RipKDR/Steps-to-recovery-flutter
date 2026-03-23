@@ -77,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Steps to Recovery',
                         style: AppTypography.headlineMedium,
                       ),
@@ -300,7 +300,7 @@ class _SobrietyCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.xl),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             colors: AppColors.primaryGradient,
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -658,7 +658,7 @@ class _CheckInCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                ExcludeSemantics(
+                const ExcludeSemantics(
                   child: Icon(Icons.chevron_right, color: AppColors.textMuted),
                 ),
               ],

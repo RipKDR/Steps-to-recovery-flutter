@@ -60,15 +60,17 @@ class EncryptionService {
 
   /// Encrypt a string value
   String encrypt(String plainText) {
-    if (_key == null || _iv == null) {
+    final key = _key;
+    final iv = _iv;
+    if (key == null || iv == null) {
       throw Exception(
         'Encryption service not initialized. Call initialize() first.',
       );
     }
 
     try {
-      final encrypter = Encrypter(AES(_key!, mode: AESMode.cbc));
-      final encrypted = encrypter.encrypt(plainText, iv: _iv!);
+      final encrypter = Encrypter(AES(key, mode: AESMode.cbc));
+      final encrypted = encrypter.encrypt(plainText, iv: iv);
       return encrypted.base64;
     } catch (e) {
       // If encryption fails, return base64 encoded data as fallback
@@ -78,15 +80,17 @@ class EncryptionService {
 
   /// Decrypt a string value
   String decrypt(String encryptedText) {
-    if (_key == null || _iv == null) {
+    final key = _key;
+    final iv = _iv;
+    if (key == null || iv == null) {
       throw Exception(
         'Encryption service not initialized. Call initialize() first.',
       );
     }
 
     try {
-      final encrypter = Encrypter(AES(_key!, mode: AESMode.cbc));
-      final decrypted = encrypter.decrypt64(encryptedText, iv: _iv!);
+      final encrypter = Encrypter(AES(key, mode: AESMode.cbc));
+      final decrypted = encrypter.decrypt64(encryptedText, iv: iv);
       return decrypted;
     } catch (e) {
       // Fallback: try base64 decode

@@ -237,19 +237,19 @@ class _SponsorScreenState extends State<SponsorScreen> {
                   style: AppTypography.headlineMedium,
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                _BenefitCard(
+                const _BenefitCard(
                   icon: Icons.lightbulb,
                   title: 'Guidance',
                   description: 'Get support from someone who has walked the path',
                 ),
                 const SizedBox(height: AppSpacing.md),
-                _BenefitCard(
+                const _BenefitCard(
                   icon: Icons.support,
                   title: 'Accountability',
                   description: 'Stay committed to your recovery goals',
                 ),
                 const SizedBox(height: AppSpacing.md),
-                _BenefitCard(
+                const _BenefitCard(
                   icon: Icons.share,
                   title: 'Experience',
                   description: 'Learn from their experience, strength, and hope',
@@ -296,7 +296,7 @@ class _CurrentSponsorCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: AppColors.primaryGradient,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,

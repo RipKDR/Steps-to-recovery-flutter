@@ -116,10 +116,10 @@ class _CravingSurfScreenState extends State<CravingSurfScreen>
                       style: AppTypography.titleMedium,
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    _TipRow(tip: 'This feeling will pass'),
-                    _TipRow(tip: 'You\'ve survived every craving before'),
-                    _TipRow(tip: 'Focus on your breath'),
-                    _TipRow(tip: 'Reach out if you need support'),
+                    const _TipRow(tip: 'This feeling will pass'),
+                    const _TipRow(tip: 'You\'ve survived every craving before'),
+                    const _TipRow(tip: 'Focus on your breath'),
+                    const _TipRow(tip: 'Reach out if you need support'),
                   ],
                 ),
               ),
@@ -239,8 +239,8 @@ class _TipRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Row(
         children: [
-          ExcludeSemantics(
-            child: const Icon(
+          const ExcludeSemantics(
+            child: Icon(
               Icons.check_circle,
               size: AppSpacing.iconSm,
               color: AppColors.success,

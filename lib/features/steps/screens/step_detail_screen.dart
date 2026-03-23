@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -100,7 +102,7 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
       return;
     }
     if (mounted) {
-      context.push('${AppRoutes.steps}/review?stepNumber=${widget.stepNumber}');
+      unawaited(context.push('${AppRoutes.steps}/review?stepNumber=${widget.stepNumber}'));
     }
   }
 
@@ -210,7 +212,7 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
               ),
               Container(
                 padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.surface,
                   border: Border(top: BorderSide(color: AppColors.border)),
                 ),

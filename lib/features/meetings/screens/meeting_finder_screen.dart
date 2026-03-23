@@ -188,20 +188,24 @@ class _MeetingFinderScreenState extends State<MeetingFinderScreen> {
                       runSpacing: AppSpacing.sm,
                       children: _filters.map((filter) {
                         final isSelected = _selectedFilter == filter;
-                        return FilterChip(
-                          label: Text(filter),
+                        return Semantics(
                           selected: isSelected,
-                          onSelected: (_) {
-                            setState(() {
-                              _selectedFilter = filter;
-                            });
-                          },
-                          backgroundColor: AppColors.surfaceInteractive,
-                          selectedColor: AppColors.primaryAmber.withValues(alpha: 0.18),
-                          labelStyle: AppTypography.labelMedium.copyWith(
-                            color: isSelected
-                                ? AppColors.primaryAmber
-                                : AppColors.textSecondary,
+                          label: 'Filter by $filter',
+                          child: FilterChip(
+                            label: Text(filter),
+                            selected: isSelected,
+                            onSelected: (_) {
+                              setState(() {
+                                _selectedFilter = filter;
+                              });
+                            },
+                            backgroundColor: AppColors.surfaceInteractive,
+                            selectedColor: AppColors.primaryAmber.withValues(alpha: 0.18),
+                            labelStyle: AppTypography.labelMedium.copyWith(
+                              color: isSelected
+                                  ? AppColors.primaryAmber
+                                  : AppColors.textSecondary,
+                            ),
                           ),
                         );
                       }).toList(),
@@ -257,7 +261,12 @@ class _MeetingCard extends StatelessWidget {
         ? AppColors.info
         : AppColors.success;
 
-    return Card(
+    final meetingLabel = '${meeting.name}, ${_meetingTypeLabel(meeting.meetingType)}'
+        '${meeting.dateTime != null ? ', ${_formatMeetingTime(meeting.dateTime)}' : ''}';
+    return Semantics(
+      label: meetingLabel,
+      button: true,
+      child: Card(
       margin: EdgeInsets.zero,
       child: InkWell(
         onTap: onTap,
@@ -279,6 +288,9 @@ class _MeetingCard extends StatelessWidget {
                   IconButton(
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
+                    tooltip: meeting.isFavorite
+                        ? 'Remove from favorites'
+                        : 'Add to favorites',
                     icon: Icon(
                       meeting.isFavorite ? Icons.favorite : Icons.favorite_border,
                       color: meeting.isFavorite
@@ -332,7 +344,7 @@ class _MeetingCard extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.location_on_outlined,
                     size: AppSpacing.iconSm,
                     color: AppColors.textMuted,
@@ -353,7 +365,7 @@ class _MeetingCard extends StatelessWidget {
               const SizedBox(height: AppSpacing.xs),
               Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.access_time,
                     size: AppSpacing.iconSm,
                     color: AppColors.textMuted,
@@ -406,6 +418,7 @@ class _MeetingCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

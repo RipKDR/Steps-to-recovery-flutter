@@ -35,7 +35,7 @@ class _GratitudeScreenState extends State<GratitudeScreen> {
           // Input area
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.surfaceCard,
               border: Border(
                 bottom: BorderSide(color: AppColors.border),

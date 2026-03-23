@@ -260,12 +260,17 @@ class _MessageBubble extends StatelessWidget {
     final isUser = message.isUser;
     return Semantics(
       label: isUser ? 'Your message' : 'Message from $sponsorName',
-      child: Align(
-        alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-        child: Container(
+      child: _buildBubble(isUser, context),
+    );
+  }
+
+  Align _buildBubble(bool isUser, BuildContext context) {
+    return Align(
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
         margin: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
         constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.82),
+          maxWidth: MediaQuery.of(context).size.width * 0.82),
         decoration: BoxDecoration(
           color: isUser ? AppColors.primaryAmber : AppColors.surfaceBubble,
           borderRadius: BorderRadius.only(
@@ -275,13 +280,17 @@ class _MessageBubble extends StatelessWidget {
             bottomRight: Radius.circular(isUser ? 4 : 20),
           ),
           border: isCrisisMode && !isUser
-              ? Border.all(color: AppColors.danger.withValues(alpha: 0.5), width: 1)
+              ? Border.all(
+                  color: AppColors.danger.withValues(alpha: 0.5),
+                  width: 1,
+                )
               : null,
           boxShadow: isCrisisMode && !isUser
               ? [
                   BoxShadow(
-                      color: AppColors.danger.withValues(alpha: 0.15),
-                      blurRadius: 12)
+                    color: AppColors.danger.withValues(alpha: 0.15),
+                    blurRadius: 12,
+                  ),
                 ]
               : null,
         ),
@@ -343,9 +352,9 @@ class _InputBar extends StatelessWidget {
           AppSpacing.md,
           AppSpacing.md + MediaQuery.of(context).padding.bottom,
         ),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: AppColors.background,
-          border: const Border(
+          border: Border(
               top: BorderSide(color: AppColors.border)),
         ),
         child: Row(

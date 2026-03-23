@@ -46,14 +46,14 @@ class _DangerZoneScreenState extends State<DangerZoneScreen> {
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 color: AppColors.danger.withValues(alpha: 0.1),
-                border: Border(
+                border: const Border(
                   bottom: BorderSide(color: AppColors.danger),
                 ),
               ),
               child: Row(
                 children: [
-                  ExcludeSemantics(
-                    child: const Icon(
+                  const ExcludeSemantics(
+                    child: Icon(
                       Icons.warning,
                       color: AppColors.danger,
                     ),
@@ -75,7 +75,7 @@ class _DangerZoneScreenState extends State<DangerZoneScreen> {
           // Contacts list
           Expanded(
             child: _contacts.isEmpty
-                ? EmptyState(
+                ? const EmptyState(
                     icon: Icons.shield,
                     title: 'No risky contacts',
                     message: 'Add contacts that might trigger cravings',
@@ -200,8 +200,8 @@ class _RiskyContactCard extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    ExcludeSemantics(
-                      child: const Icon(
+                    const ExcludeSemantics(
+                      child: Icon(
                         Icons.info_outline,
                         size: AppSpacing.iconSm,
                         color: AppColors.warning,

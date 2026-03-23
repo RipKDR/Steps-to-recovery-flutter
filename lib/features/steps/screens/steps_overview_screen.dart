@@ -97,7 +97,7 @@ class _StepCard extends StatelessWidget {
                 width: AppSpacing.quint,
                 height: AppSpacing.quint,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     colors: AppColors.primaryGradient,
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,

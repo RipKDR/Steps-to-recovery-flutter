@@ -183,7 +183,7 @@ class _OnboardingPageContent extends StatelessWidget {
             width: AppSpacing.illustrationMd,
             height: AppSpacing.illustrationMd,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              gradient: const LinearGradient(
                 colors: AppColors.primaryGradient,
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,

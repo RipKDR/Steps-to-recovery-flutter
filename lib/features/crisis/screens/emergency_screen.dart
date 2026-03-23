@@ -343,7 +343,7 @@ class _CrisisToolCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                ExcludeSemantics(
+                const ExcludeSemantics(
                   child: Icon(
                     Icons.chevron_right,
                     color: AppColors.textMuted,

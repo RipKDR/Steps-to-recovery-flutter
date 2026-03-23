@@ -141,15 +141,15 @@ class _SponsorIntroScreenState extends State<SponsorIntroScreen> {
                         fillColor: AppColors.surfaceCard,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                          borderSide: BorderSide(color: AppColors.border),
+                          borderSide: const BorderSide(color: AppColors.border),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                          borderSide: BorderSide(color: AppColors.border),
+                          borderSide: const BorderSide(color: AppColors.border),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                          borderSide: BorderSide(color: AppColors.primaryAmber, width: 1.5),
+                          borderSide: const BorderSide(color: AppColors.primaryAmber, width: 1.5),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.lg,

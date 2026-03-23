@@ -268,7 +268,7 @@ class _SobrietyCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: AppColors.primaryGradient,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -526,51 +526,6 @@ class _MilestoneCard extends StatelessWidget {
           Icon(
             achieved ? Icons.check_circle : Icons.flag_outlined,
             color: achieved ? AppColors.success : AppColors.primaryAmber,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EmptyMilestoneState extends StatelessWidget {
-  final String title;
-  final String description;
-  final String actionLabel;
-  final VoidCallback onTap;
-
-  const _EmptyMilestoneState({
-    required this.title,
-    required this.description,
-    required this.actionLabel,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: AppTypography.titleMedium),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            description,
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textMuted,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          OutlinedButton(
-            onPressed: onTap,
-            child: Text(actionLabel),
           ),
         ],
       ),

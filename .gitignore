@@ -49,5 +49,14 @@ app.*.map.json
 /.worktrees/
 
 #Ignore vscode AI rules
+<<<<<<< Updated upstream
 .github\instructions\codacy.instructions.md
+/android
+=======
+.github/instructions/codacy.instructions.md
+/android/app/build
+/android/build
+/android/.gradle
+/android/key.properties
+>>>>>>> Stashed changes
 /android

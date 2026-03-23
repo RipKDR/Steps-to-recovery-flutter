@@ -52,11 +52,11 @@ class AiSettingsScreen extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: Icon(
+                leading: const Icon(
                   Icons.cloud_outlined,
                   color: AppColors.primaryAmber,
                 ),
-                title: Text('Cloud proxy'),
+                title: const Text('Cloud proxy'),
                 subtitle: Text(
                   AiService().isCloudAvailable
                       ? 'A cloud API key is configured. The companion can use structured cloud guidance when enabled.'
