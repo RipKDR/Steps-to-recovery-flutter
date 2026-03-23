@@ -63,6 +63,7 @@ class _SignupScreenState extends State<SignupScreen> {
               TextField(
                 controller: _emailController,
                 style: AppTypography.bodyMedium,
+                autofillHints: const [AutofillHints.email],
                 decoration: const InputDecoration(
                   labelText: 'Email',
                   prefixIcon: Icon(Icons.email_outlined),
@@ -70,12 +71,13 @@ class _SignupScreenState extends State<SignupScreen> {
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
               ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.xl),
               
               // Password field
               TextField(
                 controller: _passwordController,
                 style: AppTypography.bodyMedium,
+                autofillHints: const [AutofillHints.newPassword],
                 decoration: InputDecoration(
                   labelText: 'Password',
                   prefixIcon: const Icon(Icons.lock_outline),
@@ -95,12 +97,13 @@ class _SignupScreenState extends State<SignupScreen> {
                 obscureText: _obscurePassword,
                 textInputAction: TextInputAction.next,
               ),
-              const SizedBox(height: AppSpacing.lg),
-              
+              const SizedBox(height: AppSpacing.xl),
+
               // Confirm password
               TextField(
                 controller: _confirmPasswordController,
                 style: AppTypography.bodyMedium,
+                autofillHints: const [AutofillHints.newPassword],
                 decoration: const InputDecoration(
                   labelText: 'Confirm Password',
                   prefixIcon: Icon(Icons.lock_outline),
@@ -108,7 +111,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 obscureText: _obscurePassword,
                 textInputAction: TextInputAction.next,
               ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.xl),
               
               // Sobriety date
               TextField(
@@ -136,8 +139,8 @@ class _SignupScreenState extends State<SignupScreen> {
                   }
                 },
               ),
-              const SizedBox(height: AppSpacing.lg),
-              
+              const SizedBox(height: AppSpacing.xl),
+
               // Terms agreement
               Row(
                 children: [
@@ -188,15 +191,19 @@ class _SignupScreenState extends State<SignupScreen> {
               const SizedBox(height: AppSpacing.xxl),
               
               // Sign up button
-              ElevatedButton(
-                onPressed: (_agreeToTerms && !_isLoading) ? _signup : null,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: AppSpacing.iconLg,
-                        width: AppSpacing.iconLg,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Create Account'),
+              Semantics(
+                label: 'Create your account',
+                button: true,
+                child: ElevatedButton(
+                  onPressed: (_agreeToTerms && !_isLoading) ? _signup : null,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: AppSpacing.iconLg,
+                          width: AppSpacing.iconLg,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Create Account'),
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
               

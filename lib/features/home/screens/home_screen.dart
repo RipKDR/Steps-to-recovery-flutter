@@ -125,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Semantics(
                       sortKey: const OrdinalSortKey(4),
                       header: true,
-                      child: const Text('Today', style: AppTypography.headlineSmall),
+                      child: Text('Today', style: AppTypography.headlineSmall),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     Semantics(
@@ -455,7 +455,7 @@ class _QuickActions extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Quick Actions', style: AppTypography.headlineSmall),
+        Text('Quick Actions', style: AppTypography.headlineSmall),
         const SizedBox(height: AppSpacing.md),
         Wrap(
           spacing: AppSpacing.sm,

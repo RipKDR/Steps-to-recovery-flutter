@@ -257,9 +257,11 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUser = message.isUser;
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
+    return Semantics(
+      label: isUser ? 'Your message' : 'Message from $sponsorName',
+      child: Align(
+        alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
         margin: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
         constraints: BoxConstraints(
             maxWidth: MediaQuery.of(context).size.width * 0.82),
@@ -303,24 +305,18 @@ class _QuickChip extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.xs,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.primaryAmber.withValues(alpha: 0.08),
-            border: Border.all(
-                color: AppColors.primaryAmber.withValues(alpha: 0.3)),
-            borderRadius: BorderRadius.circular(100),
-          ),
-          child: Text(
-            label,
-            style: AppTypography.labelSmall
-                .copyWith(color: AppColors.primaryAmber),
-          ),
+  Widget build(BuildContext context) => ActionChip(
+        label: Text(
+          label,
+          style: AppTypography.labelSmall
+              .copyWith(color: AppColors.primaryAmber),
+        ),
+        onPressed: onTap,
+        backgroundColor: AppColors.primaryAmber.withValues(alpha: 0.08),
+        side: BorderSide(
+            color: AppColors.primaryAmber.withValues(alpha: 0.3)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(100),
         ),
       );
 }
@@ -377,19 +373,22 @@ class _InputBar extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-            GestureDetector(
-              onTap: isSending ? null : onSend,
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: isSending
-                      ? AppColors.primaryAmber.withValues(alpha: 0.4)
-                      : AppColors.primaryAmber,
-                  shape: BoxShape.circle,
+            Semantics(
+              label: 'Send message',
+              button: true,
+              child: SizedBox(
+                width: AppSpacing.touchTargetComfortable,
+                height: AppSpacing.touchTargetComfortable,
+                child: IconButton(
+                  onPressed: isSending ? null : onSend,
+                  style: IconButton.styleFrom(
+                    backgroundColor: isSending
+                        ? AppColors.primaryAmber.withValues(alpha: 0.4)
+                        : AppColors.primaryAmber,
+                    shape: const CircleBorder(),
+                  ),
+                  icon: const Icon(Icons.send, color: Colors.black, size: 20),
                 ),
-                child:
-                    const Icon(Icons.send, color: Colors.black, size: 20),
               ),
             ),
           ],

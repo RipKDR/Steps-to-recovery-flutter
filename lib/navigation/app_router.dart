@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/app_state_service.dart';
 import '../core/theme/app_colors.dart';
+import '../core/theme/app_spacing.dart';
 import '../core/theme/app_typography.dart';
+import '../widgets/empty_state.dart';
 import '../features/home/screens/home_screen.dart';
 import '../features/home/screens/morning_intention_screen.dart';
 import '../features/home/screens/evening_pulse_screen.dart';
@@ -357,30 +359,12 @@ class _FavoriteMeetingsScreen extends StatelessWidget {
         title: const Text('Favorite Meetings'),
         backgroundColor: AppColors.background,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.favorite_border,
-              size: 72,
-              color: AppColors.primaryAmber,
-            ),
-            const SizedBox(height: 16),
-            Text('No favorites yet', style: AppTypography.headlineSmall),
-            const SizedBox(height: 8),
-            const Text(
-              'Star meetings from the Meetings tab to build this list.',
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => context.go(AppRoutes.meetings),
-              child: const Text('Browse meetings'),
-            ),
-          ],
-        ),
+      body: EmptyState(
+        icon: Icons.favorite_border,
+        title: 'No favorites yet',
+        message: 'Star meetings from the Meetings tab to build this list.',
+        actionLabel: 'Browse meetings',
+        onAction: () => context.go(AppRoutes.meetings),
       ),
     );
   }

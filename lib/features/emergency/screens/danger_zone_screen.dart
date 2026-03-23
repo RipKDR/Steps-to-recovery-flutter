@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../widgets/empty_state.dart';
 
 /// Danger Zone screen - Manage risky contacts
 class DangerZoneScreen extends StatefulWidget {
@@ -33,10 +34,12 @@ class _DangerZoneScreenState extends State<DangerZoneScreen> {
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.danger,
       ),
-      body: Column(
-        children: [
-          // Warning banner
-          Semantics(
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            // Warning banner
+            Semantics(
             liveRegion: true,
             label: 'Warning: These contacts have been flagged as risky. You will be warned before calling them.',
             child: Container(
@@ -72,7 +75,11 @@ class _DangerZoneScreenState extends State<DangerZoneScreen> {
           // Contacts list
           Expanded(
             child: _contacts.isEmpty
-                ? _EmptyState()
+                ? EmptyState(
+                    icon: Icons.shield,
+                    title: 'No risky contacts',
+                    message: 'Add contacts that might trigger cravings',
+                  )
                 : ListView.builder(
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     itemCount: _contacts.length,
@@ -88,8 +95,9 @@ class _DangerZoneScreenState extends State<DangerZoneScreen> {
                       );
                     },
                   ),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
       floatingActionButton: Semantics(
         button: true,
@@ -219,37 +227,3 @@ class _RiskyContactCard extends StatelessWidget {
   }
 }
 
-class _EmptyState extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Semantics(
-        label: 'No risky contacts. Add contacts that might trigger cravings.',
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.shield,
-              size: AppSpacing.sext,
-              color: AppColors.success,
-              semanticLabel: 'Shield icon',
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'No risky contacts',
-              style: AppTypography.headlineSmall,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Add contacts that might trigger cravings',
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textMuted,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

@@ -7,6 +7,10 @@ import '../../../core/services/database_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/app_utils.dart';
+import '../../../widgets/app_filter_chip.dart';
+import '../../../widgets/empty_state.dart';
+import '../../../widgets/loading_state.dart';
 
 /// Journal list with local filtering and edit navigation.
 class JournalListScreen extends StatefulWidget {
@@ -78,16 +82,17 @@ class _JournalListScreenState extends State<JournalListScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                   scrollDirection: Axis.horizontal,
                   children: [
-                    _FilterChip(
+                    AppFilterChip(
                       label: 'All',
                       isSelected: _filter == _JournalFilter.all,
-                      onTap: () => setState(() => _filter = _JournalFilter.all),
+                      onSelected: (_) => setState(() => _filter = _JournalFilter.all),
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    _FilterChip(
+                    AppFilterChip(
                       label: 'Favorites',
                       isSelected: _filter == _JournalFilter.favorites,
-                      onTap: () => setState(() => _filter = _JournalFilter.favorites),
+                      onSelected: (_) => setState(() => _filter = _JournalFilter.favorites),
+                      icon: Icons.star,
                     ),
                   ],
                 ),
@@ -98,15 +103,17 @@ class _JournalListScreenState extends State<JournalListScreen> {
                   future: _loadEntries(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState != ConnectionState.done) {
-                      return const Center(
-                        child: CircularProgressIndicator(color: AppColors.primaryAmber),
-                      );
+                      return const LoadingState();
                     }
 
                     final entries = snapshot.data ?? const <JournalEntry>[];
                     if (entries.isEmpty) {
-                      return _EmptyJournalState(
-                        onCreateEntry: () => context.push('${AppRoutes.journalEditor}?mode=create'),
+                      return EmptyState(
+                        icon: Icons.edit_note,
+                        title: 'No journal entries yet',
+                        message: 'Write a private reflection. Entries are encrypted before they are stored locally.',
+                        actionLabel: 'Create Entry',
+                        onAction: () => context.push('${AppRoutes.journalEditor}?mode=create'),
                       );
                     }
 

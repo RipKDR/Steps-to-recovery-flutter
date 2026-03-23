@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/app_utils.dart';
+import '../../../widgets/app_form_field.dart';
 
 /// Inventory screen - Step 10 daily inventory
 class InventoryScreen extends StatefulWidget {
@@ -37,13 +39,18 @@ class _InventoryScreenState extends State<InventoryScreen> {
         title: const Text('Personal Inventory'),
         backgroundColor: AppColors.background,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _saveInventory,
+          Semantics(
+            label: 'Save inventory',
+            button: true,
+            child: IconButton(
+              icon: const Icon(Icons.save),
+              onPressed: _saveInventory,
+            ),
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: SafeArea(
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,7 +71,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    _formatDate(DateTime.now()),
+                    AppUtils.formatDate(DateTime.now()),
                     style: AppTypography.bodyMedium,
                   ),
                 ],
@@ -72,93 +79,46 @@ class _InventoryScreenState extends State<InventoryScreen> {
             ),
             const SizedBox(height: AppSpacing.xl),
             
-            Text(
-              'Today I was resentful about:',
-              style: AppTypography.titleMedium,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            TextField(
+            AppFormField(
+              label: 'Today I was resentful about:',
               controller: _resentfulController,
               maxLines: 2,
-              style: AppTypography.bodyMedium,
-              decoration: const InputDecoration(
-                hintText: 'Who or what made you resentful?',
-              ),
+              hintText: 'Who or what made you resentful?',
             ),
             const SizedBox(height: AppSpacing.lg),
-            
-            Text(
-              'Today I was selfish about:',
-              style: AppTypography.titleMedium,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            TextField(
+            AppFormField(
+              label: 'Today I was selfish about:',
               controller: _selfishController,
               maxLines: 2,
-              style: AppTypography.bodyMedium,
-              decoration: const InputDecoration(
-                hintText: 'Where were you self-centered?',
-              ),
+              hintText: 'Where were you self-centered?',
             ),
             const SizedBox(height: AppSpacing.lg),
-            
-            Text(
-              'Today I was dishonest about:',
-              style: AppTypography.titleMedium,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            TextField(
+            AppFormField(
+              label: 'Today I was dishonest about:',
               controller: _dishonestController,
               maxLines: 2,
-              style: AppTypography.bodyMedium,
-              decoration: const InputDecoration(
-                hintText: 'Where were you dishonest?',
-              ),
+              hintText: 'Where were you dishonest?',
             ),
             const SizedBox(height: AppSpacing.lg),
-            
-            Text(
-              'Today I was afraid of:',
-              style: AppTypography.titleMedium,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            TextField(
+            AppFormField(
+              label: 'Today I was afraid of:',
               controller: _afraidController,
               maxLines: 2,
-              style: AppTypography.bodyMedium,
-              decoration: const InputDecoration(
-                hintText: 'What fears came up today?',
-              ),
+              hintText: 'What fears came up today?',
             ),
             const SizedBox(height: AppSpacing.lg),
-            
-            Text(
-              'Today I harmed:',
-              style: AppTypography.titleMedium,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            TextField(
+            AppFormField(
+              label: 'Today I harmed:',
               controller: _harmedController,
               maxLines: 2,
-              style: AppTypography.bodyMedium,
-              decoration: const InputDecoration(
-                hintText: 'Did you harm anyone? How?',
-              ),
+              hintText: 'Did you harm anyone? How?',
             ),
             const SizedBox(height: AppSpacing.lg),
-            
-            Text(
-              'Today I was kind and loving:',
-              style: AppTypography.titleMedium,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            TextField(
+            AppFormField(
+              label: 'Today I was kind and loving:',
               controller: _kindController,
               maxLines: 2,
-              style: AppTypography.bodyMedium,
-              decoration: const InputDecoration(
-                hintText: 'Where did you show kindness?',
-              ),
+              hintText: 'Where did you show kindness?',
             ),
             const SizedBox(height: AppSpacing.xxl),
             
@@ -172,15 +132,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
           ],
         ),
       ),
+      ),
     );
   }
 
   void _saveInventory() {
     // Save inventory logic
     Navigator.pop(context);
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
   }
 }

@@ -184,33 +184,41 @@ class _SafetyPlanScreenState extends State<SafetyPlanScreen> {
                   children: List.generate(_stepTitles.length, (index) {
                     final isActive = index == _currentStep;
                     final isCompleted = index < _currentStep;
+                    final statusLabel = isCompleted
+                        ? 'completed'
+                        : isActive
+                            ? 'current'
+                            : 'upcoming';
 
-                    return Container(
-                      width: AppSpacing.xl,
-                      height: AppSpacing.xl,
-                      decoration: BoxDecoration(
-                        color: isActive
-                            ? AppColors.primaryAmber
-                            : isCompleted
-                                ? AppColors.success
-                                : AppColors.surfaceInteractive,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: isCompleted
-                            ? const Icon(
-                                Icons.check,
-                                size: AppSpacing.iconSm,
-                                color: AppColors.textOnDark,
-                              )
-                            : Text(
-                                '${index + 1}',
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: isActive
-                                      ? AppColors.textOnDark
-                                      : AppColors.textMuted,
+                    return Semantics(
+                      label: 'Step ${index + 1}: ${_stepTitles[index]}, $statusLabel',
+                      child: Container(
+                        width: AppSpacing.xl,
+                        height: AppSpacing.xl,
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? AppColors.primaryAmber
+                              : isCompleted
+                                  ? AppColors.success
+                                  : AppColors.surfaceInteractive,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: isCompleted
+                              ? const Icon(
+                                  Icons.check,
+                                  size: AppSpacing.iconSm,
+                                  color: AppColors.textOnDark,
+                                )
+                              : Text(
+                                  '${index + 1}',
+                                  style: AppTypography.labelSmall.copyWith(
+                                    color: isActive
+                                        ? AppColors.textOnDark
+                                        : AppColors.textMuted,
+                                  ),
                                 ),
-                              ),
+                        ),
                       ),
                     );
                   }),
@@ -242,19 +250,29 @@ class _SafetyPlanScreenState extends State<SafetyPlanScreen> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton(
-                        onPressed: _currentStep == 0 ? null : _previousStep,
-                        child: const Text('Back'),
+                      child: Semantics(
+                        button: true,
+                        label: 'Go to previous step',
+                        child: OutlinedButton(
+                          onPressed: _currentStep == 0 ? null : _previousStep,
+                          child: const Text('Back'),
+                        ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
-                      child: ElevatedButton(
-                        onPressed: _saving ? null : _nextStep,
-                        child: Text(
-                          _currentStep < _stepTitles.length - 1
-                              ? 'Save & Next'
-                              : 'Complete Safety Plan',
+                      child: Semantics(
+                        button: true,
+                        label: _currentStep < _stepTitles.length - 1
+                            ? 'Save and go to next step'
+                            : 'Complete safety plan',
+                        child: ElevatedButton(
+                          onPressed: _saving ? null : _nextStep,
+                          child: Text(
+                            _currentStep < _stepTitles.length - 1
+                                ? 'Save & Next'
+                                : 'Complete Safety Plan',
+                          ),
                         ),
                       ),
                     ),

@@ -17,6 +17,10 @@ class AppColors {
   static const Color surfaceCard = Color(0xFF1E1E1E);
   static const Color surfaceInteractive = Color(0xFF2A2A2A);
 
+  // Glass effect colors (for premium frosted glass cards)
+  static const Color glassSurface = Color(0x1AFFFFFF); // 10% white overlay
+  static const Color glassBorder = Color(0x33FFFFFF); // 20% white edge highlight
+
   // Text colors
   static const Color textPrimary = Color(0xFFFFFFFF);
   static const Color textSecondary = Color(0xFFA1A1AA);

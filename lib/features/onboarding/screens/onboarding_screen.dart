@@ -60,9 +60,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             // Skip button
             Align(
               alignment: Alignment.topRight,
-              child: TextButton(
-                onPressed: _completeOnboarding,
-                child: const Text('Skip'),
+              child: Semantics(
+                label: 'Skip onboarding',
+                button: true,
+                child: TextButton(
+                  onPressed: _completeOnboarding,
+                  child: const Text('Skip'),
+                ),
               ),
             ),
             
@@ -84,25 +88,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
             
             // Page indicators
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_pages.length, (index) {
-                final isActive = index == _currentPage;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xs,
-                  ),
-                  width: isActive ? AppSpacing.lg : AppSpacing.sm,
-                  height: AppSpacing.sm,
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? AppColors.primaryAmber
-                        : AppColors.surfaceInteractive,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                  ),
-                );
-              }),
+            Semantics(
+              label: 'Page ${_currentPage + 1} of ${_pages.length}',
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(_pages.length, (index) {
+                  final isActive = index == _currentPage;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs,
+                    ),
+                    width: isActive ? AppSpacing.lg : AppSpacing.sm,
+                    height: AppSpacing.sm,
+                    decoration: BoxDecoration(
+                      color: isActive
+                          ? AppColors.primaryAmber
+                          : AppColors.surfaceInteractive,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                    ),
+                  );
+                }),
+              ),
             ),
             const SizedBox(height: AppSpacing.xxl),
             
@@ -123,8 +130,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryAmber,
-                    foregroundColor: AppColors.textOnDark,
                     padding: const EdgeInsets.symmetric(
                       vertical: AppSpacing.md,
                     ),
@@ -175,8 +180,8 @@ class _OnboardingPageContent extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 150,
-            height: 150,
+            width: AppSpacing.illustrationMd,
+            height: AppSpacing.illustrationMd,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: AppColors.primaryGradient,

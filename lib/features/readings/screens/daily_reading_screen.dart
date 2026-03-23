@@ -4,6 +4,7 @@ import '../../../core/constants/recovery_content.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/app_utils.dart';
 
 /// Daily Reading screen
 class DailyReadingScreen extends StatefulWidget {
@@ -132,7 +133,7 @@ class _DailyReadingScreenState extends State<DailyReadingScreen> {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    _formatDate(_selectedDate),
+                    AppUtils.formatDate(_selectedDate),
                     style: AppTypography.titleMedium,
                   ),
                   const Spacer(),
@@ -289,11 +290,4 @@ class _DailyReadingScreenState extends State<DailyReadingScreen> {
     );
   }
 
-  String _formatDate(DateTime date) {
-    const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    return '${months[date.month - 1]} ${date.day}, ${date.year}';
-  }
 }

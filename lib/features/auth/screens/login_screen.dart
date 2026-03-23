@@ -77,6 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _emailController,
                 style: AppTypography.bodyMedium,
+                autofillHints: const [AutofillHints.email],
                 decoration: const InputDecoration(
                   labelText: 'Email',
                   prefixIcon: Icon(Icons.email_outlined),
@@ -84,12 +85,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
               ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.xl),
               
               // Password field
               TextField(
                 controller: _passwordController,
                 style: AppTypography.bodyMedium,
+                autofillHints: const [AutofillHints.password],
                 decoration: InputDecoration(
                   labelText: 'Password',
                   prefixIcon: const Icon(Icons.lock_outline),
@@ -125,15 +127,19 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: AppSpacing.xl),
               
               // Login button
-              ElevatedButton(
-                onPressed: _isLoading ? null : _login,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: AppSpacing.iconLg,
-                        width: AppSpacing.iconLg,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Log In'),
+              Semantics(
+                label: 'Log in to your account',
+                button: true,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _login,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: AppSpacing.iconLg,
+                          width: AppSpacing.iconLg,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Log In'),
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
               OutlinedButton(
