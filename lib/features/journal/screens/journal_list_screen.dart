@@ -156,85 +156,6 @@ class _JournalListScreenState extends State<JournalListScreen> {
 
 enum _JournalFilter { all, favorites }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryAmber : AppColors.surfaceInteractive,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-        ),
-        child: Text(
-          label,
-          style: AppTypography.labelMedium.copyWith(
-            color: isSelected ? AppColors.textOnDark : AppColors.textSecondary,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyJournalState extends StatelessWidget {
-  const _EmptyJournalState({required this.onCreateEntry});
-
-  final VoidCallback onCreateEntry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.edit_note,
-              size: AppSpacing.sext,
-              color: AppColors.textMuted,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            const Text(
-              'No journal entries yet',
-              style: AppTypography.headlineSmall,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Write a private reflection. Entries are encrypted before they are stored locally.',
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textMuted,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            ElevatedButton.icon(
-              onPressed: onCreateEntry,
-              icon: const Icon(Icons.add),
-              label: const Text('Create Entry'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _JournalCard extends StatelessWidget {
   const _JournalCard({
     required this.entry,
@@ -269,6 +190,7 @@ class _JournalCard extends StatelessWidget {
                     ),
                   ),
                   IconButton(
+                    tooltip: 'Toggle favorite',
                     onPressed: onToggleFavorite,
                     icon: Icon(
                       entry.isFavorite ? Icons.star : Icons.star_border,

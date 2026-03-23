@@ -34,7 +34,8 @@ class _BeforeYouUseScreenState extends State<BeforeYouUseScreen> {
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.warning,
       ),
-      body: Padding(
+      body: SafeArea(
+        child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: [
@@ -161,6 +162,7 @@ class _BeforeYouUseScreenState extends State<BeforeYouUseScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

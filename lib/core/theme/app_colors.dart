@@ -15,6 +15,7 @@ class AppColors {
   static const Color surface = Color(0xFF141414);
   static const Color surfaceElevated = Color(0xFF1A1A1A);
   static const Color surfaceCard = Color(0xFF1E1E1E);
+  static const Color surfaceBubble = Color(0xFF1E1E1E); // Chat message bubbles
   static const Color surfaceInteractive = Color(0xFF2A2A2A);
 
   // Glass effect colors (for premium frosted glass cards)

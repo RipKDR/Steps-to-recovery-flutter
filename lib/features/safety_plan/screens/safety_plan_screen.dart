@@ -5,6 +5,7 @@ import '../../../core/services/database_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../widgets/loading_state.dart';
 
 /// Safety Plan screen - Personal safety plan builder
 class SafetyPlanScreen extends StatefulWidget {
@@ -150,9 +151,7 @@ class _SafetyPlanScreenState extends State<SafetyPlanScreen> {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Scaffold(
             backgroundColor: AppColors.background,
-            body: Center(
-              child: CircularProgressIndicator(color: AppColors.primaryAmber),
-            ),
+            body: LoadingState(message: 'Loading safety plan...'),
           );
         }
 

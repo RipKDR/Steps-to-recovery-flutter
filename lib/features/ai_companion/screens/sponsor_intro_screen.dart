@@ -73,8 +73,8 @@ class _SponsorIntroScreenState extends State<SponsorIntroScreen> {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        AppColors.primaryAmber.withOpacity(0.12),
-                        AppColors.primaryAmber.withOpacity(0.04),
+                        AppColors.primaryAmber.withValues(alpha:0.12),
+                        AppColors.primaryAmber.withValues(alpha:0.04),
                         Colors.transparent,
                       ],
                     ),
@@ -135,7 +135,7 @@ class _SponsorIntroScreenState extends State<SponsorIntroScreen> {
                       decoration: InputDecoration(
                         hintText: 'Rex',
                         hintStyle: AppTypography.bodyLarge.copyWith(
-                          color: AppColors.textSecondary.withOpacity(0.4),
+                          color: AppColors.textSecondary.withValues(alpha:0.4),
                         ),
                         filled: true,
                         fillColor: AppColors.surfaceCard,
@@ -191,7 +191,7 @@ class _SponsorIntroScreenState extends State<SponsorIntroScreen> {
                             boxShadow: selected
                                 ? [
                                     BoxShadow(
-                                      color: AppColors.primaryAmber.withOpacity(0.25),
+                                      color: AppColors.primaryAmber.withValues(alpha:0.25),
                                       blurRadius: 12,
                                     )
                                   ]
@@ -223,7 +223,7 @@ class _SponsorIntroScreenState extends State<SponsorIntroScreen> {
                           onPressed: enabled ? _submit : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryAmber,
-                            disabledBackgroundColor: AppColors.primaryAmber.withOpacity(0.3),
+                            disabledBackgroundColor: AppColors.primaryAmber.withValues(alpha:0.3),
                             padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),

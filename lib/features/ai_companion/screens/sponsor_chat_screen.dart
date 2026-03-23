@@ -167,6 +167,7 @@ class _SponsorChatScreenState extends State<SponsorChatScreen>
         ),
         actions: [
           IconButton(
+            tooltip: 'View details',
             icon: const Icon(Icons.info_outline),
             color: AppColors.textSecondary,
             onPressed: () => Navigator.push(
@@ -266,7 +267,7 @@ class _MessageBubble extends StatelessWidget {
         constraints: BoxConstraints(
             maxWidth: MediaQuery.of(context).size.width * 0.82),
         decoration: BoxDecoration(
-          color: isUser ? AppColors.primaryAmber : const Color(0xFF1E1E1E),
+          color: isUser ? AppColors.primaryAmber : AppColors.surfaceBubble,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(20),
             topRight: const Radius.circular(20),
@@ -274,12 +275,12 @@ class _MessageBubble extends StatelessWidget {
             bottomRight: Radius.circular(isUser ? 4 : 20),
           ),
           border: isCrisisMode && !isUser
-              ? Border.all(color: Colors.red.withValues(alpha: 0.5), width: 1)
+              ? Border.all(color: AppColors.danger.withValues(alpha: 0.5), width: 1)
               : null,
           boxShadow: isCrisisMode && !isUser
               ? [
                   BoxShadow(
-                      color: Colors.red.withValues(alpha: 0.15),
+                      color: AppColors.danger.withValues(alpha: 0.15),
                       blurRadius: 12)
                 ]
               : null,
@@ -387,7 +388,7 @@ class _InputBar extends StatelessWidget {
                         : AppColors.primaryAmber,
                     shape: const CircleBorder(),
                   ),
-                  icon: const Icon(Icons.send, color: Colors.black, size: 20),
+                  icon: const Icon(Icons.send, color: AppColors.textOnDark, size: 20),
                 ),
               ),
             ),

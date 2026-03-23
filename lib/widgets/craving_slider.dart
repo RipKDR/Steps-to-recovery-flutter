@@ -5,7 +5,7 @@ import '../../../core/theme/app_typography.dart';
 /// Reusable craving level slider widget
 class CravingSlider extends StatelessWidget {
   final int value;
-  final Function(int) onChanged;
+  final ValueChanged<int> onChanged;
   final bool showLabels;
 
   const CravingSlider({
