@@ -301,31 +301,90 @@ Tiered memory lives at `~/self-improving/`:
 
 ---
 
+## Product Vision (Updated 2026-03-22)
+
+**This is a Rat Park builder — not a sobriety tracker.**
+
+Inspired by Bruce Alexander's Rat Park experiment. The opposite of addiction is connection (Johann Hari). Don't ask why the addiction, ask why the pain (Gabor Maté). The 12-step program works because it accidentally creates Rat Park conditions — community, routine, meaning, service.
+
+**Who it's for:** Anyone whose cage got too small. Not just 12-steppers — harm reduction compatible, behavioral addictions, people who don't identify as addicts at all.
+
+**Full notes in:** `notes/` folder at project root (philosophy, features, gap analysis, architecture, onboarding)
+
+---
+
 ## Active Work (2026-03-22)
 
+### 1. Viral Feature Loop — PLAN READY, NOT EXECUTED
+**Plan**: `docs/superpowers/plans/2026-03-22-viral-loop.md`
 **Branch**: `codex/add-viral-feature-loop`
-**Plan file**: `viral_loop_plan.md` (root of repo)
-
-### Viral Feature Loop — 5 features planned
+**Execute via**: `superpowers:subagent-driven-development` skill
 
 | # | Feature | Status |
 |---|---|---|
-| 1 | Milestone Celebration Screen | Planned — full-screen dialog, ConfettiOverlay |
-| 2 | Visual Share Card | Planned — RepaintBoundary PNG capture, share_plus |
-| 3 | Milestone Approach Notifications | Planned — local notification 5 days before milestone |
-| 4 | Invite to Recovery | Planned — profile screen tile, text share |
-| 5 | Challenge Share | Planned — icon button on active challenge cards |
+| 1 | Milestone Celebration Screen | Planned |
+| 2 | Visual Share Card (PNG) | Planned |
+| 3 | Milestone Approach Notifications | Planned |
+| 4 | Invite to Recovery (profile tile) | Planned |
+| 5 | Challenge Share button | Planned |
 
-**New files to create:**
-- `lib/features/milestone/screens/milestone_celebration_screen.dart`
-- `lib/features/milestone/widgets/milestone_badge.dart`
-- `lib/features/milestone/widgets/milestone_share_card.dart`
-- `lib/core/services/milestone_service.dart`
+### 2. Living AI Sponsor — DESIGN APPROVED, SPEC NOT WRITTEN
+**Next step**: Write spec to `docs/superpowers/specs/2026-03-22-living-ai-sponsor-design.md`
+**Notes**: `notes/features/living-ai-sponsor.md`
 
-**Key existing assets to reuse:**
-- `lib/widgets/confetti_overlay.dart` — ConfettiController + ConfettiOverlay (ready)
-- `lib/core/constants/recovery_content.dart` — TimeMilestoneContent with emoji, title, message
-- `lib/core/utils/achievement_share_utils.dart` — isShareableMilestoneAchievement, milestoneShareContentForAchievement
+Key decisions:
+- Unique to each user — learns patterns, voice, triggers, relationships
+- Three-tier memory: session → daily digest → long-term distilled
+- Five relationship stages: New → Building → Trusted → Close → Deep
+- Hybrid data access: aggregated signals only (not raw journal/stepwork text)
+- Proactive heartbeat: behavioral drift alerts always on, scheduled touchpoints opt-in
+- Identity: user-named + vibe chosen at setup, adapts over time
+- Voice mode, real human bridge, 5-level crisis escalation tree
+- Backend: Flutter → Recovery API → OpenClaw adapter (app never talks to OpenClaw directly)
+- State management: keep existing singletons, NO Riverpod
+- Guardrails are invisible character traits, not legal disclaimers
+
+**Sponsor Soul Document**: `notes/philosophy/sponsor-soul-document.md`
+The AI's worldview is built from H's personal frameworks: ACT, CBT, DBT, Jungian/Freudian psychodynamics, attachment theory, trauma-informed care, neuroscience of addiction, Maté's "why the pain." H may contribute personal voice/phrases directly.
+
+### 3. Community Platform — BRAINSTORMING IN PROGRESS
+**Notes**: `notes/features/community-platform.md`
+
+Key decisions so far:
+- Three earned tiers: Observer (like + save) → Contributor (7d engagement) → Connected (30d + human contact)
+- "For Me" saved folder feeds AI sponsor context
+- AI pre-moderation on all posts before visible
+- No contact sharing, no external handles, anonymous usernames
+- Harm reduction users: same access tiers, no abstinence requirement
+
+**Still open**: Sub-spaces vs mixed feed, content formats, harm reduction framing within community
+
+### 4. Onboarding — DIRECTION DECIDED, NOT DESIGNED
+**Notes**: `notes/onboarding/non-addict-onboarding.md`
+
+**Direction**: "What are you working through?" — open Rat Park framing from minute one. Not 12-step locked. User can frame goal as "building toward X" not just "staying sober from Y."
+
+**Still open**: Does app ask about substance during onboarding or wait for user to bring it up?
+
+### 5. Gap Analysis — COMPLETE
+**Notes**: `notes/gap-analysis/rn-vs-flutter.md`
+Reference RN project: `C:\Users\H\Steps-to-recovery\apps\mobile\`
+
+Top gaps: Mindfulness (missing entirely), Progress Dashboard (stub), Meetings (partial), Notification Settings (partial), Gratitude/Inventory (stubs)
+
+### 6. H's Scaffold — REVIEWED
+**Location**: `C:\Users\H\Downloads\steps_to_recovery_flutter_scaffold.zip`
+**Notes**: `notes/architecture/scaffold-review.md`
+**Keep**: Architecture pattern, RecoveryStateSnapshot model, streaming chat with action_suggestion events, /v1/memory/forget endpoint
+**Replace**: Riverpod → singleton services
+
+---
+
+## Key Files Added This Session
+
+- `notes/` — full brainstorming notes folder (see README.md inside)
+- `docs/superpowers/plans/2026-03-22-viral-loop.md` — viral loop TDD implementation plan
+- `.remember/remember.md` — session handoff note
 
 ---
 

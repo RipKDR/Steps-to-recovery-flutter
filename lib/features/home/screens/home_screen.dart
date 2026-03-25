@@ -8,7 +8,9 @@ import '../../../core/models/database_models.dart';
 import '../../../core/services/app_state_service.dart';
 import '../../../core/services/database_service.dart';
 import '../../../core/services/logger_service.dart';
+import '../../../core/services/milestone_service.dart';
 import '../../../core/services/preferences_service.dart';
+import '../../milestone/screens/milestone_celebration_screen.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -16,7 +18,10 @@ import '../../../core/utils/achievement_share_utils.dart';
 
 /// Home dashboard with dynamic sobriety, check-ins, and quick actions.
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.showCelebration = true});
+
+  /// Whether to trigger the milestone celebration dialog on first load.
+  final bool showCelebration;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -29,6 +34,25 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _snapshotFuture = _loadSnapshot();
+    if (widget.showCelebration) {
+      _snapshotFuture.then((data) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          if (!mounted) return;
+          final achievement = await MilestoneService().shouldShowCelebration(
+            data.unreadShareableMilestones,
+          );
+          if (achievement != null && mounted) {
+            await showGeneralDialog(
+              context: context,
+              barrierDismissible: false,
+              barrierColor: Colors.transparent,
+              pageBuilder: (ctx, _, _) =>
+                  MilestoneCelebrationScreen(achievement: achievement),
+            );
+          }
+        });
+      });
+    }
     AppStateService.instance.addListener(_refreshSnapshot);
     DatabaseService().addListener(_refreshSnapshot);
   }
@@ -197,6 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'event=achievement_share_tapped achievementKey=${featuredAchievement.achievementKey}',
     );
 
+    // TODO(viral-loop): Upgrade to PNG share using MilestoneShareCard — celebration screen already handles this.
     final result = await SharePlus.instance.share(
       ShareParams(
         text: shareContent.shareText,

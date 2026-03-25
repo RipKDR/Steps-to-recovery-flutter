@@ -2,35 +2,27 @@
 
 ## Project Overview
 
-**Steps to Recovery** is a privacy-first recovery companion for 12-step programs (AA, NA, etc.), built with Flutter 3.41.x / Dart 3.11.x. The app is fully functional offline with client-side AES-256 encryption and optional Supabase sync.
+**Steps to Recovery** is a privacy-first recovery companion for 12-step programs (AA, NA, etc.), built with Flutter 3.41.x / Dart 3.11.x. All sensitive data is encrypted at rest with AES-256. The app is offline-first with optional Supabase sync.
 
-**Key Characteristics:**
-- **Offline-first**: App works 100% without network connectivity
-- **Privacy-first**: Zero analytics on recovery data, PII scrubbing in crash reports
-- **Client-side encryption**: All sensitive data encrypted with AES-256 before storage/transmission
-- **Crisis-ready**: Emergency features (988, Before You Use, Craving Surf) must never fail
-
-**Project Status**: Phase 5 (UX Polish) in progress. Phases 1-4 complete.
+The runnable Flutter project is the **repo root**. The nested `app/` folder is a preserved snapshot — do not edit it.
 
 ---
 
 ## Technology Stack
 
-| Component | Technology | Version |
-|-----------|------------|---------|
-| Framework | Flutter | 3.41.x |
-| Language | Dart | 3.11.x |
-| Navigation | go_router | ^17.1.0 |
-| State Management | Singleton Services + ChangeNotifier | Built-in |
-| Local Storage | shared_preferences | ^2.5.3 |
-| Encryption | encrypt (AES-256) + flutter_secure_storage | ^5.0.3 / ^10.0.0 |
-| Remote Sync | supabase_flutter | ^2.8.0 |
-| Notifications | flutter_local_notifications | ^21.0.0 |
-| Background Tasks | workmanager | ^0.9.0+3 |
-| AI | google_generative_ai | ^0.4.6 |
-| Crash Reporting | sentry_flutter | ^9.15.0 |
-
-**Intentionally NOT used**: Riverpod, BLoC, GetX, Provider (avoided due to version conflicts and overengineering for app scope)
+| Category | Technology |
+|----------|------------|
+| Framework | Flutter 3.41.x / Dart 3.11.x |
+| Navigation | `go_router` v17.1.0 |
+| Local Storage | `shared_preferences` v2.5.3 |
+| Encryption | `encrypt` v5.0.3 (AES-256), `flutter_secure_storage` v10.0.0 |
+| Biometric Auth | `local_auth` v3.0.1 |
+| Notifications | `flutter_local_notifications` v21.0.0, `workmanager` v0.9.0+3 |
+| Network | `http` v1.2.2, `supabase_flutter` v2.8.0 |
+| AI/ML | `google_generative_ai` v0.4.6 |
+| Monitoring | `sentry_flutter` v9.15.0 |
+| UI Components | `flutter_animate`, `fl_chart`, `percent_indicator`, `smooth_page_indicator` |
+| Forms | `flutter_form_builder`, `form_builder_validators` |
 
 ---
 
@@ -42,93 +34,86 @@ All commands use `tool/flutterw.ps1`, a PowerShell wrapper that resolves the Flu
 # Install dependencies
 .\tool\flutterw.ps1 pub get
 
-# Run on Chrome
-.\tool\flutterw.ps1 run -d chrome
+# Run the app
+.\tool\flutterw.ps1 run -d chrome        # Web (Chrome)
+.\tool\flutterw.ps1 run -d android       # Android
+.\tool\flutterw.ps1 run -d windows       # Windows desktop
 
-# Run on Android
-.\tool\flutterw.ps1 run -d android
-
-# Static analysis (must pass clean before committing)
+# Static analysis
 .\tool\flutterw.ps1 analyze
 
-# Run all tests
-.\tool\flutterw.ps1 test
+# Run tests
+.\tool\flutterw.ps1 test                 # All tests
+.\tool\flutterw.ps1 test test/connectivity_service_test.dart  # Single test file
 
-# Run single test file
-.\tool\flutterw.ps1 test test/database_service_test.dart
-
-# Run tests with coverage
-.\tool\flutterw.ps1 test --coverage
-
-# Build commands
-.\tool\flutterw.ps1 build apk --debug     # Android debug
-.\tool\flutterw.ps1 build apk --release   # Android release
-.\tool\flutterw.ps1 build appbundle       # Android App Bundle
-.\tool\flutterw.ps1 build web             # Web build
-.\tool\flutterw.ps1 build windows         # Windows (requires Visual Studio C++ workload)
-.\tool\flutterw.ps1 build ios             # iOS (requires Mac)
-.\tool\flutterw.ps1 build macos           # macOS (requires Mac)
+# Build
+.\tool\flutterw.ps1 build apk --debug   # Android debug APK
+.\tool\flutterw.ps1 build web           # Web build
+.\tool\flutterw.ps1 build windows       # Windows desktop build
 ```
 
-**Optional remote sync config** (omit `API_BASE_URL` for fully offline mode):
+**Optional remote sync** (omit `API_BASE_URL` for fully offline mode):
 
 ```powershell
 .\tool\flutterw.ps1 run `
   --dart-define=API_BASE_URL=https://your-api.example.com `
-  --dart-define=API_AUTH_TOKEN=your_token_here `
-  --dart-define=SUPABASE_URL=https://your-project.supabase.co `
-  --dart-define=SUPABASE_ANON_KEY=your_key_here `
-  --dart-define=SENTRY_DSN=your_sentry_dsn
+  --dart-define=API_AUTH_TOKEN=your_token_here
 ```
+
+Available dart-defines:
+- `API_BASE_URL` / `API_AUTH_TOKEN` - Custom API backend
+- `SUPABASE_URL` / `SUPABASE_ANON_KEY` - Supabase sync
+- `GOOGLE_AI_API_KEY` / `GEMINI_API_KEY` - AI companion
+- `SENTRY_DSN` - Crash reporting
+
+Windows desktop builds require Visual Studio with "Desktop development with C++" workload.
 
 ---
 
 ## Architecture & Module Organization
 
-### Service-Based Architecture (Singleton Pattern)
-
-We intentionally avoid complex state management libraries. Instead, we use 10 core singleton services:
+### Directory Structure
 
 ```
 lib/
-├── core/
-│   ├── constants/     # App-wide constants, recovery prompts, readings
+├── core/                    # Core functionality (business logic & infrastructure)
+│   ├── constants/          # App constants, step prompts, recovery content
 │   │   ├── app_constants.dart
-│   │   ├── recovery_content.dart
-│   │   └── step_prompts.dart
-│   ├── models/        # Data models and enums
+│   │   ├── step_prompts.dart
+│   │   └── recovery_content.dart
+│   ├── models/             # Data models and enums
 │   │   ├── database_models.dart
 │   │   └── enums.dart
-│   ├── services/      # 10 core singleton services
-│   │   ├── preferences_service.dart    # SharedPreferences wrapper
-│   │   ├── encryption_service.dart     # AES-256 encryption/decryption
-│   │   ├── database_service.dart       # Local persistence (CRUD)
-│   │   ├── app_state_service.dart      # App-wide state (auth, onboarding)
-│   │   ├── connectivity_service.dart   # Network status monitoring
-│   │   ├── notification_service.dart   # Local notifications + scheduling
-│   │   ├── sync_service.dart           # Supabase sync with encryption
-│   │   ├── ai_service.dart             # Google Generative AI chat
-│   │   ├── logger_service.dart         # Structured logging
-│   │   └── analytics_service.dart      # Privacy-respecting analytics
-│   ├── theme/         # Design system
+│   ├── services/           # 10 singleton services
+│   │   ├── ai_service.dart
+│   │   ├── analytics_service.dart
+│   │   ├── app_state_service.dart
+│   │   ├── connectivity_service.dart
+│   │   ├── database_service.dart
+│   │   ├── encryption_service.dart
+│   │   ├── logger_service.dart
+│   │   ├── notification_service.dart
+│   │   ├── preferences_service.dart
+│   │   └── sync_service.dart
+│   ├── theme/              # Design system
 │   │   ├── app_colors.dart
 │   │   ├── app_spacing.dart
-│   │   ├── app_typography.dart
-│   │   └── app_theme.dart
-│   ├── utils/         # Utilities
+│   │   ├── app_theme.dart
+│   │   └── app_typography.dart
+│   ├── utils/              # Utility functions
 │   │   ├── achievement_share_utils.dart
 │   │   └── app_utils.dart
-│   └── core.dart      # Barrel export
-├── features/          # Feature modules (19 modules)
+│   └── core.dart           # Barrel export
+├── features/               # 19 feature modules
 │   ├── ai_companion/
 │   ├── auth/
 │   ├── challenges/
 │   ├── craving_surf/
-│   ├── crisis/        # Emergency features (988, Before You Use)
-│   ├── emergency/     # Danger zone
+│   ├── crisis/
+│   ├── emergency/
 │   ├── gratitude/
 │   ├── home/
-│   ├── inventory/     # Step 10 inventory
+│   ├── inventory/
 │   ├── journal/
 │   ├── meetings/
 │   ├── onboarding/
@@ -137,41 +122,81 @@ lib/
 │   ├── readings/
 │   ├── safety_plan/
 │   ├── sponsor/
-│   └── steps/         # 12-step work
-├── navigation/        # GoRouter configuration
+│   └── steps/
+├── navigation/             # GoRouter configuration
 │   ├── app_router.dart
 │   └── shell_screen.dart
-├── widgets/           # Reusable UI components
+├── widgets/                # Shared reusable widgets
 │   ├── action_card.dart
-│   ├── confetti_overlay.dart
 │   ├── craving_slider.dart
 │   ├── empty_state.dart
 │   ├── error_state.dart
 │   ├── loading_state.dart
 │   ├── mood_rating.dart
-│   ├── responsive_layout.dart
 │   ├── section_header.dart
-│   ├── shimmer_loading.dart
-│   └── stat_card.dart
-└── main.dart
+│   ├── stat_card.dart
+│   └── widgets.dart
+├── app_config.dart         # Environment configuration
+├── background_sync.dart    # Background sync worker
+└── main.dart               # App entry point
 ```
 
-### Data Flow
+### Service Architecture
 
+Services are singletons accessed via the service locator pattern. Each service owns its data domain — do not reach across services.
+
+**Core Services (10 total):**
+
+| Service | Purpose | Key Methods |
+|---------|---------|-------------|
+| `PreferencesService` | SharedPreferences wrapper | `initialize()`, `getString()`, `setString()` |
+| `EncryptionService` | AES-256 encryption/decryption | `initialize()`, `encrypt()`, `decrypt()` |
+| `DatabaseService` | Local persistence (CRUD) | Extensive CRUD for all entities |
+| `AppStateService` | App-wide state (auth, onboarding) | `signIn()`, `signUp()`, `signOut()` |
+| `ConnectivityService` | Network status monitoring | `isConnected`, `connectivityStream` |
+| `NotificationService` | Local notifications | `initialize()`, `scheduleReminder()` |
+| `SyncService` | Supabase sync | `initialize()`, `syncNow()` |
+| `AiService` | Google Generative AI chat | `sendMessage()`, `streamMessage()` |
+| `LoggerService` | Structured logging | `debug()`, `info()`, `error()` |
+| `AnalyticsService` | Privacy-respecting analytics | `logEvent()` |
+
+**Data Flow:**
 ```
 UI Screen → Service Call → DatabaseService (SharedPreferences)
                 ↓ (if syncing enabled)
            SyncService → EncryptionService (AES-256) → Supabase
 ```
 
-Services use `ChangeNotifier` for state updates. `AppStateService` is the single source of truth for app-wide state.
+### Navigation Structure
 
-### Navigation: GoRouter with Bottom Tabs
+Uses `go_router` with nested shell routing:
 
-- Nested shell navigation (bottom tabs → feature-specific sub-routing)
-- Modal routes for crisis screens (instant access from any tab)
-- Redirect-based auth flow: onboarding → login → home → authenticated tabs
-- No back navigation out of tabs; each tab maintains its own stack
+- **Bootstrap** (`/bootstrap`) → Initial loading screen
+- **Auth routes**: `/onboarding`, `/login`, `/signup`
+- **Main shell** (4 tabs with bottom navigation):
+  - Home (`/home`) → Morning intention, Evening pulse, Emergency, etc.
+  - Journal (`/journal`) → Journal list, Editor
+  - Steps (`/steps`) → Step overview, Detail, Review
+  - Meetings (`/meetings`) → Finder, Detail, Favorites
+  - Profile (`/profile`) → Sponsor, Settings, AI settings, Security
+
+---
+
+## Design System
+
+The app uses Material 3 with a custom dark theme:
+
+- **Background**: True black (`#0A0A0A`)
+- **Primary Accent**: Amber (`#F59E0B`)
+- **Surface**: Card and elevated surface colors defined in `app_colors.dart`
+- **Typography**: Inter font family with defined scale
+- **Spacing**: 4px grid-based scale (xs=4, sm=8, md=16, lg=24, xl=32)
+
+Key theme files:
+- `lib/core/theme/app_colors.dart` - Color tokens
+- `lib/core/theme/app_typography.dart` - Text styles
+- `lib/core/theme/app_spacing.dart` - Spacing constants
+- `lib/core/theme/app_theme.dart` - Complete theme configuration
 
 ---
 
@@ -180,282 +205,188 @@ Services use `ChangeNotifier` for state updates. `AppStateService` is the single
 Linting is enforced via `flutter_lints` (`package:flutter_lints/flutter.yaml`). Run `flutter analyze` before committing — it must pass clean.
 
 ### Dart Naming Conventions
-
 - `lowerCamelCase` for variables, methods, and parameters
 - `UpperCamelCase` for types (classes, enums, typedefs)
-- `snake_case` for files and directories
+- `snake_case` for file names
 - `SCREAMING_SNAKE_CASE` for constants
 
 ### Code Patterns
 
-```dart
-// Screens are StatelessWidget or StatefulWidget — keep business logic in services
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+**Screens are StatelessWidget or StatefulWidget** — keep business logic in services, not widgets.
 
+```dart
+// Good: Screen delegates to service
+class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // Access app state via AppStateService.instance
-    final appState = AppStateService.instance;
-    
-    // Use ListenableBuilder for reactive UI updates
-    return ListenableBuilder(
-      listenable: appState,
-      builder: (context, child) {
-        return Scaffold(...);
-      },
-    );
+    final user = AppStateService.instance.currentUser;
+    // ...
   }
 }
-
-// Do not use print() — use the logger package
-import 'core/services/logger_service.dart';
-
-final logger = LoggerService();
-logger.info('User signed in');
-logger.debug('Debug info');
-logger.error('Error occurred', error: e, stackTrace: stackTrace);
 ```
 
-### Screen Guidelines
+**Do not use `print()`** — use the `LoggerService`:
 
-- Screens live in `lib/features/<feature>/screens/`
-- Keep business logic in services, not widgets
-- Use `const` constructors where possible
-- Use `Key` for list items that can be reordered
-- Use `ListView.builder` for long lists
+```dart
+LoggerService().info('User signed in');
+LoggerService().error('Failed to save', error: e, stackTrace: st);
+```
+
+**All user-generated sensitive data** (journal, inventory, sponsor info) must go through `DatabaseService` so encryption is applied.
 
 ---
 
 ## Testing Guidelines
 
-**Framework**: `flutter_test` (built-in) + `mockito` ^5.4.4
-**Location**: `/test/` directory
+Framework: `flutter_test` + `mockito`. Test files live in `test/`.
 
-### Current Test Coverage (~15 tests)
-
-| Test File | Coverage |
-|-----------|----------|
-| `database_service_test.dart` | Persistence, encryption at rest |
-| `encryption_service_test.dart` | AES-256 encrypt/decrypt |
-| `connectivity_service_test.dart` | Network state monitoring |
-| `ai_service_test.dart` | Chat integration |
-| `notification_service_test.dart` | Notification scheduling |
-| `preferences_service_test.dart` | Preferences operations |
-| `companion_chat_screen_test.dart` | Chat UI |
-| `home_milestone_share_test.dart` | Achievement sharing |
-| `settings_screen_test.dart` | Settings UI |
-| `crisis_screens_test.dart` | Emergency features |
-| `app_flow_test.dart` | Full app flow |
-| `router_feature_shell_test.dart` | Navigation routing |
-| `app_state_notifications_test.dart` | App state + notifications |
-
-### Test Helpers
-
-Use `test/test_helpers.dart` for setup:
-
-```dart
-import 'test_helpers.dart';
-
-void main() {
-  setUp(() async {
-    await prepareTestState();          // Initializes mocked storage
-  });
-  
-  test('test with signed in user', () async {
-    await createSignedInUser();        // Seeds authenticated state
-    // Your test here
-  });
-}
-```
-
-### Platform-Channel Testing Pattern
-
-For platform-channel dependencies, write a custom `_Fake*` class rather than relying on Mockito mocks:
-
-```dart
-// Example from connectivity_service_test.dart
-class _FakeConnectivity {
-  List<ConnectivityResult> _current = [ConnectivityResult.wifi];
-  final StreamController<List<ConnectivityResult>> _controller = 
-      StreamController<List<ConnectivityResult>>.broadcast();
-  
-  Stream<List<ConnectivityResult>> get onConnectivityChanged => _controller.stream;
-  Future<List<ConnectivityResult>> checkConnectivity() async => _current;
-  
-  void emit(List<ConnectivityResult> results) {
-    _current = results;
-    _controller.add(results);
-  }
-}
-```
-
-### Run Tests
+### Running Tests
 
 ```powershell
 .\tool\flutterw.ps1 test                                      # All tests
 .\tool\flutterw.ps1 test test/database_service_test.dart      # Single file
-.\tool\flutterw.ps1 test --coverage                           # With coverage
+.\tool\flutterw.ps1 test --coverage                          # With coverage
 ```
+
+### Test Setup
+
+Use `test/test_helpers.dart` for setup:
+
+```dart
+await prepareTestState();          // Initializes mocked storage
+await createSignedInUser();        // Seeds authenticated state
+```
+
+### Testing Patterns
+
+For platform-channel dependencies, write a custom `_Fake*` class rather than relying on Mockito mocks of platform code — see `_FakeConnectivity` in `connectivity_service_test.dart` as the pattern to follow.
+
+Services must be injectable (accept a parameter) to enable this pattern:
+
+```dart
+// Example pattern for testable services
+class _TestableConnectivityService extends ConnectivityService {
+  late _FakeConnectivity _fake;
+  void injectFake(_FakeConnectivity fake) => _fake = fake;
+  // ...
+}
+```
+
+### Test Files Overview
+
+| Test File | Coverage |
+|-----------|----------|
+| `connectivity_service_test.dart` | Connectivity monitoring with fake |
+| `database_service_test.dart` | CRUD operations, encryption |
+| `encryption_service_test.dart` | AES-256 encryption/decryption |
+| `notification_service_test.dart` | Local notification scheduling |
+| `preferences_service_test.dart` | SharedPreferences wrapper |
+| `ai_service_test.dart` | Google AI integration |
+| `crisis_screens_test.dart` | Emergency screen widgets |
+| `router_feature_shell_test.dart` | Navigation routing |
+| `app_flow_test.dart` | End-to-end app flows |
 
 ---
 
-## Security & Privacy Considerations
+## Security Considerations
 
 ### Encryption
 
-- All sensitive data (journal, inventory, sponsor info) encrypted with AES-256
-- Encryption keys stored in secure storage (`flutter_secure_storage`)
+- **AES-256 encryption** for all sensitive data at rest
+- Keys stored in `flutter_secure_storage` (Keychain/Keystore)
+- Encryption happens transparently in `DatabaseService`
 - Server never sees plaintext recovery data
 
-```dart
-// Encryption happens transparently inside DatabaseService
-await DatabaseService().saveJournalEntry(entry);  // Auto-encrypted
+### Privacy
 
-// Manual encryption when needed
+- **Zero analytics**: Recovery status/progress never tracked
+- **Biometric auth ready**: `local_auth` configured
+- **Sentry with PII scrubbing**: Crash reports strip all user data
+- No third-party tracking libraries
+
+### Data Protection
+
+```dart
+// All sensitive data flows through EncryptionService
 final encrypted = EncryptionService().encrypt(plainText);
 final decrypted = EncryptionService().decrypt(encrypted);
 ```
 
-### Privacy Requirements
+---
 
-- **Zero analytics**: Recovery status/progress never tracked
-- **Biometric auth ready**: `local_auth` v3 configured (fingerprint/face unlock)
-- **Sentry with PII scrubbing**: Crash reports strip all user data
-- **No third-party tracking**: No Firebase Analytics, Mixpanel, etc.
+## Key Configuration Files
 
-### Crisis Features (Zero Compromise)
-
-Crisis features must never crash, hang, or be unreliable:
-- `EmergencyScreen` — crisis hotlines (988, SAMHSA)
-- `BeforeYouUseScreen` — 5-minute intervention timer
-- `CravingSurfScreen` — breathing exercise
-- `DangerZoneScreen` — risky contacts management
+| File | Purpose |
+|------|---------|
+| `pubspec.yaml` | Dependencies, Flutter configuration, assets |
+| `analysis_options.yaml` | Dart analyzer rules (uses `flutter_lints`) |
+| `lib/app_config.dart` | Environment variables (dart-defines) |
+| `android/app/build.gradle` | Android build configuration |
+| `ios/Runner/Info.plist` | iOS app configuration |
+| `tool/flutterw.ps1` | Flutter SDK resolver wrapper |
 
 ---
 
-## Environment Configuration
+## Git Workflow
 
-App accepts dart-defines via command line (no `.env` file for secrets):
+### Commit Guidelines
 
-```powershell
-.\tool\flutterw.ps1 run `
-  --dart-define=API_BASE_URL=https://... `
-  --dart-define=API_AUTH_TOKEN=... `
-  --dart-define=GOOGLE_AI_API_KEY=... `
-  --dart-define=SUPABASE_URL=... `
-  --dart-define=SUPABASE_ANON_KEY=... `
-  --dart-define=SENTRY_DSN=...
-```
-
-Or see `lib/app_config.dart` for how these are consumed:
-
-```dart
-// Access config values
-if (AppConfig.hasRemoteSync) { ... }
-final apiUrl = AppConfig.apiBaseUrl;
-```
-
----
-
-## Platform Support
-
-| Platform | Status | Notes |
-|----------|--------|-------|
-| Android | ✅ | Gradle build, AndroidManifest, notifications v21 |
-| iOS | ✅ | Xcode project, CocoaPods, notifications v21 |
-| Web (Chrome) | ✅ | PWA manifest, responsive, IndexedDB persistence |
-| Windows | ✅ | CMake build, requires Visual Studio C++ workload |
-| macOS | ✅ | Xcode project, native build |
-
----
-
-## Commit Guidelines
-
-- **Branch**: `main` (always deployable)
-- **Commit style**: Conventional commits (`feat:`, `fix:`, `chore:`, `test:`, `docs:`, `refactor:`)
-- **Before pushing**: Run `flutter analyze` + `flutter test`
+Recent history uses Conventional Commits for meaningful changes:
 
 ```
 feat: add sponsor contact encryption
 fix: harden tab navigation switch flow
-test: add connectivity service tests
 docs: update setup guide
-refactor: simplify achievement calculation
+refactor: simplify database service initialization
+test: add connectivity service tests
 ```
+
+Use imperative mood and a scope prefix (`feat:`, `fix:`, `test:`, `docs:`, `refactor:`).
+
+### Ignored Files
+
+Key entries in `.gitignore`:
+- `/build/` - Flutter build outputs
+- `/.dart_tool/` - Dart tooling
+- `/app/` - Preserved snapshot (not the runnable app)
+- Platform-specific build artifacts
 
 ---
 
 ## Troubleshooting
 
-### Local Notifications Not Firing
-- Check `NotificationService.initializeNotifications()` in `main.dart`
-- Verify `android/app/src/main/AndroidManifest.xml` has notification permissions
-- For iOS, check `ios/Runner/GeneratedPluginRegistrant.swift`
-- On Android 12+, requires `SCHEDULE_EXACT_ALARM` permission
+### Common Issues
 
-### Sync Failing Silently
-- Check `SyncService._retry()` exponential backoff logic
-- Verify Supabase credentials in dart-defines
-- Check `EncryptionService` is initialized before sync attempts
-- Look at `logger_service` output (if debug logging enabled)
+**No devices found:**
+- Connect Android device with USB debugging enabled
+- Or start Android emulator from Android Studio
 
-### Hot Reload Not Working
-- Avoid editing `AppStateService` or service initialization logic (requires hot restart)
-- Use hot reload for UI-only changes
-- Full hot restart: `R` in CLI or `flutter run --hot-restart`
-
----
-
-## Design System
-
-### Colors (Material 3 Dark Theme)
-
-```dart
-// Primary palette
-AppColors.primaryAmber        // #F59E0B - Primary accent
-AppColors.background          // #0A0A0A - True black background
-AppColors.surface             // #141414 - Card/surface backgrounds
-AppColors.surfaceVariant      // #1E1E1E - Elevated surfaces
-
-// Semantic colors
-AppColors.success             // #10B981 - Success states
-AppColors.warning             // #F59E0B - Warning states
-AppColors.error               // #EF4444 - Error states
-AppColors.info                // #3B82F6 - Info states
-
-// Text colors
-AppColors.onBackground        // #F9FAFB - Primary text
-AppColors.onSurface           // #F9FAFB - Text on surfaces
-AppColors.onSurfaceVariant    // #9CA3AF - Secondary text
+**Gradle build failed:**
+```powershell
+cd android
+.\gradlew clean
+cd ..
+flutter clean
+flutter pub get
+flutter run
 ```
 
-### Typography
+**Package conflicts:**
+```powershell
+flutter clean
+flutter pub get
+```
 
-```dart
-AppTypography.displayLarge    // Hero text
-AppTypography.headlineLarge   // Screen titles
-AppTypography.headlineMedium  // Section headers
-AppTypography.headlineSmall   // Card titles
-AppTypography.bodyLarge       // Primary body text
-AppTypography.bodyMedium      // Secondary body text
-AppTypography.labelLarge      // Button text
-AppTypography.labelMedium     // Caption text
+**Android licenses not accepted:**
+```powershell
+flutter doctor --android-licenses
 ```
 
 ---
 
-## Key Files Reference
+## Resources
 
-| File | Purpose |
-|------|---------|
-| `lib/main.dart` | App entry point, service initialization |
-| `lib/app_config.dart` | Environment configuration (dart-defines) |
-| `lib/navigation/app_router.dart` | GoRouter configuration |
-| `lib/core/services/app_state_service.dart` | Global app state, auth |
-| `lib/core/services/database_service.dart` | Local persistence |
-| `lib/core/services/encryption_service.dart` | AES-256 encryption |
-| `lib/core/constants/recovery_content.dart` | Milestones, readings |
-| `lib/core/constants/step_prompts.dart` | All 12-step questions |
-| `test/test_helpers.dart` | Test setup utilities |
-| `tool/flutterw.ps1` | Flutter SDK wrapper |
+- [Flutter Documentation](https://docs.flutter.dev/)
+- [Dart Documentation](https://dart.dev/guides)
+- [GoRouter Documentation](https://pub.dev/packages/go_router)
+- [Supabase Flutter](https://supabase.com/docs/reference/dart)
