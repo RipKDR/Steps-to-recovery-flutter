@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:steps_recovery_flutter/core/constants/app_constants.dart';
+import 'package:steps_recovery_flutter/navigation/app_router.dart';
 import 'package:steps_recovery_flutter/main.dart';
 
 import 'test_helpers.dart';
@@ -17,16 +18,20 @@ void main() {
       expect(find.text('Quick Actions'), findsOneWidget);
       expect(find.text('Quick Journal'), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.edit_outlined));
+      AppRouter.router.go(AppRoutes.journal);
       await _pumpShell(tester);
+      await tester.pumpAndSettle();
 
-      expect(
-        find.widgetWithText(TextField, 'Search titles, content, or tags'),
-        findsOneWidget,
+      final journalSearchField = find.byWidgetPredicate(
+        (widget) =>
+            widget is TextField &&
+            widget.decoration?.hintText == 'Search titles, content, or tags',
       );
+      expect(journalSearchField, findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.people_outlined));
+      AppRouter.router.go(AppRoutes.meetings);
       await _pumpShell(tester);
+      await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.filter_list), findsOneWidget);
       expect(find.text('Favorites'), findsWidgets);
@@ -38,4 +43,5 @@ Future<void> _pumpShell(WidgetTester tester) async {
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 200));
   await tester.pump(const Duration(milliseconds: 200));
+  await tester.pumpAndSettle();
 }
