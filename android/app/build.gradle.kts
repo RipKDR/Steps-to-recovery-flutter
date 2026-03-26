@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -16,15 +18,17 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
     }
 
     // Load signing properties from key.properties file (local) or environment variables (CI)
     val keystorePropertiesFile = rootProject.file("key.properties")
     val hasKeystoreFile = keystorePropertiesFile.exists()
     val keystoreProperties = if (hasKeystoreFile) {
-        java.util.Properties().apply { load(keystorePropertiesFile.inputStream()) }
+        Properties().apply { load(keystorePropertiesFile.inputStream()) }
     } else null
 
     signingConfigs {
@@ -79,7 +83,7 @@ afterEvaluate {
         doLast {
             val flutterApkDir = file("${rootProject.projectDir}/../build/app/outputs/flutter-apk")
             flutterApkDir.mkdirs()
-            val apkFile = file("${project.buildDir}/outputs/apk/debug/app-debug.apk")
+            val apkFile = file("${layout.buildDirectory.get()}/outputs/apk/debug/app-debug.apk")
             if (apkFile.exists()) {
                 apkFile.copyTo(file("${flutterApkDir}/app-debug.apk"), overwrite = true)
             }
