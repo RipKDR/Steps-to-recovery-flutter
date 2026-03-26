@@ -43,4 +43,15 @@
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
+    
+    <!-- Microphone permissions for voice recording -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    
+    <!-- Phone dialing for Safe Dial -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    
+    <!-- Location for meeting geofencing (future) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 </manifest>

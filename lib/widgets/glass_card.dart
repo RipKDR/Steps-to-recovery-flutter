@@ -6,6 +6,7 @@ import '../core/theme/app_spacing.dart';
 
 /// Premium frosted glass card with subtle blur effect.
 /// Use sparingly on key surfaces: home dashboard, milestones, profile header.
+/// Features consistent 12dp radius and subtle border for Meta-like geometry.
 class GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -16,7 +17,7 @@ class GlassCard extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(AppSpacing.lg),
-    this.borderRadius = AppSpacing.radiusXl,
+    this.borderRadius = AppSpacing.radiusStandard,
     this.blur = 8.0,
   });
 
@@ -57,7 +58,7 @@ class GlassCard extends StatelessWidget {
         color: AppColors.surfaceCard,
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: AppColors.border,
+          color: AppColors.borderSubtle,
           width: AppSpacing.dividerThickness,
         ),
       ),

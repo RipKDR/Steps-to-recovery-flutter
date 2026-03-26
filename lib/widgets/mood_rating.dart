@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/services/haptic_feedback_service.dart';
 
 /// Reusable mood rating widget
+/// Features haptic feedback on selection for tactile response
 class MoodRating extends StatelessWidget {
   final int selectedMood;
   final ValueChanged<int> onMoodSelected;
@@ -23,13 +25,17 @@ class MoodRating extends StatelessWidget {
       children: List.generate(5, (index) {
         final mood = index + 1;
         final isSelected = selectedMood == mood;
-        
+
         return Semantics(
           button: true,
           label: 'Mood ${_getMoodLabel(mood)}',
           selected: isSelected,
           child: InkWell(
-            onTap: () => onMoodSelected(mood),
+            onTap: () {
+              onMoodSelected(mood);
+              // Trigger haptic feedback on mood selection
+              HapticFeedbackService().selectionClick();
+            },
             customBorder: const CircleBorder(),
             child: Column(
               mainAxisSize: MainAxisSize.min,

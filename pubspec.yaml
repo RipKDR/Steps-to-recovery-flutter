@@ -34,7 +34,13 @@ dependencies:
 
   # Network & API
   http: ^1.2.2
+  dio: ^5.4.0
   supabase_flutter: ^2.8.0
+
+  # UI Enhancements
+  lottie: ^3.1.0
+  flutter_staggered_animations: ^1.1.1
+  haptic_feedback: ^0.6.4+3
 
   # Typography
   google_fonts: ^8.0.2
@@ -46,6 +52,15 @@ dependencies:
   fl_chart: ^1.2.0
   percent_indicator: ^4.2.4
   smooth_page_indicator: ^2.0.1
+
+  # Audio
+  just_audio: ^0.10.5
+  audio_session: ^0.2.3
+
+  # Speech & Recording
+  speech_to_text: ^7.0.0
+  record: ^6.2.0
+  permission_handler: ^12.0.1
 
   # Forms & Validation
   flutter_form_builder: ^10.3.0+2
@@ -76,9 +91,17 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
   flutter_lints: ^6.0.0
   build_runner: ^2.4.13
   mockito: ^5.4.4
+  mocktail: ^1.0.4
+  golden_toolkit: ^0.15.0
+  freezed: ^3.2.5
+  json_serializable: ^6.7.1
+  very_good_analysis: ^10.2.0
+  image: ^4.5.4
 
   flutter_secure_storage_platform_interface: any
 flutter:

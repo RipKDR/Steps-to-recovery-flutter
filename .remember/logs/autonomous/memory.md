@@ -28,3 +28,12 @@
 - `flutter_test` + `mockito`
 - Use `test_helpers.dart` for setup
 - Custom `_Fake*` classes for platform-channel dependencies
+
+### Big Tech Polish (2026-03-27)
+- `StatCard`/`ActionCard`: gray by default, amber only for primary actions (`isPrimary` param)
+- Consistent 12dp radius (`AppSpacing.radiusStandard`)
+- Subtle borders: `AppColors.borderSubtle` (12% opacity)
+- Haptic feedback: `HapticFeedbackService().lightImpact()` (taps), `.selectionClick()` (sliders)
+- List animations: `AnimatedListItem` with 50ms stagger, 300ms duration
+- Typography: bigger jumps (36/30/26 display, 24/22/20 headline), 1.6 line height for body
+- Whitespace: `lg=20dp`, `sectionGap=32dp`, `textGap=24dp`

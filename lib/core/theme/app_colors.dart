@@ -50,6 +50,15 @@ class AppColors {
   // Border colors
   static const Color border = Color(0xFF27272A);
   static const Color borderLight = Color(0xFF3F3F46);
+  static const Color borderSubtle = Color(0x1F27272A); // 12% opacity for subtle card borders
+
+  // Secondary accent (for non-primary actions — reduces amber overuse)
+  static const Color accentBlue = Color(0xFF3B82F6);
+  static const Color accentTeal = Color(0xFF10B981);
+
+  // Alpha transparency constants for consistent styling
+  static const double iconBackgroundAlpha = 0.15;
+  static const double iconBorderAlpha = 0.2;
 
   // Overlay colors
   static const Color overlay = Color(0xFF000000);

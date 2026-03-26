@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/services/analytics_service.dart';
 import '../../../core/services/app_state_service.dart';
+import '../../../core/services/notification_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/app_utils.dart';
@@ -77,6 +78,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _morningReminderTime = '08:00';
   String _eveningReminderTime = '20:00';
   bool _saving = false;
+  bool _isTestingNotification = false;
+  
+  // Notification preferences
+  bool _achievementNotificationsEnabled = true;
+  bool _dailyReadingNotificationsEnabled = true;
+  bool _stepRemindersEnabled = false;
+  bool _meetingRemindersEnabled = false;
 
   @override
   void initState() {
@@ -103,6 +111,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _morningReminderTime = state.morningReminderTime;
     _eveningReminderTime = state.eveningReminderTime;
     _sobrietyDate = state.sobrietyDate;
+  }
+
+  Future<void> _testNotification() async {
+    setState(() => _isTestingNotification = true);
+    
+    try {
+      await NotificationService().showNotification(
+        id: 9999,
+        title: 'Test Notification',
+        body: 'Your notification settings are working correctly! 🎉',
+        channelId: 'reminders',
+      );
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Test notification sent!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to send test notification'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isTestingNotification = false);
+      }
+    }
   }
 
   Future<void> _pickSobrietyDate() async {
@@ -255,49 +298,83 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   SettingsSection(
                     title: 'Reminders',
                     children: [
-                      ListTile(
-                        key: const Key('settings-morning-reminder'),
-                        leading: Icon(
-                          Icons.wb_sunny_outlined,
-                          color: reminderAccentColor,
+                      SwitchListTile(
+                        title: const Text('Daily reminders'),
+                        subtitle: const Text('Morning and evening check-ins'),
+                        value: AppStateService.instance.notificationsEnabled,
+                        onChanged: (value) =>
+                            AppStateService.instance.setNotificationsEnabled(value),
+                      ),
+                      if (AppStateService.instance.notificationsEnabled) ...[
+                        ListTile(
+                          key: const Key('settings-morning-reminder'),
+                          leading: const Icon(
+                            Icons.wb_sunny_outlined,
+                            color: AppColors.primaryAmber,
+                          ),
+                          title: const Text('Morning reminder'),
+                          subtitle: Text(_morningReminderTime),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => _pickReminderTime(isMorning: true),
                         ),
-                        title: const Text('Morning reminder'),
-                        subtitle: Text(
-                          remindersEnabled
-                              ? _morningReminderTime
-                              : 'Enable notifications to edit',
+                        ListTile(
+                          key: const Key('settings-evening-reminder'),
+                          leading: const Icon(
+                            Icons.nightlight_outlined,
+                            color: AppColors.primaryAmber,
+                          ),
+                          title: const Text('Evening reminder'),
+                          subtitle: Text(_eveningReminderTime),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => _pickReminderTime(isMorning: false),
                         ),
-                        trailing: Icon(
-                          Icons.chevron_right,
-                          color: remindersEnabled
-                              ? null
-                              : Theme.of(context).disabledColor,
-                        ),
-                        onTap: remindersEnabled
-                            ? () => _pickReminderTime(isMorning: true)
-                            : null,
+                      ],
+                      SwitchListTile(
+                        title: const Text('Achievement notifications'),
+                        subtitle: const Text('Celebrate milestones and wins'),
+                        value: _achievementNotificationsEnabled,
+                        onChanged: (value) {
+                          setState(() => _achievementNotificationsEnabled = value);
+                        },
+                      ),
+                      SwitchListTile(
+                        title: const Text('Daily reading reminder'),
+                        subtitle: const Text('Reflect on today\'s reading'),
+                        value: _dailyReadingNotificationsEnabled,
+                        onChanged: (value) {
+                          setState(() => _dailyReadingNotificationsEnabled = value);
+                        },
+                      ),
+                      SwitchListTile(
+                        title: const Text('Step progress reminders'),
+                        subtitle: const Text('Encouragement for step work'),
+                        value: _stepRemindersEnabled,
+                        onChanged: (value) {
+                          setState(() => _stepRemindersEnabled = value);
+                        },
+                      ),
+                      SwitchListTile(
+                        title: const Text('Meeting reminders (beta)'),
+                        subtitle: const Text('Geofencing-based alerts near meeting locations'),
+                        value: _meetingRemindersEnabled,
+                        onChanged: (value) {
+                          setState(() => _meetingRemindersEnabled = value);
+                        },
                       ),
                       ListTile(
-                        key: const Key('settings-evening-reminder'),
-                        leading: Icon(
-                          Icons.nightlight_outlined,
-                          color: reminderAccentColor,
-                        ),
-                        title: const Text('Evening reminder'),
-                        subtitle: Text(
-                          remindersEnabled
-                              ? _eveningReminderTime
-                              : 'Enable notifications to edit',
-                        ),
-                        trailing: Icon(
-                          Icons.chevron_right,
-                          color: remindersEnabled
-                              ? null
-                              : Theme.of(context).disabledColor,
-                        ),
-                        onTap: remindersEnabled
-                            ? () => _pickReminderTime(isMorning: false)
-                            : null,
+                        leading: _isTestingNotification
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(
+                                Icons.notifications_active,
+                                color: AppColors.success,
+                              ),
+                        title: const Text('Test notifications'),
+                        subtitle: const Text('Send a test notification'),
+                        onTap: _isTestingNotification ? null : _testNotification,
                       ),
                     ],
                   ),

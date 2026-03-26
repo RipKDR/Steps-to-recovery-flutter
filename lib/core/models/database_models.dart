@@ -603,26 +603,68 @@ class ChatConversation extends Equatable {
 class GratitudeEntry extends Equatable {
   final String id;
   final String userId;
-  final String content;
+  final String content; // Encrypted
+  final SyncStatus syncStatus;
   final DateTime createdAt;
 
   const GratitudeEntry({
     required this.id,
     required this.userId,
     required this.content,
+    this.syncStatus = SyncStatus.pending,
     required this.createdAt,
   });
+
+  /// Calculate gratitude streak - consecutive days with at least one entry
+  static int calculateStreak(List<GratitudeEntry> entries) {
+    if (entries.isEmpty) return 0;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    // Get unique dates from entries
+    final uniqueDates = entries
+        .map((e) => DateTime(e.createdAt.year, e.createdAt.month, e.createdAt.day))
+        .toSet()
+        .toList()
+      ..sort((a, b) => b.compareTo(a)); // Sort descending
+
+    // Check if there's an entry today or yesterday (streak is still active)
+    if (uniqueDates.isEmpty) return 0;
+    
+    final mostRecent = uniqueDates.first;
+    final daysDiff = today.difference(mostRecent).inDays;
+    
+    // If most recent entry is older than yesterday, streak is broken
+    if (daysDiff > 1) return 0;
+
+    // Count consecutive days
+    int streak = 1;
+    for (int i = 1; i < uniqueDates.length; i++) {
+      final prevDate = uniqueDates[i - 1];
+      final currDate = uniqueDates[i];
+      if (prevDate.difference(currDate).inDays == 1) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  }
 
   GratitudeEntry copyWith({
     String? id,
     String? userId,
     String? content,
+    SyncStatus? syncStatus,
     DateTime? createdAt,
   }) {
     return GratitudeEntry(
       id: id ?? this.id,
       userId: userId ?? this.userId,
       content: content ?? this.content,
+      syncStatus: syncStatus ?? this.syncStatus,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -632,6 +674,7 @@ class GratitudeEntry extends Equatable {
         id,
         userId,
         content,
+        syncStatus,
         createdAt,
       ];
 }
@@ -809,5 +852,134 @@ class ReadingReflection extends Equatable {
         readingDate,
         reflection,
         createdAt,
+      ];
+}
+
+/// Daily inventory model - Step 10 daily check-in
+class DailyInventory extends Equatable {
+  final String id;
+  final String userId;
+  final DateTime inventoryDate;
+  
+  // Section 1: Quick check-in (text fields)
+  final String? resentfulAbout; // Encrypted
+  final String? selfishAbout; // Encrypted
+  final String? dishonestAbout; // Encrypted
+  final String? afraidOf; // Encrypted
+  final String? harmedWho; // Encrypted
+  final String? kindAndLoving; // Encrypted
+  
+  // Section 2: Structured 10th Step questions
+  final bool? wasResentful;
+  final bool? wasSelfish;
+  final bool? wasDishonest;
+  final bool? wasAfraid;
+  final bool? harmedAnyone;
+  final bool? showedKindness;
+  
+  // Section 3: Reflection
+  final String? reflection; // Encrypted
+  final int? moodRating; // 1-5
+  final int? cravingLevel; // 0-10
+  
+  final SyncStatus syncStatus;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const DailyInventory({
+    required this.id,
+    required this.userId,
+    required this.inventoryDate,
+    this.resentfulAbout,
+    this.selfishAbout,
+    this.dishonestAbout,
+    this.afraidOf,
+    this.harmedWho,
+    this.kindAndLoving,
+    this.wasResentful,
+    this.wasSelfish,
+    this.wasDishonest,
+    this.wasAfraid,
+    this.harmedAnyone,
+    this.showedKindness,
+    this.reflection,
+    this.moodRating,
+    this.cravingLevel,
+    this.syncStatus = SyncStatus.pending,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  DailyInventory copyWith({
+    String? id,
+    String? userId,
+    DateTime? inventoryDate,
+    String? resentfulAbout,
+    String? selfishAbout,
+    String? dishonestAbout,
+    String? afraidOf,
+    String? harmedWho,
+    String? kindAndLoving,
+    bool? wasResentful,
+    bool? wasSelfish,
+    bool? wasDishonest,
+    bool? wasAfraid,
+    bool? harmedAnyone,
+    bool? showedKindness,
+    String? reflection,
+    int? moodRating,
+    int? cravingLevel,
+    SyncStatus? syncStatus,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return DailyInventory(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      inventoryDate: inventoryDate ?? this.inventoryDate,
+      resentfulAbout: resentfulAbout ?? this.resentfulAbout,
+      selfishAbout: selfishAbout ?? this.selfishAbout,
+      dishonestAbout: dishonestAbout ?? this.dishonestAbout,
+      afraidOf: afraidOf ?? this.afraidOf,
+      harmedWho: harmedWho ?? this.harmedWho,
+      kindAndLoving: kindAndLoving ?? this.kindAndLoving,
+      wasResentful: wasResentful ?? this.wasResentful,
+      wasSelfish: wasSelfish ?? this.wasSelfish,
+      wasDishonest: wasDishonest ?? this.wasDishonest,
+      wasAfraid: wasAfraid ?? this.wasAfraid,
+      harmedAnyone: harmedAnyone ?? this.harmedAnyone,
+      showedKindness: showedKindness ?? this.showedKindness,
+      reflection: reflection ?? this.reflection,
+      moodRating: moodRating ?? this.moodRating,
+      cravingLevel: cravingLevel ?? this.cravingLevel,
+      syncStatus: syncStatus ?? this.syncStatus,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        id,
+        userId,
+        inventoryDate,
+        resentfulAbout,
+        selfishAbout,
+        dishonestAbout,
+        afraidOf,
+        harmedWho,
+        kindAndLoving,
+        wasResentful,
+        wasSelfish,
+        wasDishonest,
+        wasAfraid,
+        harmedAnyone,
+        showedKindness,
+        reflection,
+        moodRating,
+        cravingLevel,
+        syncStatus,
+        createdAt,
+        updatedAt,
       ];
 }

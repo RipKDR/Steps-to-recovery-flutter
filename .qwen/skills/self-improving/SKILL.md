@@ -18,20 +18,25 @@ Use this skill when ANY of these conditions occur:
 
 ## Memory Structure
 
-Write to `~/self-improving/` with tiered organization:
+Write to `.remember/logs/autonomous/` with tiered organization:
 
 ```
-~/self-improving/
-├── patterns/        # Recurring patterns (always-persisted)
-│   ├── windows-flutter.md
-│   └── gradle-fixes.md
-├── corrections/     # User-specific corrections
-│   └── user-H-corrections.md
-├── discoveries/     # Better approaches discovered
-│   └── build-optimizations.md
-└── sessions/        # Session-specific learnings (rotated)
-    └── 2026-03-26-gradle-build-fix.md
+.remember/logs/autonomous/
+├── SKILL.md           # This file
+├── memory.md          # HOT: ≤100 lines, always loaded
+├── index.md           # Topic index
+├── corrections.md     # Last 50 corrections log
+├── reflections.md     # Self-reflections from completed work
+├── projects/          # Per-project learnings
+│   └── steps-to-recovery.md
+├── domains/           # Domain-specific (flutter, dart, testing, etc.)
+│   ├── flutter.md
+│   ├── dart.md
+│   └── testing.md
+└── archive/           # COLD: decayed patterns
 ```
+
+**Note:** This skill is integrated with the `.remember/` memory system. All learnings are stored in `.remember/logs/autonomous/` and loaded automatically at the start of each session via the memory-loader agent.
 
 ## Commands
 
@@ -39,70 +44,90 @@ Users can query learned knowledge:
 
 | Command | Action |
 |---------|--------|
-| `what have you learned?` | Show recent learnings |
-| `show my patterns` | List all stored patterns |
-| `memory stats` | Show memory usage, file count |
-| `remember that I always...` | Add new pattern |
+| `what have you learned?` | Show recent learnings from `corrections.md` |
+| `show my patterns` | List HOT memory (`memory.md`) |
+| `memory stats` | Show counts per tier |
+| `remember that I always...` | Add new pattern to `memory.md` |
+| `show [project] patterns` | Load `projects/[name].md` |
+| `forget X` | Remove pattern (confirms first) |
 
 ## Writing Patterns
 
-### 1. Session Log Format
+### 1. Session Log Format (Daily Notes)
+
+Write to `.remember/memory/YYYY-MM-DD.md`:
 
 ```markdown
-# Session: [Date] - [Topic]
+# YYYY-MM-DD — Session Notes
 
-## What Happened
-[Brief description of the task]
+## Session Start
+- **Date:** [Date]
+- **Timezone:** Australia/Sydney (GMT+11)
+- **Context:** [What we're working on]
 
-## What Went Wrong
-[Errors encountered, failures]
+## Key Actions
+- [Action 1]
+- [Action 2]
 
-## What I Learned
-[Key takeaways, patterns discovered]
+## Project Context
+[Brief status update]
 
-## Commands That Worked
-```bash
-[Exact commands that succeeded]
+## Recent Changes
+[What changed today]
+
+## Next Steps
+[Awaiting user direction]
 ```
 
-## Files Modified
-- `path/to/file.dart` - [change summary]
+### 2. Pattern Format (HOT Memory)
 
-## Future Reference
-[How to apply this learning next time]
-```
-
-### 2. Pattern Format
+Write to `.remember/logs/autonomous/memory.md`:
 
 ```markdown
-# Pattern: [Pattern Name]
+## [Category]
 
-## When to Apply
-[Trigger conditions]
-
-## What to Do
-[Step-by-step approach]
-
-## Example
-[Concrete example from this project]
-
-## Related
-[Links to other patterns, skills]
+- **[Pattern name]** — [Brief description]
+  - Example: `- **Card styling** — gray default, amber for primary only`
 ```
 
 ### 3. Correction Format
 
+Write to `.remember/logs/autonomous/corrections.md`:
+
 ```markdown
-# Correction: [Topic]
+## [Date] — [Topic]
 
-## What I Did Wrong
-[Incorrect approach I used]
+**Correction:** [What user said]
+**Context:** [What triggered it]
+**Count:** [How many times]
+**Action:** [Where stored if promoted]
+```
 
-## What User Taught Me
-[Correct approach]
+### 4. Domain-Specific Patterns
 
-## Rule Going Forward
-[Specific rule to follow]
+Write to `.remember/logs/autonomous/domains/<domain>.md`:
+
+```markdown
+# <Domain> Patterns
+
+## Conventions
+- [Convention 1]
+- [Convention 2]
+
+## Common Pitfalls
+- [Pitfall 1 with solution]
+```
+
+### 5. Project-Specific Overrides
+
+Write to `.remember/logs/autonomous/projects/<project>.md`:
+
+```markdown
+# <Project> Patterns
+
+## Overrides
+- [Override 1] (overrides global pattern X)
+- Reason: [Why]
 ```
 
 ## Integration with Other Skills
@@ -110,7 +135,7 @@ Users can query learned knowledge:
 ### After `flutter-fix` Completes
 ```
 1. Run flutter-fix skill
-2. If success: Log what fixed it to self-improving
+2. If success: Log what fixed it to `.remember/logs/autonomous/domains/flutter.md`
 3. If failure: Log error pattern and workaround
 4. Extract reusable pattern if discovered
 ```
@@ -118,17 +143,17 @@ Users can query learned knowledge:
 ### After User Correction
 ```
 1. Acknowledge correction
-2. Write to corrections/ immediately
-3. Update relevant pattern file
+2. Write to `.remember/logs/autonomous/corrections.md` immediately
+3. Evaluate for promotion to `memory.md`
 4. Confirm learning is stored
 ```
 
 ### Before Context Compaction
 ```
 1. Review conversation for key learnings
-2. Write session summary to sessions/
-3. Extract any new patterns to patterns/
-4. Report what was saved
+2. Write session summary to `.remember/memory/YYYY-MM-DD.md`
+3. Extract any new patterns to appropriate domain/project files
+4. Update `index.md` with new file counts
 ```
 
 ## Examples
@@ -139,34 +164,19 @@ Users can query learned knowledge:
 
 **Action:**
 ```markdown
-# Session: 2026-03-26 - Gradle Build Fixes
+# 2026-03-27 — Gradle Build Fixes
 
-## What Happened
-Fixed Gradle compilation errors in android/app/build.gradle.kts
+## Session Start
+- **Date:** 2026-03-27
+- **Context:** Fixed Gradle deprecations
 
-## What Went Wrong
-- `kotlinOptions.jvmTarget` deprecated in Gradle 8.14+
-- `project.buildDir` deprecated
-- Missing `java.util.Properties` import
+## Key Actions
+- Migrated `kotlinOptions.jvmTarget` to new DSL
+- Fixed `project.buildDir` deprecation
 
 ## What I Learned
-- Kotlin DSL changed in Gradle 8.x: use `kotlin { compilerOptions { } }`
-- Use `layout.buildDirectory.get()` instead of `project.buildDir`
-- Always import `java.util.Properties` explicitly
-
-## Commands That Worked
-```bash
-C:\src\flutter\bin\flutter.bat build apk --debug
-```
-
-## Files Modified
-- `android/app/build.gradle.kts` - Fixed deprecations
-
-## Future Reference
-When Gradle fails with "Unresolved reference" errors:
-1. Check Gradle version in use
-2. Look for deprecated API usage
-3. Migrate to new DSL syntax
+- Kotlin DSL changed in Gradle 8.x
+- Use `layout.buildDirectory.get()` for build dir
 ```
 
 ### Example 2: After User Preference
@@ -175,18 +185,14 @@ When Gradle fails with "Unresolved reference" errors:
 
 **Action:**
 ```markdown
-# Correction: Windows PATH Modifications
+## Corrections
 
-## What I Did Wrong
-Used inline PowerShell commands for PATH changes
+## 2026-03-27 — Windows PATH Modifications
 
-## What User Taught Me
-Use batch files (.bat) for PATH modifications on Windows
-
-## Rule Going Forward
-- Windows + PATH changes = create .bat file
-- Avoid inline PowerShell for environment modifications
-- Batch files are more reliable across Windows versions
+**Correction:** "Use batch files not PowerShell"
+**Context:** PATH modification script
+**Count:** 1
+**Action:** Logged to memory.md
 ```
 
 ## Best Practices
@@ -196,11 +202,13 @@ Use batch files (.bat) for PATH modifications on Windows
 3. **Extract Patterns** - Convert specific fixes into reusable patterns
 4. **Link Related** - Cross-reference related patterns and sessions
 5. **Keep Concise** - Future readers need signal, not noise
+6. **Cite Sources** - When using memory, cite file:line (e.g., "from memory.md:12")
 
 ## Completion Criteria
 
 After using this skill:
-- ✓ Learning is written to appropriate file(s)
+- ✓ Learning is written to `.remember/logs/autonomous/` or `.remember/memory/`
 - ✓ Pattern extracted if reusable
 - ✓ User can query with "what have you learned?"
 - ✓ Future sessions benefit from stored knowledge
+- ✓ Index updated if new files created

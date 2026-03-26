@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(c:\\src\\flutter\\bin\\flutter.bat *)"
+      "Bash(c:\\src\\flutter\\bin\\flutter.bat *)",
+      "Read(C:\\Users\\H\\Steps-to-recovery-flutter\\.remember/**)",
+      "Write(C:\\Users\\H\\Steps-to-recovery-flutter\\.remember/**)",
+      "Read(C:\\Users\\H\\Steps-to-recovery-flutter\\..\\self-improving\\projects/**)",
+      "Bash(flutter *)",
+      "Bash(select-object *)",
+      "Bash(md *)",
+      "Bash(echo *)",
+      "Bash(adb *)"
     ]
-  }
+  },
+  "$version": 3
 }

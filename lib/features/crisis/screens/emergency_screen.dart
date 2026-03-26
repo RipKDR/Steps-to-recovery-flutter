@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/services/permissions_service.dart';
 
 /// Emergency screen - Immediate crisis support
 class EmergencyScreen extends StatelessWidget {
@@ -26,7 +27,7 @@ class EmergencyScreen extends StatelessWidget {
             // Warning message
             Semantics(
               liveRegion: true,
-              label: 'Warning: If you are in immediate danger, call emergency services first.',
+              label: 'If you are in immediate danger, call emergency services first.',
               child: Container(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
@@ -57,13 +58,17 @@ class EmergencyScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: AppSpacing.xxl),
+            const SizedBox(height: AppSpacing.xl),
+
+            // Safe Dial - Quick emergency contacts
+            _SafeDial(),
+            const SizedBox(height: AppSpacing.xl),
 
             // Emergency contacts
             Semantics(
               header: true,
               child: Text(
-                'Emergency Contacts',
+                'Emergency Hotlines',
                 style: AppTypography.headlineMedium,
               ),
             ),
@@ -87,32 +92,6 @@ class EmergencyScreen extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.xxl),
 
-            // Personal emergency contacts
-            Semantics(
-              header: true,
-              child: Text(
-                'Your Support Network',
-                style: AppTypography.headlineMedium,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-
-            _ContactCard(
-              name: 'Sponsor Name',
-              role: 'Sponsor',
-              phone: '(555) 123-4567',
-              onTap: () => _launchPhone('5551234567'),
-            ),
-            const SizedBox(height: AppSpacing.md),
-
-            _ContactCard(
-              name: 'Support Friend',
-              role: 'Emergency Contact',
-              phone: '(555) 987-6543',
-              onTap: () => _launchPhone('5559876543'),
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-
             // Crisis tools
             Semantics(
               header: true,
@@ -122,6 +101,16 @@ class EmergencyScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
+
+            _CrisisToolCard(
+              title: 'Grounding Exercises',
+              description: '5-4-3-2-1 technique, breathing, body scan',
+              icon: Icons.self_improvement,
+              onTap: () {
+                context.push('/grounding-exercises');
+              },
+            ),
+            const SizedBox(height: AppSpacing.md),
 
             _CrisisToolCard(
               title: 'Before You Use',
@@ -200,6 +189,137 @@ class _EmergencyButton extends StatelessWidget {
               vertical: AppSpacing.lg,
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Safe Dial - Quick access to emergency contacts
+class _SafeDial extends StatelessWidget {
+  const _SafeDial();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.phone_in_talk, color: AppColors.primaryAmber),
+              const SizedBox(width: AppSpacing.sm),
+              Text('Safe Dial', style: AppTypography.titleMedium),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Quick access to your support network',
+            style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _SafeDialButton(
+                label: 'Sponsor',
+                icon: Icons.person,
+                onTap: () {
+                  // In production, load from DatabaseService contacts
+                  _launchPhone('5551234567');
+                },
+              ),
+              _SafeDialButton(
+                label: 'Friend',
+                icon: Icons.people,
+                onTap: () {
+                  // In production, load from DatabaseService contacts
+                  _launchPhone('5559876543');
+                },
+              ),
+              _SafeDialButton(
+                label: '988',
+                icon: Icons.emergency,
+                color: AppColors.success,
+                onTap: () => _launchPhone('988'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _launchPhone(String phoneNumber) async {
+    try {
+      // Request phone permission
+      final permissionsService = PermissionsService();
+      final hasPermission = await permissionsService.requestPhonePermission();
+      
+      if (!hasPermission) {
+        debugPrint('Phone permission denied');
+        return;
+      }
+
+      final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+      if (await canLaunchUrl(phoneUri)) {
+        await launchUrl(phoneUri);
+      }
+    } catch (e) {
+      debugPrint('Failed to launch phone: $e');
+    }
+  }
+}
+
+class _SafeDialButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _SafeDialButton({
+    required this.label,
+    required this.icon,
+    this.color = AppColors.primaryAmber,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: Container(
+        width: 80,
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: Column(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: color,
+                size: 28,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              label,
+              style: AppTypography.bodySmall.copyWith(color: color),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );

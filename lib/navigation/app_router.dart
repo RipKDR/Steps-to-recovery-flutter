@@ -15,6 +15,7 @@ import '../features/steps/screens/step_review_screen.dart';
 import '../features/profile/screens/profile_screen.dart';
 import '../features/crisis/screens/emergency_screen.dart';
 import '../features/crisis/screens/before_you_use_screen.dart';
+import '../features/crisis/screens/grounding_exercises_screen.dart';
 import '../features/craving_surf/screens/craving_surf_screen.dart';
 import '../features/progress/screens/progress_dashboard_screen.dart';
 import '../features/gratitude/screens/gratitude_screen.dart';
@@ -28,9 +29,12 @@ import '../features/emergency/screens/danger_zone_screen.dart';
 import '../features/sponsor/screens/sponsor_screen.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/signup_screen.dart';
+import '../features/auth/screens/forgot_password_screen.dart';
 import '../features/onboarding/screens/onboarding_screen.dart';
 import '../features/meetings/screens/meeting_detail_screen.dart';
 import '../features/meetings/screens/meeting_finder_screen.dart';
+import '../features/meetings/screens/meetings_stats_screen.dart';
+import '../features/mindfulness/screens/mindfulness_library_screen.dart';
 import '../features/profile/screens/settings_screen.dart';
 import '../features/profile/screens/ai_settings_screen.dart';
 import '../features/profile/screens/security_settings_screen.dart';
@@ -110,6 +114,11 @@ class AppRouter {
         name: 'signup',
         builder: (context, state) => const SignupScreen(),
       ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        name: 'forgotPassword',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
 
       // NEW: Sponsor intro (post-auth gate — outside ShellRoute)
       GoRoute(
@@ -118,6 +127,13 @@ class AppRouter {
         builder: (context, state) => SponsorIntroScreen(
           onComplete: () => context.go(AppRoutes.home),
         ),
+      ),
+
+      // Mindfulness Library (top-level)
+      GoRoute(
+        path: '/mindfulness',
+        name: 'mindfulness',
+        builder: (context, state) => const MindfulnessLibraryScreen(),
       ),
 
       // Main app shell with bottom navigation
@@ -190,6 +206,11 @@ class AppRouter {
                 path: 'before-you-use',
                 name: 'beforeYouUse',
                 builder: (context, state) => const BeforeYouUseScreen(),
+              ),
+              GoRoute(
+                path: 'grounding-exercises',
+                name: 'groundingExercises',
+                builder: (context, state) => const GroundingExercisesScreen(),
               ),
             ],
           ),
@@ -273,6 +294,11 @@ class AppRouter {
                 path: 'favorites',
                 name: 'favoriteMeetings',
                 builder: (context, state) => const _FavoriteMeetingsScreen(),
+              ),
+              GoRoute(
+                path: 'stats',
+                name: 'meetingsStats',
+                builder: (context, state) => const MeetingsStatsScreen(),
               ),
             ],
           ),

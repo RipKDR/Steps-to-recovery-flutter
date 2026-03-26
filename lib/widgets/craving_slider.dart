@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/services/haptic_feedback_service.dart';
 
 /// Reusable craving level slider widget
+/// Features haptic feedback on value change for tactile response
 class CravingSlider extends StatelessWidget {
   final int value;
   final ValueChanged<int> onChanged;
@@ -53,7 +55,11 @@ class CravingSlider extends StatelessWidget {
             divisions: 10,
             activeColor: AppColors.primaryAmber,
             inactiveColor: AppColors.surfaceInteractive,
-            onChanged: (value) => onChanged(value.round()),
+            onChanged: (value) {
+              onChanged(value.round());
+              // Trigger haptic feedback on slider change
+              HapticFeedbackService().selectionClick();
+            },
             semanticFormatterCallback: (double value) {
               final level = value.round();
               if (level <= 3) return '$level — low craving';

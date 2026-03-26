@@ -8,6 +8,7 @@ import '../../../core/services/database_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../widgets/animated_list_item.dart';
 
 /// Meeting Finder screen - Find and filter meetings
 class MeetingFinderScreen extends StatefulWidget {
@@ -220,13 +221,16 @@ class _MeetingFinderScreenState extends State<MeetingFinderScreen> {
                         if (meetings.isEmpty)
                           _EmptyMeetingsState(filter: _selectedFilter)
                         else
-                          ...meetings.map(
-                            (meeting) => Padding(
+                          ...meetings.asMap().entries.map(
+                            (entry) => Padding(
                               padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                              child: _MeetingCard(
-                                meeting: meeting,
-                                onTap: () => _openMeeting(meeting),
-                                onFavoriteTap: () => _toggleFavorite(meeting),
+                              child: AnimatedListItem(
+                                index: entry.key,
+                                child: _MeetingCard(
+                                  meeting: entry.value,
+                                  onTap: () => _openMeeting(entry.value),
+                                  onFavoriteTap: () => _toggleFavorite(entry.value),
+                                ),
                               ),
                             ),
                           ),

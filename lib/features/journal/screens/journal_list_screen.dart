@@ -8,6 +8,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../widgets/app_filter_chip.dart';
+import '../../../widgets/animated_list_item.dart';
 import '../../../widgets/empty_state.dart';
 import '../../../widgets/loading_state.dart';
 
@@ -121,18 +122,21 @@ class _JournalListScreenState extends State<JournalListScreen> {
                       itemCount: entries.length,
                       itemBuilder: (context, index) {
                         final entry = entries[index];
-                        return _JournalCard(
-                          entry: entry,
-                          onTap: () {
-                            context.push(
-                              '${AppRoutes.journalEditor}?mode=edit&entryId=${entry.id}',
-                            );
-                          },
-                          onToggleFavorite: () async {
-                            await DatabaseService().saveJournalEntry(
-                              entry.copyWith(isFavorite: !entry.isFavorite),
-                            );
-                          },
+                        return AnimatedListItem(
+                          index: index,
+                          child: _JournalCard(
+                            entry: entry,
+                            onTap: () {
+                              context.push(
+                                '${AppRoutes.journalEditor}?mode=edit&entryId=${entry.id}',
+                              );
+                            },
+                            onToggleFavorite: () async {
+                              await DatabaseService().saveJournalEntry(
+                                entry.copyWith(isFavorite: !entry.isFavorite),
+                              );
+                            },
+                          ),
                         );
                       },
                     );

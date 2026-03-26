@@ -5,6 +5,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/database_models.dart';
@@ -37,6 +38,26 @@ class AppStateService extends ChangeNotifier {
   static const String _keyEveningReminder = 'evening_reminder';
   static const String _keyThemeMode = 'app_theme_mode';
   static const String _keyAccounts = 'app_accounts_v1';
+
+  // Supabase configuration (from environment)
+  static const String _supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: '',
+  );
+  static const String _supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: '',
+  );
+
+  /// Check if Supabase is configured
+  bool get hasSupabaseConfig =>
+      _supabaseUrl.isNotEmpty && _supabaseAnonKey.isNotEmpty;
+
+  /// Get Supabase URL
+  String get supabaseUrl => _supabaseUrl;
+
+  /// Get Supabase anon key
+  String get supabaseAnonKey => _supabaseAnonKey;
 
   final Uuid _uuid = const Uuid();
   ReminderScheduler _reminderScheduler = NotificationService();
@@ -314,6 +335,47 @@ class AppStateService extends ChangeNotifier {
       programType: 'Guest',
     );
     await updateDisplayName('Guest');
+  }
+
+  /// Request password reset email via Supabase
+  Future<void> resetPassword(String email) async {
+    await initialize();
+    
+    final normalizedEmail = email.trim().toLowerCase();
+    
+    // Check if Supabase is configured
+    if (!hasSupabaseConfig) {
+      throw StateError(
+        'Supabase is not configured. Please add SUPABASE_URL and SUPABASE_ANON_KEY '
+        'to your environment variables.',
+      );
+    }
+
+    try {
+      // Initialize Supabase if not already done
+      if (Supabase.instance.client == null) {
+        await Supabase.initialize(
+          url: supabaseUrl,
+          anonKey: supabaseAnonKey,
+        );
+      }
+
+      // Request password reset
+      await Supabase.instance.client.auth.resetPasswordForEmail(
+        normalizedEmail,
+        redirectTo: 'steps-to-recovery://reset-password', // Deep link for mobile
+      );
+    } catch (e) {
+      // Handle common errors
+      if (e.toString().contains('Invalid login credentials')) {
+        throw Exception('No account found with this email address');
+      } else if (e.toString().contains('Email not confirmed')) {
+        // Still send reset email even if email not confirmed
+        rethrow;
+      } else {
+        rethrow;
+      }
+    }
   }
 
   Future<void> signOut() async {

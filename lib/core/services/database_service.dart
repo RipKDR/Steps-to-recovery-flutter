@@ -42,6 +42,7 @@ class DatabaseService extends ChangeNotifier {
   List<SafetyPlan> _safetyPlans = <SafetyPlan>[];
   List<Challenge> _challenges = <Challenge>[];
   List<ReadingReflection> _readingReflections = <ReadingReflection>[];
+  List<DailyInventory> _dailyInventories = <DailyInventory>[];
 
   bool get isInitialized => _initialized;
   String? get activeUserId => _activeUserId;
@@ -672,6 +673,13 @@ class DatabaseService extends ChangeNotifier {
       ..sort((left, right) => right.createdAt.compareTo(left.createdAt));
   }
 
+  /// Calculate gratitude streak for a user
+  Future<int> getGratitudeStreak({String? userId}) async {
+    await _ensureInitialized();
+    final entries = await getGratitudeEntries(userId: userId);
+    return GratitudeEntry.calculateStreak(entries);
+  }
+
   Future<GratitudeEntry> saveGratitudeEntry(GratitudeEntry entry) async {
     await _ensureInitialized();
     final resolvedUserId = _resolveUserId(entry.userId);
@@ -685,6 +693,7 @@ class DatabaseService extends ChangeNotifier {
           ? _gratitudeEntries[existingIndex].id
           : (entry.id.isNotEmpty ? entry.id : _uuid.v4()),
       userId: resolvedUserId,
+      syncStatus: SyncStatus.pending, // Mark as pending for sync
       createdAt: existingIndex >= 0 ? _gratitudeEntries[existingIndex].createdAt : entry.createdAt,
     );
 
@@ -701,6 +710,100 @@ class DatabaseService extends ChangeNotifier {
   Future<void> deleteGratitudeEntry(String id) async {
     await _ensureInitialized();
     _gratitudeEntries.removeWhere((entry) => entry.id == id);
+    await _persist();
+  }
+
+  // ==================== Daily Inventory ====================
+
+  /// Get today's inventory or create a new one
+  Future<DailyInventory?> getTodayInventory({String? userId}) async {
+    await _ensureInitialized();
+    final resolvedUserId = _resolveUserId(userId);
+    if (resolvedUserId == null) {
+      return null;
+    }
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    final inventory = _dailyInventories.firstWhereOrNull((inv) {
+      final invDate = DateTime(inv.inventoryDate.year, inv.inventoryDate.month, inv.inventoryDate.day);
+      return inv.userId == resolvedUserId && invDate == today;
+    });
+
+    return inventory;
+  }
+
+  /// Get inventory by date
+  Future<DailyInventory?> getInventoryByDate({required DateTime date, String? userId}) async {
+    await _ensureInitialized();
+    final resolvedUserId = _resolveUserId(userId);
+    if (resolvedUserId == null) {
+      return null;
+    }
+
+    final targetDate = DateTime(date.year, date.month, date.day);
+    
+    return _dailyInventories.firstWhereOrNull((inv) {
+      final invDate = DateTime(inv.inventoryDate.year, inv.inventoryDate.month, inv.inventoryDate.day);
+      return inv.userId == resolvedUserId && invDate == targetDate;
+    });
+  }
+
+  /// Get recent inventories
+  Future<List<DailyInventory>> getRecentInventories({
+    String? userId,
+    int limit = 30,
+  }) async {
+    await _ensureInitialized();
+    final resolvedUserId = _resolveUserId(userId);
+    if (resolvedUserId == null) {
+      return <DailyInventory>[];
+    }
+
+    var results = _dailyInventories.where((inv) => inv.userId == resolvedUserId);
+    
+    final sorted = results.toList()
+      ..sort((left, right) => right.inventoryDate.compareTo(left.inventoryDate));
+    
+    return sorted.take(limit).toList();
+  }
+
+  /// Save or update daily inventory
+  Future<DailyInventory> saveInventory(DailyInventory inventory) async {
+    await _ensureInitialized();
+    final resolvedUserId = _resolveUserId(inventory.userId);
+    if (resolvedUserId == null) {
+      throw StateError('Cannot save inventory without an active user.');
+    }
+
+    final existingIndex = _dailyInventories.indexWhere((existing) => existing.id == inventory.id);
+    final now = DateTime.now();
+    
+    final toSave = inventory.copyWith(
+      id: existingIndex >= 0
+          ? _dailyInventories[existingIndex].id
+          : (inventory.id.isNotEmpty ? inventory.id : _uuid.v4()),
+      userId: resolvedUserId,
+      syncStatus: SyncStatus.pending, // Mark as pending for sync
+      createdAt: existingIndex >= 0 ? _dailyInventories[existingIndex].createdAt : now,
+      updatedAt: now,
+    );
+
+    if (existingIndex >= 0) {
+      _dailyInventories[existingIndex] = toSave;
+    } else {
+      _dailyInventories.add(toSave);
+    }
+
+    await _persist();
+    return toSave;
+  }
+
+  /// Delete inventory
+  Future<void> deleteInventory(String id) async {
+    await _ensureInitialized();
+    _dailyInventories.removeWhere((inv) => inv.id == id);
     await _persist();
   }
 
@@ -922,6 +1025,7 @@ class DatabaseService extends ChangeNotifier {
     _safetyPlans = <SafetyPlan>[];
     _readingReflections = <ReadingReflection>[];
     _challenges = <Challenge>[];
+    _dailyInventories = <DailyInventory>[];
     _activeUserId = null;
     _seedMeetingsIfNeeded(force: true);
     await _persist();
@@ -1006,6 +1110,7 @@ class DatabaseService extends ChangeNotifier {
     _safetyPlans = _readList(data['safetyPlans'], _safetyPlanFromJson);
     _challenges = _readList(data['challenges'], _challengeFromJson);
     _readingReflections = _readList(data['readingReflections'], _readingReflectionFromJson);
+    _dailyInventories = _readList(data['dailyInventories'], _dailyInventoryFromJson);
   }
 
   Future<void> _persist() async {
@@ -1032,6 +1137,7 @@ class DatabaseService extends ChangeNotifier {
       'safetyPlans': _safetyPlans.map(_safetyPlanToJson).toList(),
       'challenges': _challenges.map(_challengeToJson).toList(),
       'readingReflections': _readingReflections.map(_readingReflectionToJson).toList(),
+      'dailyInventories': _dailyInventories.map(_dailyInventoryToJson).toList(),
     };
   }
 
@@ -1573,6 +1679,7 @@ class DatabaseService extends ChangeNotifier {
         'id': entry.id,
         'userId': entry.userId,
         'content': _encryptNullable(entry.content),
+        'syncStatus': entry.syncStatus.value,
         'createdAt': entry.createdAt.toIso8601String(),
       };
 
@@ -1580,6 +1687,7 @@ class DatabaseService extends ChangeNotifier {
         id: json['id'] as String,
         userId: json['userId'] as String,
         content: _decryptNullable(json['content']) ?? '',
+        syncStatus: SyncStatus.fromString(json['syncStatus'] as String? ?? 'pending'),
         createdAt: DateTime.parse(json['createdAt'] as String),
       );
 
@@ -1652,6 +1760,56 @@ class DatabaseService extends ChangeNotifier {
         readingDate: DateTime.parse(json['readingDate'] as String),
         reflection: _decryptNullable(json['reflection']) ?? '',
         createdAt: DateTime.parse(json['createdAt'] as String),
+      );
+
+  // ==================== Daily Inventory Serialization ====================
+
+  Map<String, dynamic> _dailyInventoryToJson(DailyInventory inventory) => {
+        'id': inventory.id,
+        'userId': inventory.userId,
+        'inventoryDate': inventory.inventoryDate.toIso8601String(),
+        'resentfulAbout': _encryptNullable(inventory.resentfulAbout),
+        'selfishAbout': _encryptNullable(inventory.selfishAbout),
+        'dishonestAbout': _encryptNullable(inventory.dishonestAbout),
+        'afraidOf': _encryptNullable(inventory.afraidOf),
+        'harmedWho': _encryptNullable(inventory.harmedWho),
+        'kindAndLoving': _encryptNullable(inventory.kindAndLoving),
+        'wasResentful': inventory.wasResentful,
+        'wasSelfish': inventory.wasSelfish,
+        'wasDishonest': inventory.wasDishonest,
+        'wasAfraid': inventory.wasAfraid,
+        'harmedAnyone': inventory.harmedAnyone,
+        'showedKindness': inventory.showedKindness,
+        'reflection': _encryptNullable(inventory.reflection),
+        'moodRating': inventory.moodRating,
+        'cravingLevel': inventory.cravingLevel,
+        'syncStatus': inventory.syncStatus.value,
+        'createdAt': inventory.createdAt.toIso8601String(),
+        'updatedAt': inventory.updatedAt.toIso8601String(),
+      };
+
+  DailyInventory _dailyInventoryFromJson(Map<String, dynamic> json) => DailyInventory(
+        id: json['id'] as String,
+        userId: json['userId'] as String,
+        inventoryDate: DateTime.parse(json['inventoryDate'] as String),
+        resentfulAbout: _decryptNullable(json['resentfulAbout']),
+        selfishAbout: _decryptNullable(json['selfishAbout']),
+        dishonestAbout: _decryptNullable(json['dishonestAbout']),
+        afraidOf: _decryptNullable(json['afraidOf']),
+        harmedWho: _decryptNullable(json['harmedWho']),
+        kindAndLoving: _decryptNullable(json['kindAndLoving']),
+        wasResentful: json['wasResentful'] as bool?,
+        wasSelfish: json['wasSelfish'] as bool?,
+        wasDishonest: json['wasDishonest'] as bool?,
+        wasAfraid: json['wasAfraid'] as bool?,
+        harmedAnyone: json['harmedAnyone'] as bool?,
+        showedKindness: json['showedKindness'] as bool?,
+        reflection: _decryptNullable(json['reflection']),
+        moodRating: json['moodRating'] as int?,
+        cravingLevel: json['cravingLevel'] as int?,
+        syncStatus: SyncStatus.fromString(json['syncStatus'] as String? ?? 'pending'),
+        createdAt: DateTime.parse(json['createdAt'] as String),
+        updatedAt: DateTime.parse(json['updatedAt'] as String),
       );
 }
 

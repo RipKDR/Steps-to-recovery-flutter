@@ -8,6 +8,7 @@ import '../../../core/services/database_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../widgets/animated_list_item.dart';
 
 /// Steps overview with real progress from local step answers.
 class StepsOverviewScreen extends StatelessWidget {
@@ -39,14 +40,17 @@ class StepsOverviewScreen extends StatelessWidget {
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
                           final step = StepPrompts.all[index];
-                          return _StepCard(
-                            step: step,
-                            progress: progressByStep[step.step],
-                            onTap: () {
-                              context.push(
-                                '${AppRoutes.steps}/detail?stepNumber=${step.step}',
-                              );
-                            },
+                          return AnimatedListItem(
+                            index: index,
+                            child: _StepCard(
+                              step: step,
+                              progress: progressByStep[step.step],
+                              onTap: () {
+                                context.push(
+                                  '${AppRoutes.steps}/detail?stepNumber=${step.step}',
+                                );
+                              },
+                            ),
                           );
                         },
                         childCount: StepPrompts.all.length,

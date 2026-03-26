@@ -8,6 +8,43 @@ The runnable Flutter project is the **repo root**. The nested `app/` folder is a
 
 ---
 
+## 🧠 Persistent Memory System
+
+This project uses a **file-based memory system** in `.remember/` that persists across all chat sessions.
+
+### Auto-Load (Every Conversation)
+
+At the start of **every conversation**, the following files are automatically read:
+
+1. `.remember/SOUL.md` — Agent identity and role
+2. `.remember/USER.md` — Your preferences and working style
+3. `.remember/memory/project-state.md` — Current project state
+4. `.remember/memory/YYYY-MM-DD.md` — Recent session notes
+5. `.remember/logs/autonomous/memory.md` — HOT memory (always relevant)
+
+### What Gets Remembered
+
+| Type | Stored In | Example |
+|------|-----------|---------|
+| Corrections | `logs/autonomous/corrections.md` | "Use tabs not spaces" |
+| Preferences | `logs/autonomous/memory.md` | "Always run tests before commit" |
+| Project-specific | `logs/autonomous/projects/` | "This repo uses flutter_lints" |
+| Domain-specific | `logs/autonomous/domains/` | "Flutter: prefer stateless widgets" |
+| Reflections | `logs/autonomous/reflections.md` | "Spent 3x on spacing — check visuals first" |
+
+### Manual Commands
+
+```
+"Show my patterns"        → List HOT memory
+"What have you learned?"  → Show recent corrections
+"Memory stats"            → Show counts per tier
+"Forget X"                → Remove pattern (confirms first)
+```
+
+---
+
+---
+
 ## Technology Stack
 
 | Category | Technology |

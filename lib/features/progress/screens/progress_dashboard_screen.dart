@@ -10,6 +10,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_utils.dart';
 import '../../../widgets/empty_state.dart';
 import '../../../widgets/loading_state.dart';
+import '../widgets/progress_charts.dart';
 
 /// Progress Dashboard screen - Shows recovery progress and insights
 class ProgressDashboardScreen extends StatefulWidget {
@@ -78,13 +79,6 @@ class _ProgressDashboardScreenState extends State<ProgressDashboardScreen> {
 
           final nextMilestone = nextMilestoneForDays(data.daysSober);
           final achievedMilestones = achievedMilestonesForDays(data.daysSober);
-          final moodValues = data.checkIns
-              .where((checkIn) => checkIn.mood != null)
-              .map((checkIn) => checkIn.mood!)
-              .toList();
-          final averageMood = moodValues.isEmpty
-              ? null
-              : moodValues.reduce((a, b) => a + b) / moodValues.length;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -139,12 +133,15 @@ class _ProgressDashboardScreenState extends State<ProgressDashboardScreen> {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                Text('Mood Trends', style: AppTypography.headlineSmall),
+                Text('Charts & Insights', style: AppTypography.headlineSmall),
                 const SizedBox(height: AppSpacing.md),
-                _MoodTrendCard(
-                  averageMood: averageMood,
-                  checkIns: data.checkIns,
-                ),
+                MoodTrendChart(checkIns: data.checkIns),
+                const SizedBox(height: AppSpacing.lg),
+                CravingTrendChart(checkIns: data.checkIns),
+                const SizedBox(height: AppSpacing.lg),
+                CheckInHeatmap(checkIns: data.checkIns),
+                const SizedBox(height: AppSpacing.lg),
+                StepProgressChart(stepProgress: data.stepProgress),
                 const SizedBox(height: AppSpacing.xl),
                 Text('Milestones', style: AppTypography.headlineSmall),
                 const SizedBox(height: AppSpacing.md),
@@ -296,77 +293,6 @@ class _SobrietyCard extends StatelessWidget {
             subtitle,
             style: AppTypography.bodyMedium.copyWith(
               color: AppColors.textOnDark.withValues(alpha: 0.8),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MoodTrendCard extends StatelessWidget {
-  final double? averageMood;
-  final List<DailyCheckIn> checkIns;
-
-  const _MoodTrendCard({
-    required this.averageMood,
-    required this.checkIns,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (checkIns.isEmpty) {
-      return EmptyState(
-        icon: Icons.track_changes,
-        title: 'No check-in data yet',
-        message:
-            'Morning and evening check-ins will build your mood trend automatically.',
-        actionLabel: 'Do morning check-in',
-        onAction: () => context.push('/home/morning-intention'),
-      );
-    }
-
-    final recent = checkIns.take(7).toList();
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            averageMood == null
-                ? 'Mood is not tracked yet'
-                : 'Average mood: ${averageMood!.toStringAsFixed(1)} / 5',
-            style: AppTypography.titleMedium,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          ...recent.map(
-            (checkIn) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: Row(
-                children: [
-                  Container(
-                    width: 10,
-                    height: 10,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primaryAmber,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      '${checkIn.checkInType.displayName} - mood ${checkIn.mood ?? 0}',
-                      style: AppTypography.bodyMedium,
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
         ],

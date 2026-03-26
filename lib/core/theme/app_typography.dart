@@ -2,61 +2,62 @@ import 'package:flutter/material.dart';
 
 /// Design system typography tokens
 /// Uses Nunito — warm, rounded, and highly readable for a recovery app.
+/// Enhanced hierarchy for Meta/Google-level scanability (3-second rule).
 class AppTypography {
   AppTypography._();
 
   static const String fontFamily = 'Nunito';
 
-  // Display styles
+  // Display styles — 800 weight for maximum impact
   static TextStyle get displayLarge => const TextStyle(
     fontFamily: fontFamily,
-    fontSize: 32,
-    fontWeight: FontWeight.bold,
+    fontSize: 36,
+    fontWeight: FontWeight.w800,
     height: 1.2,
     letterSpacing: -0.5,
   );
 
   static TextStyle get displayMedium => const TextStyle(
     fontFamily: fontFamily,
-    fontSize: 28,
-    fontWeight: FontWeight.bold,
+    fontSize: 30,
+    fontWeight: FontWeight.w800,
     height: 1.25,
     letterSpacing: -0.25,
   );
 
   static TextStyle get displaySmall => const TextStyle(
     fontFamily: fontFamily,
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
+    fontSize: 26,
+    fontWeight: FontWeight.w700,
     height: 1.3,
   );
 
-  // Headline styles
+  // Headline styles — 600 weight for section headers
   static TextStyle get headlineLarge => const TextStyle(
     fontFamily: fontFamily,
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: FontWeight.w600,
     height: 1.35,
   );
 
   static TextStyle get headlineMedium => const TextStyle(
     fontFamily: fontFamily,
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: FontWeight.w600,
     height: 1.4,
   );
 
   static TextStyle get headlineSmall => const TextStyle(
     fontFamily: fontFamily,
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: FontWeight.w600,
     height: 1.45,
   );
 
-  // Title styles
+  // Title styles — 500 weight for card titles, list items
   static TextStyle get titleLarge => const TextStyle(
     fontFamily: fontFamily,
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: FontWeight.w600,
     height: 1.45,
   );
@@ -75,29 +76,29 @@ class AppTypography {
     height: 1.5,
   );
 
-  // Body styles
+  // Body styles — 400 weight, 1.6 line height for readability
   static TextStyle get bodyLarge => const TextStyle(
     fontFamily: fontFamily,
     fontSize: 16,
-    fontWeight: FontWeight.normal,
-    height: 1.5,
+    fontWeight: FontWeight.w400,
+    height: 1.6,
   );
 
   static TextStyle get bodyMedium => const TextStyle(
     fontFamily: fontFamily,
-    fontSize: 14,
-    fontWeight: FontWeight.normal,
-    height: 1.5,
+    fontSize: 15,
+    fontWeight: FontWeight.w400,
+    height: 1.6,
   );
 
   static TextStyle get bodySmall => const TextStyle(
     fontFamily: fontFamily,
-    fontSize: 12,
-    fontWeight: FontWeight.normal,
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
     height: 1.5,
   );
 
-  // Label styles
+  // Label styles — 500 weight for buttons, chips
   static TextStyle get labelLarge => const TextStyle(
     fontFamily: fontFamily,
     fontSize: 14,

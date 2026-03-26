@@ -113,13 +113,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 onSubmitted: (_) => _login(),
               ),
               const SizedBox(height: AppSpacing.md),
-              
+
               // Forgot password
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () {
-                    // Forgot password
+                    context.push('/forgot-password');
                   },
                   child: const Text('Forgot Password?'),
                 ),

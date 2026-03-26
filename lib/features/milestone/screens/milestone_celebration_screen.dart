@@ -5,6 +5,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/recovery_content.dart';
 import '../../../core/models/database_models.dart';
 import '../../../core/services/database_service.dart';
+import '../../../core/services/haptic_feedback_service.dart';
 import '../../../core/services/logger_service.dart';
 import '../../../core/services/preferences_service.dart';
 import '../../../widgets/confetti_overlay.dart';
@@ -46,6 +47,8 @@ class _MilestoneCelebrationScreenState
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _confettiController.fire();
+      // Trigger medium haptic feedback on milestone celebration
+      HapticFeedbackService().mediumImpact();
     });
   }
 

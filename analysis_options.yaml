@@ -9,6 +9,14 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+# Uncomment below to enable stricter linting (very_good_analysis)
+# include: package:very_good_analysis/analysis_options.yaml
+
+# Exclude example code from analysis (reference only)
+analyzer:
+  exclude:
+    - docs/examples/**
+
 linter:
   rules:
     # Logging — use LoggerService, not print()

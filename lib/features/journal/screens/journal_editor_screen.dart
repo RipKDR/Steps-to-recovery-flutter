@@ -5,6 +5,7 @@ import '../../../core/services/database_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../widgets/voice_input_widgets.dart';
 
 /// Journal editor for encrypted local journal entries.
 class JournalEditorScreen extends StatefulWidget {
@@ -179,16 +180,34 @@ class _JournalEditorScreenState extends State<JournalEditorScreen> {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                TextField(
-                  controller: _contentController,
-                  style: AppTypography.bodyMedium,
-                  decoration: const InputDecoration(
-                    hintText: 'Write your thoughts...',
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  maxLines: null,
-                  minLines: 12,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _contentController,
+                        style: AppTypography.bodyMedium,
+                        decoration: const InputDecoration(
+                          hintText: 'Write your thoughts...',
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        maxLines: null,
+                        minLines: 12,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    VoiceInputButton(
+                      onFinalText: (text) {
+                        final current = _contentController.text;
+                        if (current.isNotEmpty) {
+                          _contentController.text = '$current $text';
+                        } else {
+                          _contentController.text = text;
+                        }
+                      },
+                    ),
+                  ],
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 Text('Tags', style: AppTypography.titleMedium),
