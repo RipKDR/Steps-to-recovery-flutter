@@ -11,7 +11,8 @@ class GroundingExercisesScreen extends StatefulWidget {
   const GroundingExercisesScreen({super.key});
 
   @override
-  State<GroundingExercisesScreen> createState() => _GroundingExercisesScreenState();
+  State<GroundingExercisesScreen> createState() =>
+      _GroundingExercisesScreenState();
 }
 
 class _GroundingExercisesScreenState extends State<GroundingExercisesScreen>
@@ -21,7 +22,7 @@ class _GroundingExercisesScreenState extends State<GroundingExercisesScreen>
   int _breathCount = 0;
   Timer? _breathTimer;
   bool _isInhaling = true;
-  
+
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
 
@@ -45,11 +46,12 @@ class _GroundingExercisesScreenState extends State<GroundingExercisesScreen>
   }
 
   final List<_GroundingExercise> _exercises = [
-    _GroundingExercise(
+    const _GroundingExercise(
       title: '5-4-3-2-1 Technique',
-      description: 'Notice 5 things you see, 4 things you feel, 3 things you hear, 2 things you smell, and 1 thing you taste.',
+      description:
+          'Notice 5 things you see, 4 things you feel, 3 things you hear, 2 things you smell, and 1 thing you taste.',
       icon: Icons.visibility_outlined,
-      duration: const Duration(minutes: 2),
+      duration: Duration(minutes: 2),
       steps: [
         'Take a deep breath and look around',
         'Name 5 things you can SEE',
@@ -60,11 +62,12 @@ class _GroundingExercisesScreenState extends State<GroundingExercisesScreen>
         'Notice how you feel now',
       ],
     ),
-    _GroundingExercise(
+    const _GroundingExercise(
       title: 'Box Breathing',
-      description: 'Breathe in for 4, hold for 4, breathe out for 4, hold for 4. Repeat.',
+      description:
+          'Breathe in for 4, hold for 4, breathe out for 4, hold for 4. Repeat.',
       icon: Icons.air,
-      duration: const Duration(minutes: 3),
+      duration: Duration(minutes: 3),
       steps: [
         'Breathe IN through your nose for 4 counts',
         'HOLD your breath for 4 counts',
@@ -73,11 +76,12 @@ class _GroundingExercisesScreenState extends State<GroundingExercisesScreen>
         'Repeat until you feel calmer',
       ],
     ),
-    _GroundingExercise(
+    const _GroundingExercise(
       title: 'Body Scan',
-      description: 'Progressively relax each part of your body from head to toe.',
+      description:
+          'Progressively relax each part of your body from head to toe.',
       icon: Icons.accessibility_new_outlined,
-      duration: const Duration(minutes: 5),
+      duration: Duration(minutes: 5),
       steps: [
         'Close your eyes and take 3 deep breaths',
         'Focus on your forehead - release any tension',
@@ -89,11 +93,11 @@ class _GroundingExercisesScreenState extends State<GroundingExercisesScreen>
         'Notice your whole body feeling heavy and relaxed',
       ],
     ),
-    _GroundingExercise(
+    const _GroundingExercise(
       title: 'Safe Place Visualization',
       description: 'Imagine a place where you feel completely safe and calm.',
       icon: Icons.home_outlined,
-      duration: const Duration(minutes: 4),
+      duration: Duration(minutes: 4),
       steps: [
         'Close your eyes and breathe deeply',
         'Imagine a place where you feel safe',
@@ -112,8 +116,9 @@ class _GroundingExercisesScreenState extends State<GroundingExercisesScreen>
       _currentExercise = index;
       _isInProgress = true;
     });
-    
-    if (index == 1) { // Box breathing
+
+    if (index == 1) {
+      // Box breathing
       _startBreathingTimer();
       _animationController.repeat(reverse: true);
     }
@@ -122,7 +127,7 @@ class _GroundingExercisesScreenState extends State<GroundingExercisesScreen>
   void _startBreathingTimer() {
     _breathCount = 0;
     _isInhaling = true;
-    
+
     _breathTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         _breathCount++;
@@ -190,7 +195,7 @@ class _GroundingExercisesScreenState extends State<GroundingExercisesScreen>
                 onTap: () => _startExercise(index),
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -198,7 +203,7 @@ class _GroundingExercisesScreenState extends State<GroundingExercisesScreen>
 
   Widget _buildExerciseView() {
     final exercise = _exercises[_currentExercise];
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(exercise.title),
@@ -226,8 +231,18 @@ class _GroundingExercisesScreenState extends State<GroundingExercisesScreen>
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
                             colors: _isInhaling
-                                ? [AppColors.primaryAmber.withValues(alpha: 0.3), AppColors.primaryAmber.withValues(alpha: 0.6)]
-                                : [AppColors.info.withValues(alpha: 0.3), AppColors.info.withValues(alpha: 0.6)],
+                                ? [
+                                    AppColors.primaryAmber.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                    AppColors.primaryAmber.withValues(
+                                      alpha: 0.6,
+                                    ),
+                                  ]
+                                : [
+                                    AppColors.info.withValues(alpha: 0.3),
+                                    AppColors.info.withValues(alpha: 0.6),
+                                  ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -295,7 +310,7 @@ class _GroundingExercisesScreenState extends State<GroundingExercisesScreen>
                           ],
                         ),
                       );
-                    }).toList(),
+                    }),
                   ],
                 ),
               ),
@@ -344,10 +359,7 @@ class _ExerciseCard extends StatelessWidget {
   final _GroundingExercise exercise;
   final VoidCallback onTap;
 
-  const _ExerciseCard({
-    required this.exercise,
-    required this.onTap,
-  });
+  const _ExerciseCard({required this.exercise, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -376,10 +388,7 @@ class _ExerciseCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      exercise.title,
-                      style: AppTypography.titleMedium,
-                    ),
+                    Text(exercise.title, style: AppTypography.titleMedium),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       exercise.description,

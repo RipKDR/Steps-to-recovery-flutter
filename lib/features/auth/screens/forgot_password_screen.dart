@@ -239,22 +239,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       style: AppTypography.titleSmall,
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    _StepItem(
+                    const _StepItem(
                       number: '1',
                       text: 'Check your email inbox',
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    _StepItem(
+                    const _StepItem(
                       number: '2',
                       text: 'Click the reset link',
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    _StepItem(
+                    const _StepItem(
                       number: '3',
                       text: 'Create a new password',
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    _StepItem(
+                    const _StepItem(
                       number: '4',
                       text: 'Don\'t see it? Check your spam folder',
                     ),

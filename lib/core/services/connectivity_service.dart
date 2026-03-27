@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
+import 'logger_service.dart';
+
 /// Network connectivity service
 class ConnectivityService {
   static final Connectivity _plugin = Connectivity();
@@ -35,8 +37,12 @@ class ConnectivityService {
 
       _subscription =
           _onConnectivityChanged.listen(_updateConnectionStatus);
-    } catch (e) {
-      debugPrint('Failed to initialize connectivity: $e');
+    } catch (e, stackTrace) {
+      LoggerService().error(
+        'Failed to initialize connectivity',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -50,9 +56,9 @@ class ConnectivityService {
       _connectivityController.add(_isConnected);
 
       if (_isConnected) {
-        debugPrint('Connection restored');
+        LoggerService().debug('Connection restored');
       } else {
-        debugPrint('Connection lost');
+        LoggerService().debug('Connection lost');
       }
     }
   }

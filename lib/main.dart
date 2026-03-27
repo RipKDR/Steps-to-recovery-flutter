@@ -52,19 +52,16 @@ void main() async {
 
   // Wrap app with Sentry if DSN is configured
   if (AppConfig.sentryDsn.isNotEmpty) {
-    await SentryFlutter.init(
-      (options) {
-        options.dsn = AppConfig.sentryDsn;
-        options.tracesSampleRate = 0.2;
-        options.beforeSend = _scrubPii;
-        options.beforeBreadcrumb = (breadcrumb, hint) {
-          // Drop breadcrumbs that might contain user content
-          if (breadcrumb?.category == 'console') return null;
-          return breadcrumb;
-        };
-      },
-      appRunner: () => runApp(const StepsToRecoveryApp()),
-    );
+    await SentryFlutter.init((options) {
+      options.dsn = AppConfig.sentryDsn;
+      options.tracesSampleRate = 0.2;
+      options.beforeSend = _scrubPii;
+      options.beforeBreadcrumb = (breadcrumb, hint) {
+        // Drop breadcrumbs that might contain user content
+        if (breadcrumb?.category == 'console') return null;
+        return breadcrumb;
+      };
+    }, appRunner: () => runApp(const StepsToRecoveryApp()));
   } else {
     runApp(const StepsToRecoveryApp());
   }
@@ -209,20 +206,22 @@ class _StepsToRecoveryAppState extends State<StepsToRecoveryApp>
         final platformBrightness = MediaQuery.platformBrightnessOf(context);
         final effectiveBrightness =
             switch (AppStateService.instance.appThemeMode) {
-          ThemeMode.dark => Brightness.dark,
-          ThemeMode.light => Brightness.light,
-          ThemeMode.system => platformBrightness,
-        };
+              ThemeMode.dark => Brightness.dark,
+              ThemeMode.light => Brightness.light,
+              ThemeMode.system => platformBrightness,
+            };
         final isDark = effectiveBrightness == Brightness.dark;
         SystemChrome.setSystemUIOverlayStyle(
           SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,
-            statusBarIconBrightness:
-                isDark ? Brightness.light : Brightness.dark,
+            statusBarIconBrightness: isDark
+                ? Brightness.light
+                : Brightness.dark,
             systemNavigationBarColor: Colors.transparent,
             systemNavigationBarDividerColor: Colors.transparent,
-            systemNavigationBarIconBrightness:
-                isDark ? Brightness.light : Brightness.dark,
+            systemNavigationBarIconBrightness: isDark
+                ? Brightness.light
+                : Brightness.dark,
           ),
         );
         return MaterialApp.router(
@@ -236,9 +235,7 @@ class _StepsToRecoveryAppState extends State<StepsToRecoveryApp>
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          supportedLocales: const [
-            Locale('en'),
-          ],
+          supportedLocales: const [Locale('en')],
           routerConfig: AppRouter.router,
           builder: (context, child) {
             // Allow system text scaling up to 1.3x for accessibility
@@ -246,9 +243,9 @@ class _StepsToRecoveryAppState extends State<StepsToRecoveryApp>
             final systemScale = MediaQuery.of(context).textScaler.scale(1.0);
             final clampedScale = systemScale.clamp(1.0, 1.3);
             return MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                textScaler: TextScaler.linear(clampedScale),
-              ),
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: TextScaler.linear(clampedScale)),
               child: child!,
             );
           },

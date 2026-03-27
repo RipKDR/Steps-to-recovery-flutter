@@ -12,7 +12,7 @@ class MindfulnessAudioService extends ChangeNotifier {
   final AudioPlayer _player = AudioPlayer();
   
   MindfulnessTrack? _currentTrack;
-  PlayerState _state = PlayerState.idle;
+  MindfulnessPlayerState _state = MindfulnessPlayerState.idle;
   Duration _position = Duration.zero;
   Duration _duration = Duration.zero;
   double _volume = 1.0;
@@ -20,14 +20,14 @@ class MindfulnessAudioService extends ChangeNotifier {
 
   // Getters
   MindfulnessTrack? get currentTrack => _currentTrack;
-  PlayerState get state => _state;
+  MindfulnessPlayerState get state => _state;
   Duration get position => _position;
   Duration get duration => _duration;
   double get volume => _volume;
   double get speed => _speed;
   
-  bool get isPlaying => _state == PlayerState.playing;
-  bool get isLoading => _state == PlayerState.loading;
+  bool get isPlaying => _state == MindfulnessPlayerState.playing;
+  bool get isLoading => _state == MindfulnessPlayerState.loading;
 
   /// Initialize audio service
   Future<void> initialize() async {
@@ -66,23 +66,18 @@ class MindfulnessAudioService extends ChangeNotifier {
       }
     });
 
-    // Listen for completion
-    _player.playerCompleteStream.listen((_) {
-      _state = PlayerState.completed;
-      notifyListeners();
-    });
   }
 
   void _updateState(PlayerState playerState) {
     if (playerState.playing) {
-      _state = PlayerState.playing;
+      _state = MindfulnessPlayerState.playing;
     } else if (playerState.processingState == ProcessingState.loading ||
                playerState.processingState == ProcessingState.buffering) {
-      _state = PlayerState.loading;
+      _state = MindfulnessPlayerState.loading;
     } else if (playerState.processingState == ProcessingState.completed) {
-      _state = PlayerState.completed;
+      _state = MindfulnessPlayerState.completed;
     } else {
-      _state = PlayerState.paused;
+      _state = MindfulnessPlayerState.paused;
     }
     notifyListeners();
   }
@@ -90,7 +85,7 @@ class MindfulnessAudioService extends ChangeNotifier {
   /// Set the current track
   Future<void> setTrack(MindfulnessTrack track) async {
     _currentTrack = track;
-    _state = PlayerState.loading;
+    _state = MindfulnessPlayerState.loading;
     notifyListeners();
 
     try {
@@ -100,10 +95,10 @@ class MindfulnessAudioService extends ChangeNotifier {
       } else {
         await _player.setUrl(track.audioUrl);
       }
-      _state = PlayerState.idle;
+      _state = MindfulnessPlayerState.idle;
       notifyListeners();
     } catch (e) {
-      _state = PlayerState.error;
+      _state = MindfulnessPlayerState.error;
       notifyListeners();
       rethrow;
     }
@@ -115,10 +110,10 @@ class MindfulnessAudioService extends ChangeNotifier {
     
     try {
       await _player.play();
-      _state = PlayerState.playing;
+      _state = MindfulnessPlayerState.playing;
       notifyListeners();
     } catch (e) {
-      _state = PlayerState.error;
+      _state = MindfulnessPlayerState.error;
       notifyListeners();
       rethrow;
     }
@@ -127,7 +122,7 @@ class MindfulnessAudioService extends ChangeNotifier {
   /// Pause current track
   Future<void> pause() async {
     await _player.pause();
-    _state = PlayerState.paused;
+    _state = MindfulnessPlayerState.paused;
     notifyListeners();
   }
 
@@ -143,7 +138,7 @@ class MindfulnessAudioService extends ChangeNotifier {
   /// Stop playback
   Future<void> stop() async {
     await _player.stop();
-    _state = PlayerState.idle;
+    _state = MindfulnessPlayerState.idle;
     _position = Duration.zero;
     notifyListeners();
   }
@@ -188,7 +183,7 @@ class MindfulnessAudioService extends ChangeNotifier {
     await _player.stop();
     await _player.dispose();
     _currentTrack = null;
-    _state = PlayerState.idle;
+    _state = MindfulnessPlayerState.idle;
     _position = Duration.zero;
     _duration = Duration.zero;
     notifyListeners();

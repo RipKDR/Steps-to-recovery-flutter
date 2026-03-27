@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -39,12 +38,12 @@ class FullScreenAudioPlayer extends StatelessWidget {
               child: Column(
                 children: [
                   const Spacer(),
-                  
+
                   // Album art / visualization
                   _buildAlbumArt(track),
-                  
+
                   const SizedBox(height: AppSpacing.xxl),
-                  
+
                   // Track info
                   Text(
                     track.title,
@@ -54,7 +53,9 @@ class FullScreenAudioPlayer extends StatelessWidget {
                   const SizedBox(height: AppSpacing.sm),
                   Text(
                     track.description,
-                    style: AppTypography.bodyMedium.copyWith(color: AppColors.textMuted),
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.textMuted,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: AppSpacing.sm),
@@ -69,25 +70,27 @@ class FullScreenAudioPlayer extends StatelessWidget {
                     ),
                     child: Text(
                       track.category,
-                      style: AppTypography.bodySmall.copyWith(color: AppColors.primaryAmber),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.primaryAmber,
+                      ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: AppSpacing.xxl),
-                  
+
                   // Progress bar
                   _buildProgressBar(service),
-                  
+
                   const SizedBox(height: AppSpacing.xl),
-                  
+
                   // Playback controls
                   _buildControls(service),
-                  
+
                   const SizedBox(height: AppSpacing.xl),
-                  
+
                   // Speed and volume controls
                   _buildOptions(service),
-                  
+
                   const Spacer(),
                 ],
               ),
@@ -145,7 +148,10 @@ class FullScreenAudioPlayer extends StatelessWidget {
           child: Slider(
             value: service.position.inSeconds.toDouble(),
             min: 0,
-            max: service.duration.inSeconds.toDouble().clamp(1, double.infinity),
+            max: service.duration.inSeconds.toDouble().clamp(
+              1,
+              double.infinity,
+            ),
             onChanged: (value) {
               service.seek(Duration(seconds: value.toInt()));
             },
@@ -158,11 +164,15 @@ class FullScreenAudioPlayer extends StatelessWidget {
             children: [
               Text(
                 _formatDuration(service.position),
-                style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textMuted,
+                ),
               ),
               Text(
                 _formatDuration(service.duration),
-                style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textMuted,
+                ),
               ),
             ],
           ),
@@ -177,14 +187,14 @@ class FullScreenAudioPlayer extends StatelessWidget {
       children: [
         // Skip backward
         IconButton(
-          icon: const Icon(Icons.replay_15),
+          icon: const Icon(Icons.replay_10),
           iconSize: 32,
           color: AppColors.textPrimary,
           onPressed: service.skipBackward,
         ),
-        
+
         const SizedBox(width: AppSpacing.lg),
-        
+
         // Play/Pause
         Container(
           width: 80,
@@ -213,12 +223,12 @@ class FullScreenAudioPlayer extends StatelessWidget {
             onPressed: service.playPause,
           ),
         ),
-        
+
         const SizedBox(width: AppSpacing.lg),
-        
+
         // Skip forward
         IconButton(
-          icon: const Icon(Icons.forward_15),
+          icon: const Icon(Icons.forward_10),
           iconSize: 32,
           color: AppColors.textPrimary,
           onPressed: service.skipForward,
@@ -234,7 +244,7 @@ class FullScreenAudioPlayer extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Speed:', style: AppTypography.bodySmall),
+            Text('Speed:', style: AppTypography.bodySmall),
             const SizedBox(width: AppSpacing.sm),
             ...[0.5, 0.75, 1.0, 1.25, 1.5, 2.0].map((speed) {
               final isSelected = service.speed == speed;
@@ -246,17 +256,19 @@ class FullScreenAudioPlayer extends StatelessWidget {
                   onSelected: (_) => service.setSpeed(speed),
                   selectedColor: AppColors.primaryAmber,
                   labelStyle: TextStyle(
-                    color: isSelected ? AppColors.textOnDark : AppColors.textPrimary,
+                    color: isSelected
+                        ? AppColors.textOnDark
+                        : AppColors.textPrimary,
                     fontSize: 12,
                   ),
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
-        
+
         const SizedBox(height: AppSpacing.md),
-        
+
         // Volume control
         Row(
           mainAxisAlignment: MainAxisAlignment.center,

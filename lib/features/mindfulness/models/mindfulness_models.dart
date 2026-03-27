@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 /// Mindfulness track model
 class MindfulnessTrack {
   final String id;
@@ -48,7 +50,7 @@ enum MindfulnessCategory {
 }
 
 /// Player state enum
-enum PlayerState {
+enum MindfulnessPlayerState {
   idle,
   loading,
   playing,

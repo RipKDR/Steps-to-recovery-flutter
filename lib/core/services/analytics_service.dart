@@ -1,5 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'logger_service.dart';
 
 /// Privacy-respecting analytics service.
 ///
@@ -14,6 +15,7 @@ class AnalyticsService {
   AnalyticsService._internal();
 
   static const String _keyOptOut = 'analytics_opt_out';
+  final _logger = LoggerService();
 
   SharedPreferences? _prefs;
   bool _optedOut = false;
@@ -36,20 +38,20 @@ class AnalyticsService {
   /// Log a screen view event.
   void trackScreenView(String screenName) {
     if (_optedOut) return;
-    debugPrint('[analytics] screen=$screenName');
+    _logger.debug('[analytics] screen=$screenName');
     // In production: send to Supabase edge function or PostHog
   }
 
   /// Log a feature usage event.
   void trackFeatureUsed(String featureName) {
     if (_optedOut) return;
-    debugPrint('[analytics] feature=$featureName');
+    _logger.debug('[analytics] feature=$featureName');
   }
 
   /// Log a non-sensitive event with optional metadata.
   /// Never include recovery content in [properties].
   void trackEvent(String name, {Map<String, String>? properties}) {
     if (_optedOut) return;
-    debugPrint('[analytics] event=$name props=$properties');
+    _logger.debug('[analytics] event=$name props=$properties');
   }
 }

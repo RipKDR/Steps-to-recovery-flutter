@@ -1,11 +1,15 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:steps_recovery_flutter/features/meetings/services/meetings_service.dart';
+
+import 'test_helpers.dart';
 
 void main() {
   group('MeetingsService', () {
     late MeetingsService service;
 
-    setUp(() {
+    setUp(() async {
+      await prepareTestState();
       service = MeetingsService();
     });
 

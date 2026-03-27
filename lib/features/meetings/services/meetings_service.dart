@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
-import '../models/database_models.dart';
-import 'database_service.dart';
+import 'package:flutter/material.dart';
+import '../../../core/models/database_models.dart';
+import '../../../core/services/database_service.dart';
 
 /// Meetings service with stats and 90-in-90 challenge tracking
 class MeetingsService extends ChangeNotifier {
@@ -21,8 +21,7 @@ class MeetingsService extends ChangeNotifier {
     return meetings.where((m) => m.dateTime != null).toList();
   }
 
-  /// Calculate 90-in-90 progress
-  Future<_90In90Progress> get90In90Progress() async {
+  Future<NinetyInNinetyProgress> get90In90Progress() async {
     final recentMeetings = await getRecentMeetings(days: 90);
     final uniqueDates = recentMeetings
         .map((m) => DateTime(
@@ -33,7 +32,7 @@ class MeetingsService extends ChangeNotifier {
         .toSet()
         .length;
 
-    return _90In90Progress(
+    return NinetyInNinetyProgress(
       meetingsAttended: uniqueDates,
       goal: 90,
       daysRemaining: 90 - uniqueDates,
@@ -142,7 +141,7 @@ class MeetingsService extends ChangeNotifier {
 
     // 90-in-90 progress
     if (progress.meetingsAttended >= 30) {
-      achievements.add(const MeetingAchievement(
+      achievements.add(MeetingAchievement(
         id: '90-in-90-30',
         title: '30 Days Strong',
         description: 'Attended 30 meetings',
@@ -158,7 +157,7 @@ class MeetingsService extends ChangeNotifier {
         id: '90-in-90-60',
         title: '60 Days Commitment',
         description: 'Attended 60 meetings',
-        icon: Icons.silver_dining,
+        icon: Icons.workspace_premium,
         progress: 60,
         total: 90,
         unlocked: true,
@@ -179,7 +178,7 @@ class MeetingsService extends ChangeNotifier {
 
     // Meeting streak achievements
     if (stats.longestStreak >= 7) {
-      achievements.add(const MeetingAchievement(
+      achievements.add(MeetingAchievement(
         id: 'streak-7',
         title: 'Week Warrior',
         description: '7 day attendance streak',
@@ -191,7 +190,7 @@ class MeetingsService extends ChangeNotifier {
     }
 
     if (stats.longestStreak >= 30) {
-      achievements.add(const MeetingAchievement(
+      achievements.add(MeetingAchievement(
         id: 'streak-30',
         title: 'Monthly Master',
         description: '30 day attendance streak',
@@ -204,7 +203,7 @@ class MeetingsService extends ChangeNotifier {
 
     // Total meetings achievements
     if (stats.totalAttended >= 50) {
-      achievements.add(const MeetingAchievement(
+      achievements.add(MeetingAchievement(
         id: 'total-50',
         title: 'Dedicated Member',
         description: '50 meetings attended',
@@ -216,7 +215,7 @@ class MeetingsService extends ChangeNotifier {
     }
 
     if (stats.totalAttended >= 100) {
-      achievements.add(const MeetingAchievement(
+      achievements.add(MeetingAchievement(
         id: 'total-100',
         title: 'Century Club',
         description: '100 meetings attended',
@@ -232,13 +231,13 @@ class MeetingsService extends ChangeNotifier {
 }
 
 /// 90-in-90 progress tracker
-class _90In90Progress {
+class NinetyInNinetyProgress {
   final int meetingsAttended;
   final int goal;
   final int daysRemaining;
   final double percentage;
 
-  const _90In90Progress({
+  const NinetyInNinetyProgress({
     required this.meetingsAttended,
     required this.goal,
     required this.daysRemaining,

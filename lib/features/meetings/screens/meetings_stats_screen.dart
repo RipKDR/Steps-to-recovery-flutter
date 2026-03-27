@@ -28,7 +28,11 @@ class _MeetingsStatsScreenState extends State<MeetingsStatsScreen> {
     final stats = await service.getStats();
     final progress = await service.get90In90Progress();
     final achievements = await service.getAchievements();
-    return _StatsSnapshot(stats: stats, progress: progress, achievements: achievements);
+    return _StatsSnapshot(
+      stats: stats,
+      progress: progress,
+      achievements: achievements,
+    );
   }
 
   @override
@@ -45,9 +49,10 @@ class _MeetingsStatsScreenState extends State<MeetingsStatsScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final data = snapshot.data ??
-              _StatsSnapshot(
-                stats: const MeetingStats(
+          final data =
+              snapshot.data ??
+              const _StatsSnapshot(
+                stats: MeetingStats(
                   totalAttended: 0,
                   thisWeek: 0,
                   thisMonth: 0,
@@ -55,7 +60,7 @@ class _MeetingsStatsScreenState extends State<MeetingsStatsScreen> {
                   typeBreakdown: {},
                   longestStreak: 0,
                 ),
-                progress: const _90In90Progress(
+                progress: NinetyInNinetyProgress(
                   meetingsAttended: 0,
                   goal: 90,
                   daysRemaining: 90,
@@ -79,7 +84,10 @@ class _MeetingsStatsScreenState extends State<MeetingsStatsScreen> {
                   const SizedBox(height: AppSpacing.xl),
 
                   // Quick Stats
-                  Text('Attendance Overview', style: AppTypography.headlineSmall),
+                  Text(
+                    'Attendance Overview',
+                    style: AppTypography.headlineSmall,
+                  ),
                   const SizedBox(height: AppSpacing.md),
                   Row(
                     children: [
@@ -135,13 +143,17 @@ class _MeetingsStatsScreenState extends State<MeetingsStatsScreen> {
                       padding: const EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: AppColors.surfaceCard,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusLg,
+                        ),
                         border: Border.all(color: AppColors.border),
                       ),
                       child: Column(
                         children: data.stats.typeBreakdown.entries.map((entry) {
                           return Padding(
-                            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                            padding: const EdgeInsets.only(
+                              bottom: AppSpacing.sm,
+                            ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -176,7 +188,7 @@ class _MeetingsStatsScreenState extends State<MeetingsStatsScreen> {
                         padding: const EdgeInsets.only(bottom: AppSpacing.md),
                         child: _AchievementCard(achievement: achievement),
                       );
-                    }).toList(),
+                    }),
 
                   const SizedBox(height: AppSpacing.xl),
 
@@ -200,7 +212,7 @@ class _MeetingsStatsScreenState extends State<MeetingsStatsScreen> {
     );
   }
 
-  Widget _build90In90Card(_90In90Progress progress) {
+  Widget _build90In90Card(NinetyInNinetyProgress progress) {
     final isComplete = progress.meetingsAttended >= 90;
 
     return Container(
@@ -208,8 +220,14 @@ class _MeetingsStatsScreenState extends State<MeetingsStatsScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isComplete
-              ? [AppColors.success.withValues(alpha: 0.3), AppColors.success.withValues(alpha: 0.1)]
-              : [AppColors.primaryAmber.withValues(alpha: 0.3), AppColors.primaryAmber.withValues(alpha: 0.1)],
+              ? [
+                  AppColors.success.withValues(alpha: 0.3),
+                  AppColors.success.withValues(alpha: 0.1),
+                ]
+              : [
+                  AppColors.primaryAmber.withValues(alpha: 0.3),
+                  AppColors.primaryAmber.withValues(alpha: 0.1),
+                ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -235,7 +253,9 @@ class _MeetingsStatsScreenState extends State<MeetingsStatsScreen> {
                     Text(
                       isComplete ? '90-in-90 Complete!' : '90-in-90 Challenge',
                       style: AppTypography.titleLarge.copyWith(
-                        color: isComplete ? AppColors.success : AppColors.primaryAmber,
+                        color: isComplete
+                            ? AppColors.success
+                            : AppColors.primaryAmber,
                       ),
                     ),
                     Text(
@@ -262,7 +282,9 @@ class _MeetingsStatsScreenState extends State<MeetingsStatsScreen> {
                 Text(
                   progress.meetingsAttended.toString(),
                   style: AppTypography.displayLarge.copyWith(
-                    color: isComplete ? AppColors.success : AppColors.primaryAmber,
+                    color: isComplete
+                        ? AppColors.success
+                        : AppColors.primaryAmber,
                   ),
                 ),
                 Text(
@@ -273,14 +295,18 @@ class _MeetingsStatsScreenState extends State<MeetingsStatsScreen> {
                 ),
               ],
             ),
-            progressColor: isComplete ? AppColors.success : AppColors.primaryAmber,
+            progressColor: isComplete
+                ? AppColors.success
+                : AppColors.primaryAmber,
             backgroundColor: AppColors.border,
             circularStrokeCap: CircularStrokeCap.round,
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
             progress.progressText,
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.textMuted),
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textMuted,
+            ),
           ),
         ],
       ),
@@ -297,11 +323,17 @@ class _MeetingsStatsScreenState extends State<MeetingsStatsScreen> {
       ),
       child: Column(
         children: [
-          Icon(Icons.emoji_events_outlined, size: 48, color: AppColors.textMuted),
+          const Icon(
+            Icons.emoji_events_outlined,
+            size: 48,
+            color: AppColors.textMuted,
+          ),
           const SizedBox(height: AppSpacing.md),
           Text(
             'No achievements yet',
-            style: AppTypography.titleMedium.copyWith(color: AppColors.textMuted),
+            style: AppTypography.titleMedium.copyWith(
+              color: AppColors.textMuted,
+            ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
@@ -403,14 +435,18 @@ class _AchievementCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   achievement.description,
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textMuted,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 if (!isUnlocked)
                   LinearProgressIndicator(
                     value: achievement.progressPercentage,
                     backgroundColor: AppColors.border,
-                    valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryAmber),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      AppColors.primaryAmber,
+                    ),
                     minHeight: 6,
                   ),
               ],
@@ -421,7 +457,9 @@ class _AchievementCard extends StatelessWidget {
           else
             Text(
               '${achievement.progress}/${achievement.total}',
-              style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textMuted,
+              ),
             ),
         ],
       ),
@@ -431,7 +469,7 @@ class _AchievementCard extends StatelessWidget {
 
 class _StatsSnapshot {
   final MeetingStats stats;
-  final _90In90Progress progress;
+  final NinetyInNinetyProgress progress;
   final List<MeetingAchievement> achievements;
 
   const _StatsSnapshot({

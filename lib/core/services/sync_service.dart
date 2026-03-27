@@ -13,7 +13,9 @@ import 'logger_service.dart';
 ///
 /// All sensitive fields are encrypted client-side before upload.
 /// Supabase stores only ciphertext — the server never sees plaintext.
-/// Conflict resolution: last-write-wins based on updated_at.
+///
+/// Conflict resolution: last-write-wins based on updated_at timestamp comparison.
+/// Each record is compared individually - newer timestamp wins.
 class SyncService extends ChangeNotifier {
   static final SyncService _instance = SyncService._internal();
   factory SyncService() => _instance;
@@ -38,13 +40,22 @@ class SyncService extends ChangeNotifier {
   Future<void> initialize() async {
     if (_initialized || !isAvailable) return;
 
-    await Supabase.initialize(
-      url: AppConfig.supabaseUrl,
-      anonKey: AppConfig.supabaseAnonKey,
-    );
+    try {
+      await Supabase.initialize(
+        url: AppConfig.supabaseUrl,
+        anonKey: AppConfig.supabaseAnonKey,
+      );
 
-    _initialized = true;
-    _logger.info('SyncService initialized');
+      _initialized = true;
+      _logger.info('SyncService initialized');
+    } catch (e, stackTrace) {
+      _logger.error(
+        'Failed to initialize SyncService',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
   }
 
   // ── Auth ──────────────────────────────────────────────────
@@ -151,24 +162,23 @@ class SyncService extends ChangeNotifier {
     );
 
     for (final checkIn in pending) {
-      final encryptedData = _encryption.encrypt(jsonEncode({
-        'intention': checkIn.intention,
-        'reflection': checkIn.reflection,
-        'mood': checkIn.mood,
-        'craving': checkIn.craving,
-      }));
-
-      await _client.from('check_ins').upsert(
-        {
-          'id': checkIn.id,
-          'user_id': userId,
-          'check_in_type': checkIn.checkInType.value,
-          'check_in_date': checkIn.checkInDate.toIso8601String().split('T')[0],
-          'encrypted_data': encryptedData,
-          'updated_at': DateTime.now().toIso8601String(),
-        },
-        onConflict: 'user_id,check_in_type,check_in_date',
+      final encryptedData = _encryption.encrypt(
+        jsonEncode({
+          'intention': checkIn.intention,
+          'reflection': checkIn.reflection,
+          'mood': checkIn.mood,
+          'craving': checkIn.craving,
+        }),
       );
+
+      await _client.from('check_ins').upsert({
+        'id': checkIn.id,
+        'user_id': userId,
+        'check_in_type': checkIn.checkInType.value,
+        'check_in_date': checkIn.checkInDate.toIso8601String().split('T')[0],
+        'encrypted_data': encryptedData,
+        'updated_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'user_id,check_in_type,check_in_date');
     }
 
     // Pull remote check-ins newer than last sync
@@ -181,7 +191,9 @@ class SyncService extends ChangeNotifier {
         .order('updated_at');
 
     for (final row in remote) {
-      final data = jsonDecode(_encryption.decrypt(row['encrypted_data'] as String));
+      final data = jsonDecode(
+        _encryption.decrypt(row['encrypted_data'] as String),
+      );
       final checkIn = DailyCheckIn(
         id: row['id'] as String,
         userId: userId,
@@ -210,13 +222,15 @@ class SyncService extends ChangeNotifier {
     );
 
     for (final entry in pending) {
-      final encryptedData = _encryption.encrypt(jsonEncode({
-        'title': entry.title,
-        'content': entry.content,
-        'mood': entry.mood,
-        'craving': entry.craving,
-        'tags': entry.tags,
-      }));
+      final encryptedData = _encryption.encrypt(
+        jsonEncode({
+          'title': entry.title,
+          'content': entry.content,
+          'mood': entry.mood,
+          'craving': entry.craving,
+          'tags': entry.tags,
+        }),
+      );
 
       await _client.from('journal_entries').upsert({
         'id': entry.id,
@@ -237,10 +251,11 @@ class SyncService extends ChangeNotifier {
         .order('updated_at');
 
     for (final row in remote) {
-      final data = jsonDecode(_encryption.decrypt(row['encrypted_data'] as String));
-      final tags = (data['tags'] as List<dynamic>?)
-              ?.map((t) => t.toString())
-              .toList() ??
+      final data = jsonDecode(
+        _encryption.decrypt(row['encrypted_data'] as String),
+      );
+      final tags =
+          (data['tags'] as List<dynamic>?)?.map((t) => t.toString()).toList() ??
           const <String>[];
 
       final entry = JournalEntry(
@@ -277,21 +292,19 @@ class SyncService extends ChangeNotifier {
     );
 
     for (final answer in pending) {
-      await _client.from('step_work').upsert(
-        {
-          'id': answer.id,
-          'user_id': userId,
-          'step_number': answer.stepNumber,
-          'question_number': answer.questionNumber,
-          'encrypted_answer':
-              answer.answer != null ? _encryption.encrypt(answer.answer!) : null,
-          'is_complete': answer.isComplete,
-          'completed_at': answer.completedAt?.toIso8601String(),
-          'updated_at': answer.updatedAt.toIso8601String(),
-          'created_at': answer.createdAt.toIso8601String(),
-        },
-        onConflict: 'user_id,step_number,question_number',
-      );
+      await _client.from('step_work').upsert({
+        'id': answer.id,
+        'user_id': userId,
+        'step_number': answer.stepNumber,
+        'question_number': answer.questionNumber,
+        'encrypted_answer': answer.answer != null
+            ? _encryption.encrypt(answer.answer!)
+            : null,
+        'is_complete': answer.isComplete,
+        'completed_at': answer.completedAt?.toIso8601String(),
+        'updated_at': answer.updatedAt.toIso8601String(),
+        'created_at': answer.createdAt.toIso8601String(),
+      }, onConflict: 'user_id,step_number,question_number');
     }
 
     // Pull remote
@@ -331,19 +344,16 @@ class SyncService extends ChangeNotifier {
 
     final allProgress = await db.getStepProgress();
     for (final progress in allProgress) {
-      await _client.from('step_progress').upsert(
-        {
-          'id': progress.id,
-          'user_id': userId,
-          'step_number': progress.stepNumber,
-          'status': progress.status.value,
-          'completion_percentage': progress.completionPercentage,
-          'completed_at': progress.completedAt?.toIso8601String(),
-          'updated_at': progress.updatedAt.toIso8601String(),
-          'created_at': progress.createdAt.toIso8601String(),
-        },
-        onConflict: 'user_id,step_number',
-      );
+      await _client.from('step_progress').upsert({
+        'id': progress.id,
+        'user_id': userId,
+        'step_number': progress.stepNumber,
+        'status': progress.status.value,
+        'completion_percentage': progress.completionPercentage,
+        'completed_at': progress.completedAt?.toIso8601String(),
+        'updated_at': progress.updatedAt.toIso8601String(),
+        'created_at': progress.createdAt.toIso8601String(),
+      }, onConflict: 'user_id,step_number');
     }
   }
 
@@ -373,18 +383,15 @@ class SyncService extends ChangeNotifier {
 
     final achievements = await db.getAchievements();
     for (final a in achievements) {
-      await _client.from('achievements').upsert(
-        {
-          'id': a.id,
-          'user_id': userId,
-          'achievement_key': a.achievementKey,
-          'type': a.type.value,
-          'earned_at': a.earnedAt.toIso8601String(),
-          'is_viewed': a.isViewed,
-          'updated_at': DateTime.now().toIso8601String(),
-        },
-        onConflict: 'user_id,achievement_key',
-      );
+      await _client.from('achievements').upsert({
+        'id': a.id,
+        'user_id': userId,
+        'achievement_key': a.achievementKey,
+        'type': a.type.value,
+        'earned_at': a.earnedAt.toIso8601String(),
+        'is_viewed': a.isViewed,
+        'updated_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'user_id,achievement_key');
     }
   }
 
@@ -396,11 +403,13 @@ class SyncService extends ChangeNotifier {
 
     final contacts = await db.getContacts();
     for (final contact in contacts) {
-      final encryptedData = _encryption.encrypt(jsonEncode({
-        'name': contact.name,
-        'phone_number': contact.phoneNumber,
-        'email': contact.email,
-      }));
+      final encryptedData = _encryption.encrypt(
+        jsonEncode({
+          'name': contact.name,
+          'phone_number': contact.phoneNumber,
+          'email': contact.email,
+        }),
+      );
 
       await _client.from('contacts').upsert({
         'id': contact.id,
@@ -451,24 +460,23 @@ class SyncService extends ChangeNotifier {
     final plan = await db.getSafetyPlan(userId);
     if (plan == null) return;
 
-    final encryptedData = _encryption.encrypt(jsonEncode({
-      'warning_signs': plan.warningSigns,
-      'coping_strategies': plan.copingStrategies,
-      'support_contacts': plan.supportContacts,
-      'professional_contacts': plan.professionalContacts,
-      'safe_environments': plan.safeEnvironments,
-    }));
-
-    await _client.from('safety_plans').upsert(
-      {
-        'id': plan.id,
-        'user_id': userId,
-        'encrypted_data': encryptedData,
-        'updated_at': plan.updatedAt.toIso8601String(),
-        'created_at': plan.createdAt.toIso8601String(),
-      },
-      onConflict: 'user_id',
+    final encryptedData = _encryption.encrypt(
+      jsonEncode({
+        'warning_signs': plan.warningSigns,
+        'coping_strategies': plan.copingStrategies,
+        'support_contacts': plan.supportContacts,
+        'professional_contacts': plan.professionalContacts,
+        'safe_environments': plan.safeEnvironments,
+      }),
     );
+
+    await _client.from('safety_plans').upsert({
+      'id': plan.id,
+      'user_id': userId,
+      'encrypted_data': encryptedData,
+      'updated_at': plan.updatedAt.toIso8601String(),
+      'created_at': plan.createdAt.toIso8601String(),
+    }, onConflict: 'user_id');
   }
 
   // ── Challenges Sync ───────────────────────────────────────
@@ -534,19 +542,23 @@ class SyncService extends ChangeNotifier {
 
     final reflections = await db.getReadingReflections();
     for (final reflection in reflections) {
-      await _client.from('reading_reflections').upsert(
-        {
-          'id': reflection.id,
-          'user_id': userId,
-          'reading_id': reflection.readingId,
-          'reading_date':
-              reflection.readingDate.toIso8601String().split('T')[0],
-          'encrypted_reflection': _encryption.encrypt(reflection.reflection),
-          'updated_at': DateTime.now().toIso8601String(),
-          'created_at': reflection.createdAt.toIso8601String(),
-        },
-        onConflict: 'user_id,reading_id,reading_date',
-      );
+      await _client.from('reading_reflections').upsert({
+        'id': reflection.id,
+        'user_id': userId,
+        'reading_id': reflection.readingId,
+        'reading_date': reflection.readingDate.toIso8601String().split('T')[0],
+        'encrypted_reflection': _encryption.encrypt(reflection.reflection),
+        'updated_at': DateTime.now().toIso8601String(),
+        'created_at': reflection.createdAt.toIso8601String(),
+      }, onConflict: 'user_id,reading_id,reading_date');
     }
+  }
+
+  /// Dispose resources
+  @override
+  void dispose() {
+    _initialized = false;
+    _syncing = false;
+    super.dispose();
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../core/models/database_models.dart';
+import '../../../core/models/enums.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -53,13 +54,13 @@ class MoodTrendChart extends StatelessWidget {
                   horizontalInterval: 1,
                   verticalInterval: 5,
                   getDrawingHorizontalLine: (value) {
-                    return FlLine(
+                    return const FlLine(
                       color: AppColors.border,
                       strokeWidth: 1,
                     );
                   },
                   getDrawingVerticalLine: (value) {
-                    return FlLine(
+                    return const FlLine(
                       color: AppColors.border,
                       strokeWidth: 1,
                     );
@@ -163,7 +164,7 @@ class MoodTrendChart extends StatelessWidget {
       child: Center(
         child: Column(
           children: [
-            Icon(Icons.mood_outline, size: 48, color: AppColors.textMuted),
+            const Icon(Icons.sentiment_satisfied, size: 48, color: AppColors.textMuted),
             const SizedBox(height: AppSpacing.md),
             Text(message, style: AppTypography.bodyMedium.copyWith(color: AppColors.textMuted)),
           ],
@@ -221,13 +222,13 @@ class CravingTrendChart extends StatelessWidget {
                   horizontalInterval: 2,
                   verticalInterval: 5,
                   getDrawingHorizontalLine: (value) {
-                    return FlLine(
+                    return const FlLine(
                       color: AppColors.border,
                       strokeWidth: 1,
                     );
                   },
                   getDrawingVerticalLine: (value) {
-                    return FlLine(
+                    return const FlLine(
                       color: AppColors.border,
                       strokeWidth: 1,
                     );
@@ -331,7 +332,7 @@ class CravingTrendChart extends StatelessWidget {
       child: Center(
         child: Column(
           children: [
-            Icon(Icons.water_drop_outline, size: 48, color: AppColors.textMuted),
+            const Icon(Icons.water_drop, size: 48, color: AppColors.textMuted),
             const SizedBox(height: AppSpacing.md),
             Text(message, style: AppTypography.bodyMedium.copyWith(color: AppColors.textMuted)),
           ],
@@ -579,7 +580,7 @@ class StepProgressChart extends StatelessWidget {
                 ],
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );

@@ -1,43 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:steps_recovery_flutter/features/steps/screens/steps_overview_screen.dart';
+
 import '../core/constants/app_constants.dart';
 import '../core/services/app_state_service.dart';
+import '../core/services/logger_service.dart';
+import '../core/services/sponsor_service.dart';
 import '../core/theme/app_colors.dart';
-import '../widgets/empty_state.dart';
-import '../features/home/screens/home_screen.dart';
-import '../features/home/screens/morning_intention_screen.dart';
-import '../features/home/screens/evening_pulse_screen.dart';
-import '../features/journal/screens/journal_list_screen.dart';
-import '../features/journal/screens/journal_editor_screen.dart';
-import 'package:steps_recovery_flutter/features/steps/screens/steps_overview_screen.dart';
-import '../features/steps/screens/step_detail_screen.dart';
-import '../features/steps/screens/step_review_screen.dart';
-import '../features/profile/screens/profile_screen.dart';
-import '../features/crisis/screens/emergency_screen.dart';
-import '../features/crisis/screens/before_you_use_screen.dart';
-import '../features/crisis/screens/grounding_exercises_screen.dart';
-import '../features/craving_surf/screens/craving_surf_screen.dart';
-import '../features/progress/screens/progress_dashboard_screen.dart';
-import '../features/gratitude/screens/gratitude_screen.dart';
-import '../features/inventory/screens/inventory_screen.dart';
-import '../features/safety_plan/screens/safety_plan_screen.dart';
 import '../features/ai_companion/screens/sponsor_chat_screen.dart';
 import '../features/ai_companion/screens/sponsor_intro_screen.dart';
-import '../core/services/sponsor_service.dart';
-import '../features/readings/screens/daily_reading_screen.dart';
-import '../features/emergency/screens/danger_zone_screen.dart';
-import '../features/sponsor/screens/sponsor_screen.dart';
+import '../features/auth/screens/forgot_password_screen.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/signup_screen.dart';
-import '../features/auth/screens/forgot_password_screen.dart';
-import '../features/onboarding/screens/onboarding_screen.dart';
+import '../features/craving_surf/screens/craving_surf_screen.dart';
+import '../features/crisis/screens/before_you_use_screen.dart';
+import '../features/crisis/screens/emergency_screen.dart';
+import '../features/crisis/screens/grounding_exercises_screen.dart';
+import '../features/emergency/screens/danger_zone_screen.dart';
+import '../features/gratitude/screens/gratitude_screen.dart';
+import '../features/home/screens/evening_pulse_screen.dart';
+import '../features/home/screens/home_screen.dart';
+import '../features/home/screens/morning_intention_screen.dart';
+import '../features/inventory/screens/inventory_screen.dart';
+import '../features/journal/screens/journal_editor_screen.dart';
+import '../features/journal/screens/journal_list_screen.dart';
 import '../features/meetings/screens/meeting_detail_screen.dart';
 import '../features/meetings/screens/meeting_finder_screen.dart';
 import '../features/meetings/screens/meetings_stats_screen.dart';
 import '../features/mindfulness/screens/mindfulness_library_screen.dart';
-import '../features/profile/screens/settings_screen.dart';
+import '../features/onboarding/screens/onboarding_screen.dart';
 import '../features/profile/screens/ai_settings_screen.dart';
+import '../features/profile/screens/profile_screen.dart';
 import '../features/profile/screens/security_settings_screen.dart';
+import '../features/profile/screens/settings_screen.dart';
+import '../features/progress/screens/progress_dashboard_screen.dart';
+import '../features/readings/screens/daily_reading_screen.dart';
+import '../features/safety_plan/screens/safety_plan_screen.dart';
+import '../features/sponsor/screens/sponsor_screen.dart';
+import '../features/steps/screens/step_detail_screen.dart';
+import '../features/steps/screens/step_review_screen.dart';
+import '../widgets/empty_state.dart';
 import 'shell_screen.dart';
 
 /// Main app router using GoRouter
@@ -51,45 +53,57 @@ class AppRouter {
       SponsorService.instance,
     ]),
     redirect: (context, state) {
-      final service = AppStateService.instance;
-      final sponsor = SponsorService.instance;
-      final location = state.uri.path;
-      final isBootstrap = location == '/bootstrap';
-      final isAuthRoute =
-          location == AppRoutes.onboarding ||
-          location == AppRoutes.login ||
-          location == AppRoutes.signup;
-      final isSponsorIntro = location == '/sponsor-intro';
+      try {
+        final service = AppStateService.instance;
+        final sponsor = SponsorService.instance;
+        final location = state.uri.path;
+        final isBootstrap = location == '/bootstrap';
+        final isAuthRoute =
+            location == AppRoutes.onboarding ||
+            location == AppRoutes.login ||
+            location == AppRoutes.signup;
+        final isSponsorIntro = location == '/sponsor-intro';
 
-      if (!service.isReady) {
-        return isBootstrap ? null : '/bootstrap';
+        if (!service.isReady) {
+          return isBootstrap ? null : '/bootstrap';
+        }
+
+        if (isBootstrap) {
+          if (!service.onboardingComplete) return AppRoutes.onboarding;
+          if (!service.isAuthenticated) return AppRoutes.login;
+          if (!sponsor.hasIdentity) return '/sponsor-intro';
+          return AppRoutes.home;
+        }
+
+        if (!service.onboardingComplete) {
+          return location == AppRoutes.onboarding ? null : AppRoutes.onboarding;
+        }
+
+        if (!service.isAuthenticated) {
+          return isAuthRoute ? null : AppRoutes.login;
+        }
+
+        // After auth: gate on sponsor identity
+        if (!sponsor.hasIdentity) {
+          return isSponsorIntro ? null : '/sponsor-intro';
+        }
+
+        if (isAuthRoute || isSponsorIntro || location == '/') {
+          return AppRoutes.home;
+        }
+
+        return null;
+      } catch (e, stackTrace) {
+        // CRITICAL: Router redirect must never crash the app
+        LoggerService().error(
+          'Router redirect failed',
+          error: e,
+          stackTrace: stackTrace,
+        );
+
+        // Return safe fallback - bootstrap will re-evaluate
+        return '/bootstrap';
       }
-
-      if (isBootstrap) {
-        if (!service.onboardingComplete) return AppRoutes.onboarding;
-        if (!service.isAuthenticated) return AppRoutes.login;
-        if (!sponsor.hasIdentity) return '/sponsor-intro';
-        return AppRoutes.home;
-      }
-
-      if (!service.onboardingComplete) {
-        return location == AppRoutes.onboarding ? null : AppRoutes.onboarding;
-      }
-
-      if (!service.isAuthenticated) {
-        return isAuthRoute ? null : AppRoutes.login;
-      }
-
-      // After auth: gate on sponsor identity
-      if (!sponsor.hasIdentity) {
-        return isSponsorIntro ? null : '/sponsor-intro';
-      }
-
-      if (isAuthRoute || isSponsorIntro || location == '/') {
-        return AppRoutes.home;
-      }
-
-      return null;
     },
     routes: [
       GoRoute(
@@ -124,9 +138,8 @@ class AppRouter {
       GoRoute(
         path: '/sponsor-intro',
         name: 'sponsorIntro',
-        builder: (context, state) => SponsorIntroScreen(
-          onComplete: () => context.go(AppRoutes.home),
-        ),
+        builder: (context, state) =>
+            SponsorIntroScreen(onComplete: () => context.go(AppRoutes.home)),
       ),
 
       // Mindfulness Library (top-level)

@@ -1,0 +1,5 @@
+Analyzing Steps-to-recovery-flutter...                          
+
+   info - Unnecessary use of 'toList' in a spread - lib\features\crisis\screens\grounding_exercises_screen.dart:193:14 - unnecessary_to_list_in_spreads
+   info - Use 'const' with the constructor to improve performance - lib\features\meetings\screens\meetings_stats_screen.dart:49:15 - prefer_const_constructors
+

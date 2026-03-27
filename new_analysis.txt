@@ -1,0 +1,224 @@
+Analyzing Steps-to-recovery-flutter...                          
+
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\screens\forgot_password_screen.dart:242:21 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\screens\forgot_password_screen.dart:247:21 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\screens\forgot_password_screen.dart:252:21 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\screens\forgot_password_screen.dart:257:21 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\crisis\screens\emergency_screen.dart:65:13 - prefer_const_constructors
+warning - The declaration '_ContactCard' isn't referenced - lib\features\crisis\screens\emergency_screen.dart:330:7 - unused_element
+   info - Use 'const' with the constructor to improve performance - lib\features\crisis\screens\grounding_exercises_screen.dart:48:5 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\crisis\screens\grounding_exercises_screen.dart:63:5 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\crisis\screens\grounding_exercises_screen.dart:76:5 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\crisis\screens\grounding_exercises_screen.dart:92:5 - prefer_const_constructors
+   info - Unnecessary use of 'toList' in a spread - lib\features\crisis\screens\grounding_exercises_screen.dart:193:14 - unnecessary_to_list_in_spreads
+   info - Unnecessary use of 'toList' in a spread - lib\features\crisis\screens\grounding_exercises_screen.dart:298:24 - unnecessary_to_list_in_spreads
+   info - Use 'const' with the constructor to improve performance - lib\features\gratitude\screens\gratitude_screen.dart:176:33 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\gratitude\screens\gratitude_screen.dart:178:31 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\gratitude\screens\gratitude_screen.dart:179:33 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\journal\widgets\voice_input_widgets.dart:50:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\journal\widgets\voice_input_widgets.dart:52:16 - prefer_const_constructors
+  error - Undefined name 'AppTypography' - lib\features\journal\widgets\voice_input_widgets.dart:120:26 - undefined_identifier
+  error - Undefined name 'AppTypography' - lib\features\journal\widgets\voice_input_widgets.dart:144:28 - undefined_identifier
+   info - Use 'const' with the constructor to improve performance - lib\features\journal\widgets\voice_input_widgets.dart:210:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\journal\widgets\voice_input_widgets.dart:212:16 - prefer_const_constructors
+  error - Undefined name 'AppTypography' - lib\features\journal\widgets\voice_input_widgets.dart:233:24 - undefined_identifier
+  error - The name '_90In90Progress' isn't a class - lib\features\meetings\screens\meetings_stats_screen.dart:58:33 - creation_with_non_type
+   info - Unnecessary use of 'toList' in a spread - lib\features\meetings\screens\meetings_stats_screen.dart:179:24 - unnecessary_to_list_in_spreads
+  error - Undefined class '_90In90Progress' - lib\features\meetings\screens\meetings_stats_screen.dart:203:27 - undefined_class
+   info - Use 'const' with the constructor to improve performance - lib\features\meetings\screens\meetings_stats_screen.dart:300:11 - prefer_const_constructors
+  error - Undefined class '_90In90Progress' - lib\features\meetings\screens\meetings_stats_screen.dart:434:9 - undefined_class
+  error - Target of URI doesn't exist: '../models/database_models.dart' - lib\features\meetings\services\meetings_service.dart:2:8 - uri_does_not_exist
+  error - Undefined class 'DatabaseService' - lib\features\meetings\services\meetings_service.dart:11:9 - undefined_class
+  error - The method 'DatabaseService' isn't defined for the type 'MeetingsService' - lib\features\meetings\services\meetings_service.dart:11:37 - undefined_method
+  error - The name 'Meeting' isn't a type, so it can't be used as a type argument - lib\features\meetings\services\meetings_service.dart:14:15 - non_type_as_type_argument
+   info - Invalid use of a private type in a public API - lib\features\meetings\services\meetings_service.dart:25:10 - library_private_types_in_public_api
+  error - The property 'dateTime' can't be unconditionally accessed because the receiver can be 'null' - lib\features\meetings\services\meetings_service.dart:29:17 - unchecked_use_of_nullable_value
+  error - The property 'dateTime' can't be unconditionally accessed because the receiver can be 'null' - lib\features\meetings\services\meetings_service.dart:30:17 - unchecked_use_of_nullable_value
+  error - The property 'dateTime' can't be unconditionally accessed because the receiver can be 'null' - lib\features\meetings\services\meetings_service.dart:31:17 - unchecked_use_of_nullable_value
+  error - The property 'dateTime' can't be unconditionally accessed because the receiver can be 'null' - lib\features\meetings\services\meetings_service.dart:106:17 - unchecked_use_of_nullable_value
+  error - The property 'dateTime' can't be unconditionally accessed because the receiver can be 'null' - lib\features\meetings\services\meetings_service.dart:107:17 - unchecked_use_of_nullable_value
+  error - The property 'dateTime' can't be unconditionally accessed because the receiver can be 'null' - lib\features\meetings\services\meetings_service.dart:108:17 - unchecked_use_of_nullable_value
+  error - Invalid constant value - lib\features\meetings\services\meetings_service.dart:149:15 - invalid_constant
+  error - Undefined name 'Icons' - lib\features\meetings\services\meetings_service.dart:149:15 - undefined_identifier
+  error - Invalid constant value - lib\features\meetings\services\meetings_service.dart:152:19 - invalid_constant
+  error - Invalid constant value - lib\features\meetings\services\meetings_service.dart:161:15 - invalid_constant
+  error - Undefined name 'Icons' - lib\features\meetings\services\meetings_service.dart:161:15 - undefined_identifier
+  error - Invalid constant value - lib\features\meetings\services\meetings_service.dart:173:15 - invalid_constant
+  error - Undefined name 'Icons' - lib\features\meetings\services\meetings_service.dart:173:15 - undefined_identifier
+  error - Invalid constant value - lib\features\meetings\services\meetings_service.dart:186:15 - invalid_constant
+  error - Undefined name 'Icons' - lib\features\meetings\services\meetings_service.dart:186:15 - undefined_identifier
+  error - Invalid constant value - lib\features\meetings\services\meetings_service.dart:187:19 - invalid_constant
+  error - Invalid constant value - lib\features\meetings\services\meetings_service.dart:198:15 - invalid_constant
+  error - Undefined name 'Icons' - lib\features\meetings\services\meetings_service.dart:198:15 - undefined_identifier
+  error - Invalid constant value - lib\features\meetings\services\meetings_service.dart:199:19 - invalid_constant
+  error - Invalid constant value - lib\features\meetings\services\meetings_service.dart:211:15 - invalid_constant
+  error - Undefined name 'Icons' - lib\features\meetings\services\meetings_service.dart:211:15 - undefined_identifier
+  error - Invalid constant value - lib\features\meetings\services\meetings_service.dart:212:19 - invalid_constant
+  error - Invalid constant value - lib\features\meetings\services\meetings_service.dart:223:15 - invalid_constant
+  error - Undefined name 'Icons' - lib\features\meetings\services\meetings_service.dart:223:15 - undefined_identifier
+  error - Invalid constant value - lib\features\meetings\services\meetings_service.dart:224:19 - invalid_constant
+   info - The type name '_90In90Progress' isn't an UpperCamelCase identifier - lib\features\meetings\services\meetings_service.dart:235:7 - camel_case_types
+  error - Undefined class 'IconData' - lib\features\meetings\services\meetings_service.dart:276:9 - undefined_class
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\models\mindfulness_models.dart:35:26 - const_with_non_constant_argument
+  error - Undefined name 'Icons' - lib\features\mindfulness\models\mindfulness_models.dart:35:26 - undefined_identifier
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\models\mindfulness_models.dart:36:25 - const_with_non_constant_argument
+  error - Undefined name 'Icons' - lib\features\mindfulness\models\mindfulness_models.dart:36:25 - undefined_identifier
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\models\mindfulness_models.dart:37:34 - const_with_non_constant_argument
+  error - Undefined name 'Icons' - lib\features\mindfulness\models\mindfulness_models.dart:37:34 - undefined_identifier
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\models\mindfulness_models.dart:38:26 - const_with_non_constant_argument
+  error - Undefined name 'Icons' - lib\features\mindfulness\models\mindfulness_models.dart:38:26 - undefined_identifier
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\models\mindfulness_models.dart:39:37 - const_with_non_constant_argument
+  error - Undefined name 'Icons' - lib\features\mindfulness\models\mindfulness_models.dart:39:37 - undefined_identifier
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\models\mindfulness_models.dart:40:18 - const_with_non_constant_argument
+  error - Undefined name 'Icons' - lib\features\mindfulness\models\mindfulness_models.dart:40:18 - undefined_identifier
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\models\mindfulness_models.dart:41:29 - const_with_non_constant_argument
+  error - Undefined name 'Icons' - lib\features\mindfulness\models\mindfulness_models.dart:41:29 - undefined_identifier
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\models\mindfulness_models.dart:42:30 - const_with_non_constant_argument
+  error - Undefined name 'Icons' - lib\features\mindfulness\models\mindfulness_models.dart:42:30 - undefined_identifier
+  error - Undefined class 'IconData' - lib\features\mindfulness\models\mindfulness_models.dart:45:9 - undefined_class
+warning - Unused import: 'package:intl/intl.dart' - lib\features\mindfulness\screens\mindfulness_library_screen.dart:2:8 - unused_import
+warning - Unused import: '../widgets/audio_player_widget.dart' - lib\features\mindfulness\screens\mindfulness_library_screen.dart:8:8 - unused_import
+   info - Use 'const' with the constructor to improve performance - lib\features\mindfulness\screens\mindfulness_library_screen.dart:184:11 - prefer_const_constructors
+  error - Invalid constant value - lib\features\mindfulness\screens\mindfulness_library_screen.dart:301:44 - invalid_constant
+  error - The getter 'xxs' isn't defined for the type 'AppSpacing' - lib\features\mindfulness\screens\mindfulness_library_screen.dart:301:55 - undefined_getter
+  error - Invalid constant value - lib\features\mindfulness\screens\mindfulness_library_screen.dart:399:46 - invalid_constant
+  error - The getter 'xxs' isn't defined for the type 'AppSpacing' - lib\features\mindfulness\screens\mindfulness_library_screen.dart:399:57 - undefined_getter
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:15:3 - ambiguous_import
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:15:24 - ambiguous_import
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:23:3 - ambiguous_import
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:29:35 - ambiguous_import
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:30:35 - ambiguous_import
+  error - The getter 'playerCompleteStream' isn't defined for the type 'AudioPlayer' - lib\features\mindfulness\services\mindfulness_audio_service.dart:70:13 - undefined_getter
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:71:16 - ambiguous_import
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:76:21 - ambiguous_import
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:78:16 - ambiguous_import
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:81:16 - ambiguous_import
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:83:16 - ambiguous_import
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:85:16 - ambiguous_import
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:93:14 - ambiguous_import
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:103:16 - ambiguous_import
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:106:16 - ambiguous_import
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:118:16 - ambiguous_import
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:121:16 - ambiguous_import
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:130:14 - ambiguous_import
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:146:14 - ambiguous_import
+  error - The name 'PlayerState' is defined in the libraries 'package:just_audio/just_audio.dart' and 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart' - lib\features\mindfulness\services\mindfulness_audio_service.dart:191:14 - ambiguous_import
+warning - Unused import: 'package:intl/intl.dart' - lib\features\mindfulness\widgets\audio_player_widget.dart:2:8 - unused_import
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\widgets\audio_player_widget.dart:180:28 - const_with_non_constant_argument
+  error - The getter 'replay_15' isn't defined for the type 'Icons' - lib\features\mindfulness\widgets\audio_player_widget.dart:180:34 - undefined_getter
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\widgets\audio_player_widget.dart:221:28 - const_with_non_constant_argument
+  error - The getter 'forward_15' isn't defined for the type 'Icons' - lib\features\mindfulness\widgets\audio_player_widget.dart:221:34 - undefined_getter
+  error - Invalid constant value - lib\features\mindfulness\widgets\audio_player_widget.dart:237:41 - invalid_constant
+   info - Unnecessary use of 'toList' in a spread - lib\features\mindfulness\widgets\audio_player_widget.dart:254:16 - unnecessary_to_list_in_spreads
+warning - The value of the field '_timeoutOptions' isn't used - lib\features\profile\screens\security_settings_screen.dart:23:19 - unused_field
+warning - The value of the local variable 'reminderAccentColor' isn't used - lib\features\profile\screens\settings_screen.dart:242:21 - unused_local_variable
+   info - Use 'const' with the constructor to improve performance - lib\features\progress\widgets\progress_charts.dart:56:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\progress\widgets\progress_charts.dart:62:28 - prefer_const_constructors
+  error - The getter 'mood_outline' isn't defined for the type 'Icons' - lib\features\progress\widgets\progress_charts.dart:166:24 - undefined_getter
+   info - Use 'const' with the constructor to improve performance - lib\features\progress\widgets\progress_charts.dart:224:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\progress\widgets\progress_charts.dart:230:28 - prefer_const_constructors
+  error - The getter 'water_drop_outline' isn't defined for the type 'Icons' - lib\features\progress\widgets\progress_charts.dart:334:24 - undefined_getter
+  error - Undefined name 'StepStatus' - lib\features\progress\widgets\progress_charts.dart:501:66 - undefined_identifier
+  error - Undefined name 'StepStatus' - lib\features\progress\widgets\progress_charts.dart:502:67 - undefined_identifier
+  error - Undefined name 'StepStatus' - lib\features\progress\widgets\progress_charts.dart:560:42 - undefined_identifier
+  error - Undefined name 'StepStatus' - lib\features\progress\widgets\progress_charts.dart:562:48 - undefined_identifier
+   info - Unnecessary use of 'toList' in a spread - lib\features\progress\widgets\progress_charts.dart:582:14 - unnecessary_to_list_in_spreads
+   info - Don't invoke 'print' in production code - scripts\generate_icons.dart:10:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons.dart:19:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons.dart:23:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons.dart:27:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons.dart:30:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons.dart:31:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons.dart:32:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons.dart:33:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons.dart:34:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons.dart:35:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons.dart:36:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons.dart:37:3 - avoid_print
+  error - The function 'Canvas' isn't defined - scripts\generate_icons.dart:43:18 - undefined_function
+  error - The function 'Paint' isn't defined - scripts\generate_icons.dart:47:17 - undefined_function
+  error - The name 'Color' isn't a class - scripts\generate_icons.dart:47:40 - creation_with_non_type
+  error - Undefined name 'Rect' - scripts\generate_icons.dart:48:19 - undefined_identifier
+  error - The function 'Canvas' isn't defined - scripts\generate_icons.dart:67:18 - undefined_function
+  error - The function 'Canvas' isn't defined - scripts\generate_icons.dart:87:18 - undefined_function
+  error - Undefined class 'Canvas' - scripts\generate_icons.dart:105:25 - undefined_class
+  error - The name 'Color' isn't a class - scripts\generate_icons.dart:115:30 - creation_with_non_type
+  error - The name 'Color' isn't a class - scripts\generate_icons.dart:116:28 - creation_with_non_type
+  error - The function 'Paint' isn't defined - scripts\generate_icons.dart:152:23 - undefined_function
+  error - The function 'Offset' isn't defined - scripts\generate_icons.dart:154:5 - undefined_function
+  error - Undefined class 'Canvas' - scripts\generate_icons.dart:162:3 - undefined_class
+  error - Undefined class 'Color' - scripts\generate_icons.dart:168:3 - undefined_class
+  error - The function 'Paint' isn't defined - scripts\generate_icons.dart:170:17 - undefined_function
+  error - Undefined name 'RRect' - scripts\generate_icons.dart:171:16 - undefined_identifier
+  error - Undefined name 'Rect' - scripts\generate_icons.dart:172:5 - undefined_identifier
+  error - Undefined name 'Radius' - scripts\generate_icons.dart:173:5 - undefined_identifier
+   info - Don't invoke 'print' in production code - scripts\generate_icons_image.dart:10:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_image.dart:19:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_image.dart:23:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_image.dart:27:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_image.dart:30:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_image.dart:31:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_image.dart:32:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_image.dart:33:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_image.dart:34:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_image.dart:35:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_image.dart:36:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_image.dart:37:3 - avoid_print
+  error - The function 'getColor' isn't defined - scripts\generate_icons_image.dart:45:30 - undefined_function
+warning - The '!' will have no effect because the receiver can't be null - scripts\generate_icons_image.dart:53:35 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - scripts\generate_icons_image.dart:68:35 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - scripts\generate_icons_image.dart:83:35 - unnecessary_non_null_assertion
+  error - The function 'getColor' isn't defined - scripts\generate_icons_image.dart:97:28 - undefined_function
+  error - The function 'getColor' isn't defined - scripts\generate_icons_image.dart:98:26 - undefined_function
+  error - The function 'getColorRgba' isn't defined - scripts\generate_icons_image.dart:99:27 - undefined_function
+  error - The function 'Rectangle' isn't defined - scripts\generate_icons_image.dart:161:20 - undefined_function
+  error - The named parameter 'x1' is required, but there's no corresponding argument - scripts\generate_icons_image.dart:164:7 - missing_required_argument
+  error - The named parameter 'x2' is required, but there's no corresponding argument - scripts\generate_icons_image.dart:164:7 - missing_required_argument
+  error - The named parameter 'y1' is required, but there's no corresponding argument - scripts\generate_icons_image.dart:164:7 - missing_required_argument
+  error - The named parameter 'y2' is required, but there's no corresponding argument - scripts\generate_icons_image.dart:164:7 - missing_required_argument
+  error - Too many positional arguments: 1 expected, but 2 found - scripts\generate_icons_image.dart:164:23 - extra_positional_arguments_could_be_named
+  error - The argument type 'int' can't be assigned to the parameter type 'Color'.  - scripts\generate_icons_image.dart:164:36 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:167:21 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:167:31 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:167:40 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:168:21 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:168:32 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:168:41 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:169:21 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:169:32 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:169:44 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:170:21 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:170:31 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:170:43 - argument_type_not_assignable
+  error - The named parameter 'radius' is required, but there's no corresponding argument - scripts\generate_icons_image.dart:186:7 - missing_required_argument
+  error - The named parameter 'x' is required, but there's no corresponding argument - scripts\generate_icons_image.dart:186:7 - missing_required_argument
+  error - The named parameter 'y' is required, but there's no corresponding argument - scripts\generate_icons_image.dart:186:7 - missing_required_argument
+  error - Too many positional arguments: 1 expected, but 4 found - scripts\generate_icons_image.dart:186:25 - extra_positional_arguments_could_be_named
+  error - The argument type 'int' can't be assigned to the parameter type 'Color'.  - scripts\generate_icons_image.dart:186:43 - argument_type_not_assignable
+   info - Don't invoke 'print' in production code - scripts\generate_icons_pure.dart:9:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_pure.dart:18:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_pure.dart:22:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_pure.dart:26:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_pure.dart:29:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_pure.dart:30:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_pure.dart:31:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_pure.dart:32:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_pure.dart:33:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_pure.dart:34:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_pure.dart:35:3 - avoid_print
+   info - Don't invoke 'print' in production code - scripts\generate_icons_pure.dart:36:3 - avoid_print
+  error - Invalid constant value - test\meetings_service_test.dart:115:17 - invalid_constant
+  error - Undefined name 'Icons' - test\meetings_service_test.dart:115:17 - undefined_identifier
+  error - Invalid constant value - test\meetings_service_test.dart:129:17 - invalid_constant
+  error - Undefined name 'Icons' - test\meetings_service_test.dart:129:17 - undefined_identifier
+   info - Use 'const' with the constructor to improve performance - test\meetings_stats_screen_test.dart:98:17 - prefer_const_constructors
+  error - Invalid constant value - test\meetings_stats_screen_test.dart:157:19 - invalid_constant
+  error - The function '_StatCard' isn't defined - test\meetings_stats_screen_test.dart:157:19 - undefined_function
+  error - Invalid constant value - test\meetings_stats_screen_test.dart:188:19 - invalid_constant
+  error - The function '_AchievementCard' isn't defined - test\meetings_stats_screen_test.dart:188:19 - undefined_function
+  error - Invalid constant value - test\meetings_stats_screen_test.dart:212:19 - invalid_constant
+  error - The function '_AchievementCard' isn't defined - test\meetings_stats_screen_test.dart:212:19 - undefined_function
+  error - Directives must appear before any declarations - test\meetings_stats_screen_test.dart:225:1 - directive_after_declaration
+  error - Directives must appear before any declarations - test\meetings_stats_screen_test.dart:226:1 - directive_after_declaration
+warning - The value of the local variable 'initialState' isn't used - test\voice_recording_service_test.dart:74:15 - unused_local_variable
+

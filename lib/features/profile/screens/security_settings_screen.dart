@@ -20,7 +20,6 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
   bool _biometricAvailable = false;
   bool _isRotatingKey = false;
   int _lockTimeoutMinutes = 0;
-  final List<int> _timeoutOptions = [0, 1, 5, 15, 30, 60];
 
   @override
   void initState() {

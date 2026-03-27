@@ -3,16 +3,18 @@ import 'package:flutter/foundation.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:record/record.dart';
 import 'permissions_service.dart';
+import 'logger_service.dart';
 
 /// Voice recording service for journal dictation
 class VoiceRecordingService extends ChangeNotifier {
   static final VoiceRecordingService _instance = VoiceRecordingService._internal();
   factory VoiceRecordingService() => _instance;
   VoiceRecordingService._internal();
+  final _logger = LoggerService();
 
   final stt.SpeechToText _speech = stt.SpeechToText();
   final AudioRecorder _audioRecorder = AudioRecorder();
-  
+
   bool _isListening = false;
   bool _isRecording = false;
   String _recognizedText = '';
@@ -33,19 +35,19 @@ class VoiceRecordingService extends ChangeNotifier {
       // Request microphone permission first
       final permissionsService = PermissionsService();
       final hasPermission = await permissionsService.hasMicrophonePermission();
-      
+
       if (!hasPermission) {
         final granted = await permissionsService.requestMicrophonePermission();
         if (!granted) {
-          debugPrint('Microphone permission denied');
+          _logger.warning('Microphone permission denied');
           return false;
         }
       }
 
       bool available = await _speech.initialize(
-        onError: (error) => debugPrint('Speech recognition error: $error'),
+        onError: (error) => _logger.error('Speech recognition error', error: error),
         onStatus: (status) {
-          debugPrint('Speech recognition status: $status');
+          _logger.debug('Speech recognition status: $status');
           if (status == 'done' || status == 'notListening') {
             _isListening = false;
             notifyListeners();
@@ -53,8 +55,8 @@ class VoiceRecordingService extends ChangeNotifier {
         },
       );
       return available;
-    } catch (e) {
-      debugPrint('Failed to initialize speech recognition: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to initialize speech recognition', error: e, stackTrace: stackTrace);
       return false;
     }
   }
@@ -62,7 +64,7 @@ class VoiceRecordingService extends ChangeNotifier {
   /// Check if speech recognition is available
   Future<bool> isAvailable() async {
     try {
-      return await _speech.isAvailable();
+      return _speech.isAvailable;
     } catch (e) {
       return false;
     }
@@ -87,12 +89,14 @@ class VoiceRecordingService extends ChangeNotifier {
         localeId: 'en_US',
         listenFor: const Duration(minutes: 5),
         pauseFor: const Duration(seconds: 3),
-        partialResults: true,
-        cancelOnError: true,
-        listenMode: stt.ListenMode.dictation,
+        listenOptions: stt.SpeechListenOptions(
+          partialResults: true,
+          cancelOnError: true,
+          listenMode: stt.ListenMode.dictation,
+        ),
       );
-    } catch (e) {
-      debugPrint('Failed to start listening: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to start listening', error: e, stackTrace: stackTrace);
       _isListening = false;
       notifyListeners();
       rethrow;
@@ -105,8 +109,8 @@ class VoiceRecordingService extends ChangeNotifier {
       await _speech.stop();
       _isListening = false;
       notifyListeners();
-    } catch (e) {
-      debugPrint('Failed to stop listening: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to stop listening', error: e, stackTrace: stackTrace);
     }
   }
 
@@ -132,15 +136,15 @@ class VoiceRecordingService extends ChangeNotifier {
     try {
       final permissionsService = PermissionsService();
       final hasPermission = await permissionsService.hasMicrophonePermission();
-      
+
       if (!hasPermission) {
         // Request permission
         return await permissionsService.requestMicrophonePermission();
       }
-      
+
       return hasPermission;
-    } catch (e) {
-      debugPrint('Permission check failed: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Permission check failed', error: e, stackTrace: stackTrace);
       return false;
     }
   }
@@ -170,8 +174,8 @@ class VoiceRecordingService extends ChangeNotifier {
         ),
         path: '$path.m4a',
       );
-    } catch (e) {
-      debugPrint('Failed to start recording: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to start recording', error: e, stackTrace: stackTrace);
       _isRecording = false;
       notifyListeners();
       rethrow;
@@ -188,8 +192,8 @@ class VoiceRecordingService extends ChangeNotifier {
       final path = await _audioRecorder.stop();
       _recordingPath = path;
       return path;
-    } catch (e) {
-      debugPrint('Failed to stop recording: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to stop recording', error: e, stackTrace: stackTrace);
       _isRecording = false;
       notifyListeners();
       return null;
@@ -204,8 +208,8 @@ class VoiceRecordingService extends ChangeNotifier {
       _isRecording = false;
       _recordingPath = null;
       notifyListeners();
-    } catch (e) {
-      debugPrint('Failed to cancel recording: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to cancel recording', error: e, stackTrace: stackTrace);
     }
   }
 

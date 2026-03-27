@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Design system typography tokens
 /// Uses Nunito — warm, rounded, and highly readable for a recovery app.
-/// Enhanced hierarchy for Meta/Google-level scanability (3-second rule).
+/// Enhanced hierarchy for Meta/Google-level scannability (3-second rule).
 class AppTypography {
   AppTypography._();
 

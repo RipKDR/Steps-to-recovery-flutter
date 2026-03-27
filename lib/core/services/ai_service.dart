@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../app_config.dart';
 import '../constants/crisis_constants.dart';
 import '../models/database_models.dart';
+import 'logger_service.dart';
 
 abstract class CompanionResponder {
   bool get isCloudAvailable;
@@ -25,6 +26,7 @@ class AiService implements CompanionResponder {
 
   final String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
   final String _apiKey = AppConfig.resolvedGoogleAiApiKey;
+  final _logger = LoggerService();
 
   bool get isEnabled =>
       _apiKey.isNotEmpty ||
@@ -33,6 +35,11 @@ class AiService implements CompanionResponder {
   bool get _useEdgeFunction => AppConfig.aiChatEdgeFunctionUrl.isNotEmpty;
   bool get _useOpenClaw =>
       !_useEdgeFunction && AppConfig.hasOpenClaw;
+  
+  /// Check if using direct API key (NOT recommended for production)
+  bool get _isUsingDirectApiKey =>
+      !_useEdgeFunction && !_useOpenClaw && _apiKey.isNotEmpty;
+  
   @override
   bool get isCloudAvailable => isEnabled;
 
@@ -52,6 +59,9 @@ class AiService implements CompanionResponder {
   }
 
   /// Send a message to the AI and get a response
+  /// 
+  /// SECURITY: Prefers server-side edge functions to keep API keys off-device.
+  /// Direct Google AI API calls are only for local development.
   Future<String> chat({
     required String message,
     required String userId,
@@ -60,6 +70,15 @@ class AiService implements CompanionResponder {
   }) async {
     if (!isEnabled) {
       return 'AI companion is not configured. Please add your API key in settings.';
+    }
+
+    // Warn if using direct API key (should only happen in development)
+    if (_isUsingDirectApiKey && !kDebugMode) {
+      _logger.error(
+        'SECURITY WARNING: Using direct Google AI API key in production. '
+        'This exposes the API key in the client binary. '
+        'Please configure Supabase edge functions or OpenClaw gateway instead.',
+      );
     }
 
     try {
@@ -79,6 +98,11 @@ class AiService implements CompanionResponder {
         );
       }
 
+      // Direct API call - only for development
+      if (kDebugMode) {
+        _logger.debug('Using direct Google AI API (development mode only)');
+      }
+      
       final prompt = buildChatPrompt(
         message: message,
         conversationHistory: conversationHistory,
@@ -105,11 +129,11 @@ class AiService implements CompanionResponder {
         return data['candidates']?[0]?['content']?['parts']?[0]?['text'] ??
             'I\'m here for you. Tell me more about how you\'re feeling.';
       } else {
-        debugPrint('AI API error: ${response.statusCode} - ${response.body}');
+        _logger.error('AI API error', error: '${response.statusCode} - ${response.body}');
         return 'I\'m having trouble connecting right now. Please know that I\'m here for you when I\'m back online.';
       }
-    } catch (e) {
-      debugPrint('AI service error: $e');
+    } catch (e, stackTrace) {
+      _logger.error('AI service error', error: e, stackTrace: stackTrace);
       return 'Something went wrong. Please try again later.';
     }
   }
@@ -247,9 +271,9 @@ class AiService implements CompanionResponder {
         return data['choices']?[0]?['message']?['content'] ??
             "I'm here for you. Tell me more about how you're feeling.";
       }
-      debugPrint('OpenClaw error: ${response.statusCode} - ${response.body}');
-    } catch (e) {
-      debugPrint('OpenClaw connection error: $e');
+      _logger.error('OpenClaw error', error: '${response.statusCode} - ${response.body}');
+    } catch (e, stackTrace) {
+      _logger.error('OpenClaw connection error', error: e, stackTrace: stackTrace);
     }
 
     return "I'm having trouble connecting right now. Please know that I'm here for you when I'm back online.";
@@ -300,8 +324,7 @@ class AiService implements CompanionResponder {
           'I\'m here for you. Tell me more about how you\'re feeling.';
     }
 
-    debugPrint(
-        'Edge function error: ${response.statusCode} - ${response.body}');
+    _logger.error('Edge function error', error: '${response.statusCode} - ${response.body}');
     return 'I\'m having trouble connecting right now. Please know that I\'m here for you when I\'m back online.';
   }
 
@@ -376,8 +399,8 @@ Keep the response focused and practical.
         return data['candidates']?[0]?['content']?['parts']?[0]?['text'] ??
             'Keep working through the questions. Take your time with this step.';
       }
-    } catch (e) {
-      debugPrint('Step guidance error: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Step guidance error', error: e, stackTrace: stackTrace);
     }
 
     return 'Take your time with Step $stepNumber. Consider discussing with your sponsor.';

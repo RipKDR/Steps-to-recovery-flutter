@@ -17,12 +17,14 @@ void main() {
         home: JournalEditorScreen(),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     await tester.enterText(find.widgetWithText(TextField, 'Entry title'), 'Evening check-in');
     await tester.enterText(find.widgetWithText(TextField, 'Write your thoughts...'), 'I stayed clean today.');
     await tester.tap(find.text('Save'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     final entries = await DatabaseService().getJournalEntries();
     expect(entries, hasLength(1));
@@ -38,7 +40,8 @@ void main() {
         home: MeetingDetailScreen(meetingId: meeting.id),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text(meeting.name), findsOneWidget);
     expect(find.textContaining('Directions'), findsOneWidget);

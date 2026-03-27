@@ -4,6 +4,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 
 import '../constants/app_constants.dart';
+import 'logger_service.dart';
 
 abstract class ReminderScheduler {
   Future<void> syncDailyCheckInReminders({
@@ -229,7 +230,7 @@ class NotificationService implements ReminderScheduler {
 
   void _onNotificationTapped(NotificationResponse response) {
     // Handle notification tap
-    debugPrint('Notification tapped: ${response.payload}');
+    LoggerService().debug('Notification tapped: ${response.payload}');
   }
 
   Future<void> _createChannels() async {

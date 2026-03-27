@@ -165,6 +165,9 @@ class AppStateService extends ChangeNotifier {
     if (_sobrietyDate != null) {
       unawaited(
         MilestoneService().checkAndScheduleApproachNotifications(_sobrietyDate!),
+        MilestoneService().checkAndScheduleApproachNotifications(
+          _sobrietyDate!,
+        ),
       );
     }
 
@@ -229,33 +232,43 @@ class AppStateService extends ChangeNotifier {
       throw ArgumentError('Email and password are required.');
     }
 
-    final account = _accounts.firstWhere(
-      (entry) => entry.email == normalizedEmail,
-      orElse: () => throw StateError('No local account exists for that email.'),
-    );
+    try {
+      final account = _accounts.firstWhere(
+        (entry) => entry.email == normalizedEmail,
+        orElse: () =>
+            throw StateError('No local account exists for that email.'),
+      );
 
-    final hash = _hashPassword(trimmedPassword, account.salt);
-    if (hash != account.passwordHash) {
-      throw StateError('Incorrect password.');
+      final hash = _hashPassword(trimmedPassword, account.salt);
+      if (hash != account.passwordHash) {
+        throw StateError('Incorrect password.');
+      }
+
+      // Successful login - clear failed attempts
+      await _clearFailedAttempts();
+
+      _signedIn = true;
+      _sessionToken = _uuid.v4();
+      _email = normalizedEmail;
+      _displayName = displayName?.trim().isNotEmpty == true
+          ? displayName!.trim()
+          : account.displayName;
+      _userId = account.userId;
+      _sobrietyDate = sobrietyDate ?? _sobrietyDate;
+      _programType = programType?.trim().isNotEmpty == true
+          ? programType!.trim()
+          : _programType;
+
+      await DatabaseService().setActiveUser(account.userId);
+      await _ensureCurrentUserProfile();
+      await _syncCurrentUserProfile();
+      await _persistSession();
+      notifyListeners();
+    } catch (e) {
+      // Record failed attempt for any error
+      await _recordFailedAttempt();
+      rethrow;
     }
-
-    _signedIn = true;
-    _sessionToken = _uuid.v4();
-    _email = normalizedEmail;
-    _displayName = displayName?.trim().isNotEmpty == true
-        ? displayName!.trim()
-        : account.displayName;
-    _userId = account.userId;
-    _sobrietyDate = sobrietyDate ?? _sobrietyDate;
-    _programType = programType?.trim().isNotEmpty == true
-        ? programType!.trim()
-        : _programType;
-
-    await DatabaseService().setActiveUser(account.userId);
-    await _ensureCurrentUserProfile();
-    await _syncCurrentUserProfile();
-    await _persistSession();
-    notifyListeners();
   }
 
   Future<void> signUp({
@@ -340,9 +353,9 @@ class AppStateService extends ChangeNotifier {
   /// Request password reset email via Supabase
   Future<void> resetPassword(String email) async {
     await initialize();
-    
+
     final normalizedEmail = email.trim().toLowerCase();
-    
+
     // Check if Supabase is configured
     if (!hasSupabaseConfig) {
       throw StateError(
@@ -352,18 +365,11 @@ class AppStateService extends ChangeNotifier {
     }
 
     try {
-      // Initialize Supabase if not already done
-      if (Supabase.instance.client == null) {
-        await Supabase.initialize(
-          url: supabaseUrl,
-          anonKey: supabaseAnonKey,
-        );
-      }
-
       // Request password reset
       await Supabase.instance.client.auth.resetPasswordForEmail(
         normalizedEmail,
-        redirectTo: 'steps-to-recovery://reset-password', // Deep link for mobile
+        redirectTo:
+            'steps-to-recovery://reset-password', // Deep link for mobile
       );
     } catch (e) {
       // Handle common errors
@@ -494,8 +500,8 @@ class AppStateService extends ChangeNotifier {
     final modeStr = mode == ThemeMode.light
         ? 'light'
         : mode == ThemeMode.system
-            ? 'system'
-            : 'dark';
+        ? 'system'
+        : 'dark';
     await _prefs?.setString(_keyThemeMode, modeStr);
     notifyListeners();
   }

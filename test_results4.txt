@@ -1,0 +1,50 @@
+00:00 +0: loading C:/Users/H/Steps-to-recovery-flutter/test/grounding_exercises_screen_test.dart
+00:00 +0: C:/Users/H/Steps-to-recovery-flutter/test/grounding_exercises_screen_test.dart: GroundingExercisesScreen displays all four exercises
+00:01 +1: C:/Users/H/Steps-to-recovery-flutter/test/grounding_exercises_screen_test.dart: GroundingExercisesScreen displays app bar with title
+00:01 +2: C:/Users/H/Steps-to-recovery-flutter/test/grounding_exercises_screen_test.dart: GroundingExercisesScreen each exercise card is tappable
+00:01 +3: C:/Users/H/Steps-to-recovery-flutter/test/grounding_exercises_screen_test.dart: GroundingExercisesScreen displays exercise descriptions
+00:01 +4: C:/Users/H/Steps-to-recovery-flutter/test/grounding_exercises_screen_test.dart: GroundingExercisesScreen uses proper spacing and layout
+00:01 +5: C:/Users/H/Steps-to-recovery-flutter/test/grounding_exercises_screen_test.dart: 5-4-3-2-1 Exercise displays all sensory steps
+00:01 +6: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +7: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +8: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +9: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +10: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +11: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +12: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +13: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +14: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +15: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +16: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +17: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +18: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +19: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +20: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +21: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +22: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +23: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +24: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +25: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +26: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +27: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +28: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +29: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +30: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+00:02 +31: C:/Users/H/Steps-to-recovery-flutter/test/widget_test.dart: App boots
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+Γöé #0   LoggerService.debug (package:steps_recovery_flutter/core/services/logger_service.dart:23:15)
+Γöé #1   EncryptionService.initialize (package:steps_recovery_flutter/core/services/encryption_service.dart:61:23)
+Γö£ΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöä
+Γöé 11:54:06.636 (+0:00:00.000000)
+Γö£ΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöä
+Γöé ≡ƒÉ¢ Encryption service initialized with secure storage
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+Γöé #0   LoggerService.debug (package:steps_recovery_flutter/core/services/logger_service.dart:23:15)
+Γöé #1   DatabaseService.initialize (package:steps_recovery_flutter/core/services/database_service.dart:77:21)
+Γö£ΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöä
+Γöé 11:54:06.636 (+0:00:00.000000)
+Γö£ΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöä
+Γöé ≡ƒÉ¢ DatabaseService initialized (encryption secure: true)
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+00:03 +32: All tests passed!

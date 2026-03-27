@@ -2,6 +2,8 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:permission_handler/permission_handler.dart';
 
+import 'logger_service.dart';
+
 /// Handles runtime permissions for Android 6.0+ and iOS
 class PermissionsService {
   static final PermissionsService _instance = PermissionsService._internal();
@@ -14,10 +16,14 @@ class PermissionsService {
 
     try {
       final status = await Permission.microphone.request();
-      debugPrint('Microphone permission status: $status');
+      LoggerService().debug('Microphone permission status: $status');
       return status.isGranted;
-    } catch (e) {
-      debugPrint('Failed to request microphone permission: $e');
+    } catch (e, stackTrace) {
+      LoggerService().error(
+        'Failed to request microphone permission',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return false;
     }
   }
@@ -29,10 +35,14 @@ class PermissionsService {
 
     try {
       final status = await Permission.speech.request();
-      debugPrint('Speech recognition permission status: $status');
+      LoggerService().debug('Speech recognition permission status: $status');
       return status.isGranted;
-    } catch (e) {
-      debugPrint('Failed to request speech recognition permission: $e');
+    } catch (e, stackTrace) {
+      LoggerService().error(
+        'Failed to request speech recognition permission',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return false;
     }
   }
@@ -43,10 +53,14 @@ class PermissionsService {
 
     try {
       final status = await Permission.locationWhenInUse.request();
-      debugPrint('Location permission status: $status');
+      LoggerService().debug('Location permission status: $status');
       return status.isGranted;
-    } catch (e) {
-      debugPrint('Failed to request location permission: $e');
+    } catch (e, stackTrace) {
+      LoggerService().error(
+        'Failed to request location permission',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return false;
     }
   }
@@ -57,10 +71,14 @@ class PermissionsService {
 
     try {
       final status = await Permission.phone.request();
-      debugPrint('Phone permission status: $status');
+      LoggerService().debug('Phone permission status: $status');
       return status.isGranted;
-    } catch (e) {
-      debugPrint('Failed to request phone permission: $e');
+    } catch (e, stackTrace) {
+      LoggerService().error(
+        'Failed to request phone permission',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return false;
     }
   }
@@ -93,8 +111,12 @@ class PermissionsService {
   Future<void> openAppSettings() async {
     try {
       await openAppSettings();
-    } catch (e) {
-      debugPrint('Failed to open app settings: $e');
+    } catch (e, stackTrace) {
+      LoggerService().error(
+        'Failed to open app settings',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 

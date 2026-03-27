@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../../core/services/voice_recording_service.dart';
 
 /// Voice input button for journal dictation
@@ -8,11 +9,7 @@ class VoiceInputButton extends StatefulWidget {
   final void Function(String text)? onRecognizedText;
   final void Function(String text)? onFinalText;
 
-  const VoiceInputButton({
-    super.key,
-    this.onRecognizedText,
-    this.onFinalText,
-  });
+  const VoiceInputButton({super.key, this.onRecognizedText, this.onFinalText});
 
   @override
   State<VoiceInputButton> createState() => _VoiceInputButtonState();
@@ -20,7 +17,7 @@ class VoiceInputButton extends StatefulWidget {
 
 class _VoiceInputButtonState extends State<VoiceInputButton> {
   final _service = VoiceRecordingService();
-  bool _isInitialized = false;
+  bool _isLoading = true;
   bool _isAvailable = false;
   String _currentText = '';
 
@@ -31,14 +28,18 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
   }
 
   Future<void> _initialize() async {
-    _isInitialized = await _service.initialize();
-    _isAvailable = await _service.isAvailable();
-    if (mounted) setState(() {});
+    final success = await _service.initialize();
+    _isAvailable = success && await _service.isAvailable();
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_isInitialized) {
+    if (_isLoading) {
       return const SizedBox(
         width: 40,
         height: 40,
@@ -47,10 +48,10 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
     }
 
     if (!_isAvailable) {
-      return Tooltip(
+      return const Tooltip(
         message: 'Speech recognition not available',
         child: IconButton(
-          icon: const Icon(Icons.mic_off),
+          icon: Icon(Icons.mic_off),
           onPressed: null,
           color: AppColors.textMuted,
         ),
@@ -76,9 +77,7 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
                       ? const LinearGradient(
                           colors: [AppColors.danger, AppColors.danger],
                         )
-                      : const LinearGradient(
-                          colors: AppColors.primaryGradient,
-                        ),
+                      : const LinearGradient(colors: AppColors.primaryGradient),
                   shape: BoxShape.circle,
                   boxShadow: isListening
                       ? [
@@ -90,7 +89,9 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
                         ]
                       : [
                           BoxShadow(
-                            color: AppColors.primaryAmber.withValues(alpha: 0.4),
+                            color: AppColors.primaryAmber.withValues(
+                              alpha: 0.4,
+                            ),
                             blurRadius: 12,
                             spreadRadius: 2,
                           ),
@@ -180,10 +181,7 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
 class AudioRecordButton extends StatefulWidget {
   final void Function(String? path)? onRecordingComplete;
 
-  const AudioRecordButton({
-    super.key,
-    this.onRecordingComplete,
-  });
+  const AudioRecordButton({super.key, this.onRecordingComplete});
 
   @override
   State<AudioRecordButton> createState() => _AudioRecordButtonState();
@@ -191,6 +189,7 @@ class AudioRecordButton extends StatefulWidget {
 
 class _AudioRecordButtonState extends State<AudioRecordButton> {
   final _service = VoiceRecordingService();
+  bool _isLoading = true;
   bool _hasPermission = false;
 
   @override
@@ -201,16 +200,28 @@ class _AudioRecordButtonState extends State<AudioRecordButton> {
 
   Future<void> _checkPermission() async {
     _hasPermission = await _service.hasPermission();
-    if (mounted) setState(() {});
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const SizedBox(
+        width: 40,
+        height: 40,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
+
     if (!_hasPermission) {
-      return Tooltip(
+      return const Tooltip(
         message: 'Microphone permission not granted',
         child: IconButton(
-          icon: const Icon(Icons.mic_off),
+          icon: Icon(Icons.mic_off),
           onPressed: null,
           color: AppColors.textMuted,
         ),

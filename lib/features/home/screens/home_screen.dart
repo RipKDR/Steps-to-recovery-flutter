@@ -11,6 +11,7 @@ import '../../../core/services/logger_service.dart';
 import '../../../core/services/milestone_service.dart';
 import '../../../core/services/preferences_service.dart';
 import '../../milestone/screens/milestone_celebration_screen.dart';
+import '../../milestone/widgets/milestone_share_card.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -28,6 +29,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final _repaintKey = GlobalKey();
   late Future<_HomeSnapshot> _snapshotFuture;
 
   @override
@@ -173,18 +175,39 @@ class _HomeScreenState extends State<HomeScreen> {
               foregroundColor: AppColors.textOnDark,
             ),
           ),
+          // Off-screen share card for PNG capture
+          bottomSheet: Offstage(
+            child: RepaintBoundary(
+              key: _repaintKey,
+              child: Builder(
+                builder: (_) {
+                  final shareContent = data.featuredShareContent;
+                  if (shareContent == null) return const SizedBox.shrink();
+                  // Extract achievement phrase or emojis if necessary, default 🎉
+                  return MilestoneShareCard(
+                    emoji: '🎉',
+                    title: shareContent.milestoneTitle,
+                    message: shareContent.shareText,
+                  );
+                },
+              ),
+            ),
+          ),
         );
       },
     );
   }
 
   Future<_HomeSnapshot> _loadSnapshot() async {
+    // Use batch method for better performance - single DB access instead of 6+ calls
     final database = DatabaseService();
-    final currentUser = await database.getCurrentUser();
-    final morning = await database.getTodayCheckIn(CheckInType.morning);
-    final evening = await database.getTodayCheckIn(CheckInType.evening);
-    final sponsor = await database.getSponsor(database.activeUserId ?? '');
-    final achievements = await database.getAchievements(isViewed: false);
+    final snapshot = await database.getHomeSnapshot();
+    
+    final currentUser = snapshot['user'] as UserProfile?;
+    final morning = snapshot['morningCheckIn'] as DailyCheckIn?;
+    final evening = snapshot['eveningCheckIn'] as DailyCheckIn?;
+    final sponsor = snapshot['sponsor'] as Contact?;
+    final achievements = snapshot['achievements'] as List<Achievement>;
     final unreadShareableMilestones =
         sortShareableMilestoneAchievements(achievements);
     final featuredAchievement = unreadShareableMilestones.isEmpty
@@ -221,9 +244,14 @@ class _HomeScreenState extends State<HomeScreen> {
       'event=achievement_share_tapped achievementKey=${featuredAchievement.achievementKey}',
     );
 
-    // TODO(viral-loop): Upgrade to PNG share using MilestoneShareCard — celebration screen already handles this.
+    XFile? shareFile;
+    if (_repaintKey.currentContext != null) {
+      shareFile = await MilestoneShareCard.capture(_repaintKey);
+    }
+
     final result = await SharePlus.instance.share(
       ShareParams(
+        files: shareFile != null ? [shareFile] : null,
         text: shareContent.shareText,
         subject: shareContent.shareSubject,
       ),

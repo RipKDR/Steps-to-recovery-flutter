@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../models/mindfulness_models.dart';
 import '../services/mindfulness_audio_service.dart';
-import '../widgets/audio_player_widget.dart';
 
 /// Mindfulness Library - Browse and play mindfulness tracks
 class MindfulnessLibraryScreen extends StatefulWidget {
   const MindfulnessLibraryScreen({super.key});
 
   @override
-  State<MindfulnessLibraryScreen> createState() => _MindfulnessLibraryScreenState();
+  State<MindfulnessLibraryScreen> createState() =>
+      _MindfulnessLibraryScreenState();
 }
 
 class _MindfulnessLibraryScreenState extends State<MindfulnessLibraryScreen> {
@@ -105,7 +104,9 @@ class _MindfulnessLibraryScreenState extends State<MindfulnessLibraryScreen> {
 
   List<MindfulnessTrack> get _filteredTracks {
     if (_selectedCategory == null) return _tracks;
-    return _tracks.where((track) => track.mindfulnessCategory == _selectedCategory).toList();
+    return _tracks
+        .where((track) => track.mindfulnessCategory == _selectedCategory)
+        .toList();
   }
 
   @override
@@ -119,7 +120,7 @@ class _MindfulnessLibraryScreenState extends State<MindfulnessLibraryScreen> {
         children: [
           // Category filter
           _buildCategoryFilter(),
-          
+
           // Track list
           Expanded(
             child: _filteredTracks.isEmpty
@@ -139,10 +140,9 @@ class _MindfulnessLibraryScreenState extends State<MindfulnessLibraryScreen> {
                     },
                   ),
           ),
-          
+
           // Mini player if a track is loaded
-          if (_showPlayer)
-            const _MiniPlayer(),
+          if (_showPlayer) const _MiniPlayer(),
         ],
       ),
     );
@@ -162,15 +162,17 @@ class _MindfulnessLibraryScreenState extends State<MindfulnessLibraryScreen> {
             onTap: () => setState(() => _selectedCategory = null),
           ),
           const SizedBox(width: AppSpacing.sm),
-          ...MindfulnessCategory.values.map((category) => Padding(
-            padding: const EdgeInsets.only(left: AppSpacing.sm),
-            child: _CategoryChip(
-              label: category.displayName,
-              icon: category.icon,
-              isSelected: _selectedCategory == category,
-              onTap: () => setState(() => _selectedCategory = category),
+          ...MindfulnessCategory.values.map(
+            (category) => Padding(
+              padding: const EdgeInsets.only(left: AppSpacing.sm),
+              child: _CategoryChip(
+                label: category.displayName,
+                icon: category.icon,
+                isSelected: _selectedCategory == category,
+                onTap: () => setState(() => _selectedCategory = category),
+              ),
             ),
-          )),
+          ),
         ],
       ),
     );
@@ -181,7 +183,7 @@ class _MindfulnessLibraryScreenState extends State<MindfulnessLibraryScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.mediation_outlined,
             size: 64,
             color: AppColors.textMuted,
@@ -189,7 +191,9 @@ class _MindfulnessLibraryScreenState extends State<MindfulnessLibraryScreen> {
           const SizedBox(height: AppSpacing.lg),
           Text(
             'No tracks in this category',
-            style: AppTypography.titleMedium.copyWith(color: AppColors.textMuted),
+            style: AppTypography.titleMedium.copyWith(
+              color: AppColors.textMuted,
+            ),
           ),
         ],
       ),
@@ -218,10 +222,7 @@ class _TrackCard extends StatelessWidget {
   final MindfulnessTrack track;
   final VoidCallback onTap;
 
-  const _TrackCard({
-    required this.track,
-    required this.onTap,
-  });
+  const _TrackCard({required this.track, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -238,21 +239,23 @@ class _TrackCard extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: track.mindfulnessCategory == MindfulnessCategory.craving
+                  color:
+                      track.mindfulnessCategory == MindfulnessCategory.craving
                       ? AppColors.info.withValues(alpha: 0.2)
                       : AppColors.primaryAmber.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
                 child: Icon(
                   track.mindfulnessCategory.icon,
-                  color: track.mindfulnessCategory == MindfulnessCategory.craving
+                  color:
+                      track.mindfulnessCategory == MindfulnessCategory.craving
                       ? AppColors.info
                       : AppColors.primaryAmber,
                   size: 28,
                 ),
               ),
               const SizedBox(width: AppSpacing.lg),
-              
+
               // Track info
               Expanded(
                 child: Column(
@@ -277,7 +280,9 @@ class _TrackCard extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: AppColors.primaryAmber,
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusSm,
+                              ),
                             ),
                             child: const Text(
                               'PRO',
@@ -294,19 +299,23 @@ class _TrackCard extends StatelessWidget {
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       track.description,
-                      style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textMuted,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: AppSpacing.xxs),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       track.durationFormatted,
-                      style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textMuted,
+                      ),
                     ),
                   ],
                 ),
               ),
-              
+
               // Play button
               const Icon(
                 Icons.play_circle_filled,
@@ -366,7 +375,7 @@ class _MiniPlayer extends StatelessWidget {
       builder: (context, _) {
         final service = MindfulnessAudioService();
         final track = service.currentTrack;
-        
+
         if (track == null) return const SizedBox.shrink();
 
         return Container(
@@ -396,10 +405,12 @@ class _MiniPlayer extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: AppSpacing.xxs),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         _formatPosition(service.position),
-                        style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textMuted,
+                        ),
                       ),
                     ],
                   ),

@@ -24,7 +24,7 @@ void main() {
 
       expect(find.text('988 Suicide & Crisis Lifeline'), findsOneWidget);
       expect(find.text('SAMHSA Helpline'), findsOneWidget);
-      expect(find.text('Emergency Contacts'), findsOneWidget);
+      expect(find.text('Emergency Hotlines'), findsOneWidget);
     });
 
     testWidgets('shows emergency contact action buttons', (tester) async {
@@ -38,9 +38,9 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify the support network section and contact cards
-      expect(find.text('Your Support Network'), findsOneWidget);
-      expect(find.text('Sponsor Name'), findsOneWidget);
-      expect(find.text('Support Friend'), findsOneWidget);
+      expect(find.text('Safe Dial'), findsOneWidget);
+      expect(find.text('Sponsor'), findsOneWidget);
+      expect(find.text('Friend'), findsOneWidget);
 
       // Verify phone icons are present for contact action buttons
       expect(find.byIcon(Icons.phone), findsWidgets);
@@ -117,6 +117,11 @@ void main() {
   group('CravingSurfScreen', () {
     testWidgets('renders the breathing exercise widget', (tester) async {
       await prepareTestState();
+
+      tester.view.physicalSize = const Size(800, 1800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
         const MaterialApp(

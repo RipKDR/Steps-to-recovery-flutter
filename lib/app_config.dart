@@ -49,11 +49,36 @@ class AppConfig {
       supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
   static bool get hasOpenClaw =>
       openclawGatewayUrl.isNotEmpty && openclawGatewayToken.isNotEmpty;
+  
+  /// Check if direct Google AI API key is configured (NOT recommended for production)
+  /// This should only be used for local development
+  static bool get hasDirectGoogleAiKey =>
+      googleAiApiKey.isNotEmpty || geminiApiKey.isNotEmpty;
+  
+  /// Get resolved Google AI API key (only for development)
   static String get resolvedGoogleAiApiKey =>
       googleAiApiKey.isNotEmpty ? googleAiApiKey : geminiApiKey;
 
   /// Edge function URL for AI chat (avoids shipping API key on device).
-  /// Priority: Supabase edge function → OpenClaw direct → Google AI direct
-  static String get aiChatEdgeFunctionUrl =>
-      hasSupabase ? '$supabaseUrl/functions/v1/chat' : '';
+  /// 
+  /// Priority: Supabase edge function → OpenClaw direct → Google AI direct (dev only)
+  /// 
+  /// SECURITY: In production, always use edge functions to keep API keys server-side.
+  /// Direct Google AI calls should only be used for local development.
+  static String get aiChatEdgeFunctionUrl {
+    // Prefer Supabase edge function (API key stays server-side)
+    if (hasSupabase) {
+      return '$supabaseUrl/functions/v1/chat';
+    }
+    // Fall back to OpenClaw gateway (also keeps key server-side)
+    if (hasOpenClaw) {
+      return openclawGatewayUrl;
+    }
+    // WARNING: Direct API key usage - only for development
+    // In production, this should never be used
+    return '';
+  }
+  
+  /// Check if server-side AI is available (preferred for production)
+  static bool get hasServerSideAi => hasSupabase || hasOpenClaw;
 }

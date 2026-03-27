@@ -237,12 +237,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           body: AnimatedBuilder(
             animation: AppStateService.instance,
             builder: (context, _) {
-              final remindersEnabled =
-                  AppStateService.instance.notificationsEnabled;
-              final reminderAccentColor = remindersEnabled
-                  ? AppColors.primaryAmber
-                  : Theme.of(context).disabledColor;
-
               return ListView(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 children: [

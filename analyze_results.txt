@@ -1,0 +1,99 @@
+Analyzing Steps-to-recovery-flutter...                          
+
+   info - Unnecessary use of 'toList' in a spread - lib\features\crisis\screens\grounding_exercises_screen.dart:193:14 - unnecessary_to_list_in_spreads
+   info - Unnecessary use of 'toList' in a spread - lib\features\crisis\screens\grounding_exercises_screen.dart:298:24 - unnecessary_to_list_in_spreads
+   info - Use 'const' with the constructor to improve performance - lib\features\meetings\screens\meetings_stats_screen.dart:49:15 - prefer_const_constructors
+  error - Invalid constant value - lib\features\meetings\services\meetings_service.dart:151:19 - invalid_constant
+  error - Invalid constant value - lib\features\meetings\services\meetings_service.dart:186:19 - invalid_constant
+  error - Invalid constant value - lib\features\meetings\services\meetings_service.dart:198:19 - invalid_constant
+  error - Invalid constant value - lib\features\meetings\services\meetings_service.dart:211:19 - invalid_constant
+  error - Invalid constant value - lib\features\meetings\services\meetings_service.dart:223:19 - invalid_constant
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\models\mindfulness_models.dart:35:26 - const_with_non_constant_argument
+  error - Undefined name 'Icons' - lib\features\mindfulness\models\mindfulness_models.dart:35:26 - undefined_identifier
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\models\mindfulness_models.dart:36:25 - const_with_non_constant_argument
+  error - Undefined name 'Icons' - lib\features\mindfulness\models\mindfulness_models.dart:36:25 - undefined_identifier
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\models\mindfulness_models.dart:37:34 - const_with_non_constant_argument
+  error - Undefined name 'Icons' - lib\features\mindfulness\models\mindfulness_models.dart:37:34 - undefined_identifier
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\models\mindfulness_models.dart:38:26 - const_with_non_constant_argument
+  error - Undefined name 'Icons' - lib\features\mindfulness\models\mindfulness_models.dart:38:26 - undefined_identifier
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\models\mindfulness_models.dart:39:37 - const_with_non_constant_argument
+  error - Undefined name 'Icons' - lib\features\mindfulness\models\mindfulness_models.dart:39:37 - undefined_identifier
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\models\mindfulness_models.dart:40:18 - const_with_non_constant_argument
+  error - Undefined name 'Icons' - lib\features\mindfulness\models\mindfulness_models.dart:40:18 - undefined_identifier
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\models\mindfulness_models.dart:41:29 - const_with_non_constant_argument
+  error - Undefined name 'Icons' - lib\features\mindfulness\models\mindfulness_models.dart:41:29 - undefined_identifier
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\models\mindfulness_models.dart:42:30 - const_with_non_constant_argument
+  error - Undefined name 'Icons' - lib\features\mindfulness\models\mindfulness_models.dart:42:30 - undefined_identifier
+  error - Undefined class 'IconData' - lib\features\mindfulness\models\mindfulness_models.dart:45:9 - undefined_class
+warning - Unused import: 'package:intl/intl.dart' - lib\features\mindfulness\screens\mindfulness_library_screen.dart:2:8 - unused_import
+warning - Unused import: '../widgets/audio_player_widget.dart' - lib\features\mindfulness\screens\mindfulness_library_screen.dart:8:8 - unused_import
+   info - Use 'const' with the constructor to improve performance - lib\features\mindfulness\screens\mindfulness_library_screen.dart:184:11 - prefer_const_constructors
+  error - Invalid constant value - lib\features\mindfulness\screens\mindfulness_library_screen.dart:301:44 - invalid_constant
+  error - The getter 'xxs' isn't defined for the type 'AppSpacing' - lib\features\mindfulness\screens\mindfulness_library_screen.dart:301:55 - undefined_getter
+  error - Invalid constant value - lib\features\mindfulness\screens\mindfulness_library_screen.dart:399:46 - invalid_constant
+  error - The getter 'xxs' isn't defined for the type 'AppSpacing' - lib\features\mindfulness\screens\mindfulness_library_screen.dart:399:57 - undefined_getter
+  error - The getter 'playerCompleteStream' isn't defined for the type 'AudioPlayer' - lib\features\mindfulness\services\mindfulness_audio_service.dart:70:13 - undefined_getter
+warning - Unused import: 'package:intl/intl.dart' - lib\features\mindfulness\widgets\audio_player_widget.dart:2:8 - unused_import
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\widgets\audio_player_widget.dart:180:28 - const_with_non_constant_argument
+  error - The getter 'replay_15' isn't defined for the type 'Icons' - lib\features\mindfulness\widgets\audio_player_widget.dart:180:34 - undefined_getter
+  error - Arguments of a constant creation must be constant expressions - lib\features\mindfulness\widgets\audio_player_widget.dart:221:28 - const_with_non_constant_argument
+  error - The getter 'forward_15' isn't defined for the type 'Icons' - lib\features\mindfulness\widgets\audio_player_widget.dart:221:34 - undefined_getter
+  error - Invalid constant value - lib\features\mindfulness\widgets\audio_player_widget.dart:237:41 - invalid_constant
+   info - Unnecessary use of 'toList' in a spread - lib\features\mindfulness\widgets\audio_player_widget.dart:254:16 - unnecessary_to_list_in_spreads
+   info - Use 'const' with the constructor to improve performance - lib\features\progress\widgets\progress_charts.dart:57:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\progress\widgets\progress_charts.dart:63:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\progress\widgets\progress_charts.dart:225:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\progress\widgets\progress_charts.dart:231:28 - prefer_const_constructors
+  error - The function 'Canvas' isn't defined - scripts\generate_icons.dart:44:18 - undefined_function
+  error - The function 'Paint' isn't defined - scripts\generate_icons.dart:48:17 - undefined_function
+  error - The name 'Color' isn't a class - scripts\generate_icons.dart:48:40 - creation_with_non_type
+  error - Undefined name 'Rect' - scripts\generate_icons.dart:49:19 - undefined_identifier
+  error - The function 'Canvas' isn't defined - scripts\generate_icons.dart:68:18 - undefined_function
+  error - The function 'Canvas' isn't defined - scripts\generate_icons.dart:88:18 - undefined_function
+  error - Undefined class 'Canvas' - scripts\generate_icons.dart:107:3 - undefined_class
+  error - The name 'Color' isn't a class - scripts\generate_icons.dart:122:30 - creation_with_non_type
+  error - The name 'Color' isn't a class - scripts\generate_icons.dart:123:28 - creation_with_non_type
+  error - The function 'Paint' isn't defined - scripts\generate_icons.dart:159:23 - undefined_function
+  error - The function 'Offset' isn't defined - scripts\generate_icons.dart:161:5 - undefined_function
+  error - Undefined class 'Canvas' - scripts\generate_icons.dart:169:3 - undefined_class
+  error - Undefined class 'Color' - scripts\generate_icons.dart:175:3 - undefined_class
+  error - The function 'Paint' isn't defined - scripts\generate_icons.dart:177:17 - undefined_function
+  error - Undefined name 'RRect' - scripts\generate_icons.dart:178:16 - undefined_identifier
+  error - Undefined name 'Rect' - scripts\generate_icons.dart:179:5 - undefined_identifier
+  error - Undefined name 'Radius' - scripts\generate_icons.dart:180:5 - undefined_identifier
+  error - The function 'getColor' isn't defined - scripts\generate_icons_image.dart:46:30 - undefined_function
+  error - The function 'getColor' isn't defined - scripts\generate_icons_image.dart:98:28 - undefined_function
+  error - The function 'getColor' isn't defined - scripts\generate_icons_image.dart:99:26 - undefined_function
+  error - The function 'getColorRgba' isn't defined - scripts\generate_icons_image.dart:100:27 - undefined_function
+  error - The function 'Rectangle' isn't defined - scripts\generate_icons_image.dart:162:20 - undefined_function
+  error - The named parameter 'x1' is required, but there's no corresponding argument - scripts\generate_icons_image.dart:165:7 - missing_required_argument
+  error - The named parameter 'x2' is required, but there's no corresponding argument - scripts\generate_icons_image.dart:165:7 - missing_required_argument
+  error - The named parameter 'y1' is required, but there's no corresponding argument - scripts\generate_icons_image.dart:165:7 - missing_required_argument
+  error - The named parameter 'y2' is required, but there's no corresponding argument - scripts\generate_icons_image.dart:165:7 - missing_required_argument
+  error - Too many positional arguments: 1 expected, but 2 found - scripts\generate_icons_image.dart:165:23 - extra_positional_arguments_could_be_named
+  error - The argument type 'int' can't be assigned to the parameter type 'Color'.  - scripts\generate_icons_image.dart:165:36 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:168:21 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:168:31 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:168:40 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:169:21 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:169:32 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:169:41 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:170:21 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:170:32 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:170:44 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:171:21 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:171:31 - argument_type_not_assignable
+  error - The argument type 'int' can't be assigned to the parameter type 'double'.  - scripts\generate_icons_image.dart:171:43 - argument_type_not_assignable
+  error - The named parameter 'radius' is required, but there's no corresponding argument - scripts\generate_icons_image.dart:187:7 - missing_required_argument
+  error - The named parameter 'x' is required, but there's no corresponding argument - scripts\generate_icons_image.dart:187:7 - missing_required_argument
+  error - The named parameter 'y' is required, but there's no corresponding argument - scripts\generate_icons_image.dart:187:7 - missing_required_argument
+  error - Too many positional arguments: 1 expected, but 4 found - scripts\generate_icons_image.dart:187:25 - extra_positional_arguments_could_be_named
+  error - The argument type 'int' can't be assigned to the parameter type 'Color'.  - scripts\generate_icons_image.dart:187:43 - argument_type_not_assignable
+  error - Invalid constant value - test\meetings_stats_screen_test.dart:158:19 - invalid_constant
+  error - The function '_StatCard' isn't defined - test\meetings_stats_screen_test.dart:158:19 - undefined_function
+  error - Invalid constant value - test\meetings_stats_screen_test.dart:189:19 - invalid_constant
+  error - The function '_AchievementCard' isn't defined - test\meetings_stats_screen_test.dart:189:19 - undefined_function
+  error - Invalid constant value - test\meetings_stats_screen_test.dart:213:19 - invalid_constant
+  error - The function '_AchievementCard' isn't defined - test\meetings_stats_screen_test.dart:213:19 - undefined_function
+warning - The value of the local variable 'initialState' isn't used - test\voice_recording_service_test.dart:74:15 - unused_local_variable
+

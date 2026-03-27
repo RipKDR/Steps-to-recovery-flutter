@@ -1,32 +1,33 @@
+// ignore_for_file: avoid_print
 import 'dart:io';
-import 'dart:math';
 import 'dart:ui' as ui;
+import 'package:flutter/material.dart';
 
 /// Generates PNG app icons for Steps to Recovery app
-/// 
+///
 /// This script creates PNG files programmatically without external dependencies.
 /// Run with: dart run scripts/generate_icons.dart
 void main() async {
   print('🎨 Generating Steps to Recovery app icons...\n');
-  
+
   // Ensure output directory exists
   final outputDir = Directory('assets/icons');
   if (!await outputDir.exists()) {
     await outputDir.create(recursive: true);
   }
-  
+
   // Generate main app icon (1024x1024)
   print('✨ Creating main app icon (1024x1024)...');
   await generateMainAppIcon();
-  
+
   // Generate foreground icon for Android adaptive icon (1024x1024)
   print('✨ Creating Android adaptive icon foreground (1024x1024)...');
   await generateForegroundIcon();
-  
+
   // Generate splash logo (512x512)
   print('✨ Creating splash screen logo (512x512)...');
   await generateSplashLogo();
-  
+
   print('\n✅ All icons generated successfully!');
   print('\n📁 Output files:');
   print('   - assets/icons/app_icon.png (1024x1024)');
@@ -42,20 +43,20 @@ Future<void> generateMainAppIcon() async {
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder);
   final size = 1024.0;
-  
+
   // Background - True black
   final paint = Paint()..color = const Color(0xFF0A0A0A);
   canvas.drawRect(Rect.fromLTWH(0, 0, size, size), paint);
-  
+
   // Draw recovery stairs
   drawRecoveryStairs(canvas, size / 2, size / 2, size * 0.4);
-  
+
   // Convert to PNG
   final picture = recorder.endRecording();
   final image = await picture.toImage(size.toInt(), size.toInt());
   final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
   final pngBytes = byteData!.buffer.asUint8List();
-  
+
   // Save to file
   final file = File('assets/icons/app_icon.png');
   await file.writeAsBytes(pngBytes);
@@ -66,16 +67,16 @@ Future<void> generateForegroundIcon() async {
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder);
   final size = 1024.0;
-  
+
   // Draw recovery stairs (no background - transparent)
   drawRecoveryStairs(canvas, size / 2, size / 2, size * 0.4);
-  
+
   // Convert to PNG
   final picture = recorder.endRecording();
   final image = await picture.toImage(size.toInt(), size.toInt());
   final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
   final pngBytes = byteData!.buffer.asUint8List();
-  
+
   // Save to file
   final file = File('assets/icons/app_icon_foreground.png');
   await file.writeAsBytes(pngBytes);
@@ -86,35 +87,41 @@ Future<void> generateSplashLogo() async {
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder);
   final size = 512.0;
-  
+
   // Draw simplified recovery stairs
   drawRecoveryStairs(canvas, size / 2, size / 2, size * 0.4, isSplash: true);
-  
+
   // Convert to PNG
   final picture = recorder.endRecording();
   final image = await picture.toImage(size.toInt(), size.toInt());
   final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
   final pngBytes = byteData!.buffer.asUint8List();
-  
+
   // Save to file
   final file = File('assets/icons/splash_logo.png');
   await file.writeAsBytes(pngBytes);
 }
 
 /// Draws the recovery stairs symbol
-void drawRecoveryStairs(Canvas canvas, double centerX, double centerY, double scale, {bool isSplash = false}) {
+void drawRecoveryStairs(
+  Canvas canvas,
+  double centerX,
+  double centerY,
+  double scale, {
+  bool isSplash = false,
+}) {
   final stairWidth = isSplash ? 60.0 : 120.0;
   final stairHeight = isSplash ? 20.0 : 40.0;
   final cornerRadius = isSplash ? 4.0 : 8.0;
   final circleRadius = isSplash ? 12.0 : 24.0;
-  
+
   // Scale factor for splash vs main icon
   final scaleFactor = isSplash ? 0.5 : 1.0;
-  
+
   // Amber color with gradient effect
   final amberPrimary = const Color(0xFFF59E0B);
   final amberLight = const Color(0xFFFBBF24);
-  
+
   // Step 1 (Bottom)
   _drawRoundedRect(
     canvas,
@@ -125,7 +132,7 @@ void drawRecoveryStairs(Canvas canvas, double centerX, double centerY, double sc
     cornerRadius,
     amberPrimary,
   );
-  
+
   // Step 2 (Middle)
   _drawRoundedRect(
     canvas,
@@ -136,7 +143,7 @@ void drawRecoveryStairs(Canvas canvas, double centerX, double centerY, double sc
     cornerRadius,
     amberLight,
   );
-  
+
   // Step 3 (Top)
   _drawRoundedRect(
     canvas,
@@ -147,9 +154,9 @@ void drawRecoveryStairs(Canvas canvas, double centerX, double centerY, double sc
     cornerRadius,
     amberPrimary,
   );
-  
+
   // Unity circle at top
-  final circlePaint = Paint()..color = amberPrimary.withOpacity(0.9);
+  final circlePaint = Paint()..color = amberPrimary.withValues(alpha: 0.9);
   canvas.drawCircle(
     Offset(centerX, centerY - 160 * scaleFactor),
     circleRadius,

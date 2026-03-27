@@ -1,0 +1,20 @@
+Analyzing Steps-to-recovery-flutter...                          
+
+   info - Unnecessary use of 'toList' in a spread - lib\features\crisis\screens\grounding_exercises_screen.dart:193:14 - unnecessary_to_list_in_spreads
+   info - Unnecessary use of 'toList' in a spread - lib\features\crisis\screens\grounding_exercises_screen.dart:298:24 - unnecessary_to_list_in_spreads
+   info - Use 'const' with the constructor to improve performance - lib\features\meetings\screens\meetings_stats_screen.dart:49:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\meetings\services\meetings_service.dart:156:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\meetings\services\meetings_service.dart:168:24 - prefer_const_constructors
+  error - Invalid constant value - lib\features\mindfulness\widgets\audio_player_widget.dart:247:41 - invalid_constant
+   info - Use 'const' with the constructor to improve performance - lib\features\progress\widgets\progress_charts.dart:63:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\progress\widgets\progress_charts.dart:225:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\progress\widgets\progress_charts.dart:231:28 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - scripts\generate_icons.dart:159:53 - deprecated_member_use
+  error - Invalid constant value - test\meetings_stats_screen_test.dart:158:19 - invalid_constant
+  error - The function '_StatCard' isn't defined - test\meetings_stats_screen_test.dart:158:19 - undefined_function
+  error - Invalid constant value - test\meetings_stats_screen_test.dart:189:19 - invalid_constant
+  error - The function '_AchievementCard' isn't defined - test\meetings_stats_screen_test.dart:189:19 - undefined_function
+  error - Invalid constant value - test\meetings_stats_screen_test.dart:213:19 - invalid_constant
+  error - The function '_AchievementCard' isn't defined - test\meetings_stats_screen_test.dart:213:19 - undefined_function
+warning - The value of the local variable 'initialState' isn't used - test\voice_recording_service_test.dart:74:15 - unused_local_variable
+

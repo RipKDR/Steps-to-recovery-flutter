@@ -14,6 +14,8 @@ include: package:flutter_lints/flutter.yaml
 
 # Exclude example code from analysis (reference only)
 analyzer:
+  errors:
+    deprecated_member_use: false 
   exclude:
     - docs/examples/**
 

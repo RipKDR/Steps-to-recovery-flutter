@@ -12,6 +12,7 @@ void main() {
   late List<MethodCall> shareCalls;
 
   setUp(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
     shareResult = 'dev.fluttercommunity.plus/share/unavailable';
     shareCalls = <MethodCall>[];
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

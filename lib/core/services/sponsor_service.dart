@@ -13,6 +13,7 @@ import '../models/sponsor_models.dart';
 import '../services/app_state_service.dart';
 import '../services/connectivity_service.dart';
 import '../services/encryption_service.dart';
+import '../services/logger_service.dart';
 import '../services/sponsor_memory_store.dart';
 import '../utils/context_assembler.dart';
 import '../../app_config.dart';
@@ -237,7 +238,9 @@ class SponsorService extends ChangeNotifier implements SponsorResponder {
     try {
       final token = Supabase.instance.client.auth.currentSession?.accessToken;
       if (token != null) headers['Authorization'] = 'Bearer $token';
-    } catch (_) {}
+    } catch (e, stackTrace) {
+      LoggerService().error('Failed to get auth token for sponsor chat', error: e, stackTrace: stackTrace);
+    }
 
     final history = conversationHistory
         ?.map((m) => {'role': m.isUser ? 'User' : 'Assistant', 'content': m.content})
@@ -258,8 +261,8 @@ class SponsorService extends ChangeNotifier implements SponsorResponder {
         return data['response'] as String? ??
             "I'm here for you. Tell me more about how you're feeling.";
       }
-    } catch (e) {
-      debugPrint('SponsorService edge function error: $e');
+    } catch (e, stackTrace) {
+      LoggerService().error('SponsorService edge function error', error: e, stackTrace: stackTrace);
     }
     return "I'm having trouble connecting right now. I'm still here for you when I'm back.";
   }
@@ -271,7 +274,9 @@ class SponsorService extends ChangeNotifier implements SponsorResponder {
     try {
       final decrypted = EncryptionService().decrypt(raw);
       _identity = SponsorIdentity.fromJsonString(decrypted);
-    } catch (_) {}
+    } catch (e, stackTrace) {
+      LoggerService().error('Failed to load sponsor identity', error: e, stackTrace: stackTrace);
+    }
   }
 
   Future<void> _saveIdentity() async {
@@ -288,12 +293,20 @@ class SponsorService extends ChangeNotifier implements SponsorResponder {
     try {
       final decrypted = EncryptionService().decrypt(raw);
       _stageData = SponsorStageData.fromJsonString(decrypted);
-    } catch (_) {}
+    } catch (e, stackTrace) {
+      LoggerService().error('Failed to load sponsor stage data', error: e, stackTrace: stackTrace);
+    }
   }
 
   Future<void> _saveStage() async {
     final prefs = await SharedPreferences.getInstance();
     final encrypted = EncryptionService().encrypt(_stageData.toJsonString());
     await prefs.setString(_stageKey, encrypted);
+  }
+
+  /// Dispose resources
+  @override
+  void dispose() {
+    super.dispose();
   }
 }
