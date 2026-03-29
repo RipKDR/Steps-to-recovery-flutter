@@ -24,9 +24,13 @@ class MilestoneShareCard extends StatelessWidget {
   /// Capture the widget identified by [repaintKey] as a PNG [XFile].
   /// Returns null if the RenderObject is not ready.
   static Future<XFile?> capture(GlobalKey repaintKey) async {
-    final boundary = repaintKey.currentContext?.findRenderObject()
-        as RenderRepaintBoundary?;
+    final boundary =
+        repaintKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
     if (boundary == null) return null;
+    if (boundary.debugNeedsPaint) {
+      await WidgetsBinding.instance.endOfFrame;
+    }
+    if (boundary.debugNeedsPaint) return null;
     final image = await boundary.toImage(pixelRatio: 3.0);
     final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     if (byteData == null) return null;

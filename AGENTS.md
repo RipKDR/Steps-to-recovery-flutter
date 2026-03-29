@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Steps to Recovery** is a privacy-first recovery companion for 12-step programs (AA, NA, etc.), built with Flutter 3.41.x / Dart 3.11.x. All sensitive data is encrypted at rest with AES-256. The app is offline-first with optional Supabase sync.
+**Steps to Recovery** is a privacy-first recovery companion for 12-step programs (AA, NA, etc.), built with Flutter 3.41.6 / Dart 3.11.4. All sensitive data is encrypted at rest with AES-256. The app is offline-first with optional Supabase sync.
 
 The runnable Flutter project is the **repo root**. The nested `app/` folder is a preserved snapshot — do not edit it.
 
@@ -49,7 +49,7 @@ At the start of **every conversation**, the following files are automatically re
 
 | Category | Technology |
 |----------|------------|
-| Framework | Flutter 3.41.x / Dart 3.11.x |
+| Framework | Flutter 3.41.6 / Dart 3.11.4 |
 | Navigation | `go_router` v17.1.0 |
 | Local Storage | `shared_preferences` v2.5.3 |
 | Encryption | `encrypt` v5.0.3 (AES-256), `flutter_secure_storage` v10.0.0 |

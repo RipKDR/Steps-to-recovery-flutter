@@ -1,5 +1,5 @@
 import 'package:workmanager/workmanager.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
+// import 'package:sentry_flutter/sentry_flutter.dart';  // Temporarily disabled
 
 import 'app_config.dart';
 import 'core/services/encryption_service.dart';
@@ -36,16 +36,17 @@ void recoverySyncDispatcher() {
         error: e,
         stackTrace: stackTrace,
       );
-      
+
       // If Sentry is configured, capture the error
-      if (AppConfig.sentryDsn.isNotEmpty) {
-        try {
-          await Sentry.captureException(e, stackTrace: stackTrace);
-        } catch (sentryError) {
-          // Silent failure - Sentry is optional
-          logger.debug('[workmanager] Failed to send to Sentry: $sentryError');
-        }
-      }
+      // Temporarily disabled with Sentry
+      // if (AppConfig.sentryDsn.isNotEmpty) {
+      //   try {
+      //     await Sentry.captureException(e, stackTrace: stackTrace);
+      //   } catch (sentryError) {
+      //     // Silent failure - Sentry is optional
+      //     logger.debug('[workmanager] Failed to send to Sentry: $sentryError');
+      //   }
+      // }
     }
 
     return true;

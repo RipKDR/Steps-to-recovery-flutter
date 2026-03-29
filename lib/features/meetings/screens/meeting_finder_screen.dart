@@ -152,6 +152,11 @@ class _MeetingFinderScreenState extends State<MeetingFinderScreen> {
         backgroundColor: AppColors.background,
         actions: [
           IconButton(
+            tooltip: 'View meeting statistics',
+            icon: const Icon(Icons.bar_chart_outlined),
+            onPressed: () => context.push('/meetings/stats'),
+          ),
+          IconButton(
             tooltip: 'Filter meetings',
             icon: const Icon(Icons.filter_list),
             onPressed: _showFilters,

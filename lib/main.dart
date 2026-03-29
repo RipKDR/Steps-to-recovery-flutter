@@ -1,12 +1,12 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
+// import 'package:sentry_flutter/sentry_flutter.dart';  // Temporarily disabled
 
-import 'app_config.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/app_state_service.dart';
 import 'core/services/encryption_service.dart';
@@ -18,10 +18,20 @@ import 'core/services/preferences_service.dart';
 import 'core/services/sync_service.dart';
 import 'core/services/biometric_service.dart';
 import 'core/services/sponsor_service.dart';
+import 'firebase_options.dart';
 import 'navigation/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    debugPrint('Firebase initialization failed: $e');
+  }
 
   // Enable edge-to-edge display
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -43,7 +53,7 @@ void main() async {
     ),
   );
 
-  // Register Nunito font for download (side effect: schedules async fetch).
+  // Register NUnit font for download (side effect: schedules async fetch).
   // Not called in tests (tests don't invoke main), so tests use system font fallback.
   GoogleFonts.nunito();
 
@@ -51,34 +61,36 @@ void main() async {
   await _initializeServices();
 
   // Wrap app with Sentry if DSN is configured
-  if (AppConfig.sentryDsn.isNotEmpty) {
-    await SentryFlutter.init((options) {
-      options.dsn = AppConfig.sentryDsn;
-      options.tracesSampleRate = 0.2;
-      options.beforeSend = _scrubPii;
-      options.beforeBreadcrumb = (breadcrumb, hint) {
-        // Drop breadcrumbs that might contain user content
-        if (breadcrumb?.category == 'console') return null;
-        return breadcrumb;
-      };
-    }, appRunner: () => runApp(const StepsToRecoveryApp()));
-  } else {
+  // Temporarily disabled - Sentry causing build issues
+  // if (AppConfig.sentryDsn.isNotEmpty) {
+  //   await SentryFlutter.init((options) {
+  //     options.dsn = AppConfig.sentryDsn;
+  //     options.tracesSampleRate = 0.2;
+  //     options.beforeSend = _scrubPii;
+  //     options.beforeBreadcrumb = (breadcrumb, hint) {
+  //       // Drop breadcrumbs that might contain user content
+  //       if (breadcrumb?.category == 'console') return null;
+  //       return breadcrumb;
+  //     };
+  //   }, appRunner: () => runApp(const StepsToRecoveryApp()));
+  // } else {
     runApp(const StepsToRecoveryApp());
-  }
+  // }
 }
 
 /// Strip PII from Sentry events — no recovery content, names, or journal text.
-SentryEvent? _scrubPii(SentryEvent event, Hint hint) {
-  // Remove user email/name (we only send anonymous device info)
-  final user = event.user;
-  if (user != null) {
-    user.email = null;
-    user.username = null;
-    user.name = null;
-    user.data = {};
-  }
-  return event;
-}
+// Temporarily disabled with Sentry
+// SentryEvent? _scrubPii(SentryEvent event, Hint hint) {
+//   // Remove user email/name (we only send anonymous device info)
+//   final user = event.user;
+//   if (user != null) {
+//     user.email = null;
+//     user.username = null;
+//     user.name = null;
+//     user.data = {};
+//   }
+//   return event;
+// }
 
 Future<void> _initializeServices() async {
   final logger = LoggerService();

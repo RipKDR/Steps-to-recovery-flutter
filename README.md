@@ -6,8 +6,8 @@ The runnable Flutter project is the repo root. A nested `app/` folder exists as 
 
 ## Stack
 
-- Flutter 3.41.x
-- Dart 3.11.x
+- Flutter 3.41.6
+- Dart 3.11.4
 - Material 3 + `go_router`
 - Local persistence (`shared_preferences`)
 - Local notifications scaffold (`flutter_local_notifications`)

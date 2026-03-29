@@ -11,7 +11,7 @@
 ## Project: Steps to Recovery
 
 ### Stack
-- Flutter 3.41.x / Dart 3.11.x
+- Flutter 3.41.6 / Dart 3.11.4
 - Offline-first: SQLite local, Supabase optional sync
 - AES-256 encryption for sensitive data
 - Material 3 dark theme (true black #0A0A0A, amber #F59E0B)

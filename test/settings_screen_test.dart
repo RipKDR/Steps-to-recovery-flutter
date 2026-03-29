@@ -10,6 +10,11 @@ void main() {
   testWidgets('settings screen saves reminder times chosen from time pickers', (
     tester,
   ) async {
+    // Set a larger viewport to ensure "Save changes" is fully reachable
+    tester.view.physicalSize = const Size(1200, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
     await createSignedInUser();
 
     final pickedTimes = <TimeOfDay>[
@@ -33,12 +38,13 @@ void main() {
     await tester.tap(find.byKey(const Key('settings-evening-reminder')));
     await tester.pumpAndSettle();
 
+    final saveButton = find.text('Save changes');
     await tester.scrollUntilVisible(
-      find.text('Save changes'),
+      saveButton,
       200,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.tap(find.text('Save changes'));
+    await tester.tap(saveButton);
     await tester.pumpAndSettle();
 
     expect(AppStateService.instance.morningReminderTime, '07:15');
@@ -46,18 +52,16 @@ void main() {
   });
 
   testWidgets(
-    'settings screen disables reminder pickers when notifications are off',
+    'settings screen hides reminder pickers when notifications are off',
     (tester) async {
       await createSignedInUser();
       await AppStateService.instance.setNotificationsEnabled(false);
 
-      var pickerCalls = 0;
 
       await tester.pumpWidget(
         MaterialApp(
           home: SettingsScreen(
             pickReminderTime: (context, initialTime) async {
-              pickerCalls += 1;
               return const TimeOfDay(hour: 6, minute: 30);
             },
           ),
@@ -65,12 +69,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Enable notifications to edit'), findsNWidgets(2));
-
-      await tester.tap(find.byKey(const Key('settings-morning-reminder')));
-      await tester.pumpAndSettle();
-
-      expect(pickerCalls, 0);
+      // In the updated UI, tiles are hidden instead of showing "Enable notifications to edit"
+      expect(find.byKey(const Key('settings-morning-reminder')), findsNothing);
+      expect(find.byKey(const Key('settings-evening-reminder')), findsNothing);
     },
   );
 }

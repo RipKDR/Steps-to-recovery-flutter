@@ -2,7 +2,7 @@
 
 ## Language Version
 
-**Dart 3.11.x** with full null safety and modern features
+**Dart 3.11.4** with full null safety and modern features
 
 ## Naming Conventions
 

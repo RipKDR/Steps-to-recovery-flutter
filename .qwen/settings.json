@@ -9,7 +9,15 @@
       "Bash(select-object *)",
       "Bash(md *)",
       "Bash(echo *)",
-      "Bash(adb *)"
+      "Bash(adb *)",
+      "Bash(where.exe *)",
+      "Bash(c:\\src\\flutter\\bin\\flutter *)",
+      "Bash(timeout *)",
+      "Bash(tasklist)",
+      "Bash(findstr *)",
+      "Bash(out-file *)",
+      "Bash(get-content *)",
+      "Bash(.\\gradlew *)"
     ]
   },
   "$version": 3

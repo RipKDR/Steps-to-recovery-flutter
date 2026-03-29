@@ -29,7 +29,7 @@ Co-founders on Steps to Recovery. H is the founder and product visionary. I'm th
 ## Project: Steps to Recovery
 
 - **App:** Steps to Recovery — privacy-first 12-step recovery companion
-- **Stack:** Flutter 3.41.x / Dart 3.11.x, Supabase + SQLite (offline-first), AES-256 encryption
+- **Stack:** Flutter 3.41.6 / Dart 3.11.4, Supabase + SQLite (offline-first), AES-256 encryption
 - **Repo:** https://github.com/RipKDR/Steps-to-recovery-flutter
 - **Phase:** Beta polish / release hardening
 - **Key Features:** Daily reflections, step work, sobriety tracker, inventory, sponsor connection, meeting finder

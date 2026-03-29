@@ -48,10 +48,6 @@ class AppRouter {
 
   static final GoRouter router = GoRouter(
     initialLocation: '/bootstrap',
-    refreshListenable: Listenable.merge([
-      AppStateService.instance,
-      SponsorService.instance,
-    ]),
     redirect: (context, state) {
       try {
         final service = AppStateService.instance;
@@ -105,6 +101,10 @@ class AppRouter {
         return '/bootstrap';
       }
     },
+    refreshListenable: Listenable.merge([
+      AppStateService.instance,
+      SponsorService.instance,
+    ]),
     routes: [
       GoRoute(
         path: '/bootstrap',

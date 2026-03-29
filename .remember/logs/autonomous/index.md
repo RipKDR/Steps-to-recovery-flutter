@@ -8,7 +8,7 @@
   - steps-to-recovery.md: Project-specific patterns and overrides
 - domains/
   - flutter.md: Flutter conventions, UI patterns, build commands
-  - dart.md: Dart 3.11 patterns, null safety, modern features
+  - dart.md: Dart 3.11.4 patterns, null safety, modern features
   - testing.md: flutter_test + mockito patterns, test setup
 - memory/
   - project-state.md: Current project state

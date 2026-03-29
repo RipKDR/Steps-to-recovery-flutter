@@ -144,6 +144,24 @@ void main() {
       expect(AppStateService.instance.email, isNull);
     });
 
+    test('signOut clears persisted recovery metadata', () async {
+      await AppStateService.instance.signUp(
+        email: 'grace@example.com',
+        password: 'password123',
+        sobrietyDate: DateTime(2024, 1, 1),
+        programType: 'AA',
+      );
+
+      final prefs = await getTestSharedPreferences();
+      expect(prefs.getString('sobriety_date'), isNotNull);
+      expect(prefs.getString('program_type'), 'AA');
+
+      await AppStateService.instance.signOut();
+
+      expect(prefs.getString('sobriety_date'), isNull);
+      expect(prefs.getString('program_type'), isNull);
+    });
+
     // ── resetLocalData ────────────────────────────────────────────
 
     test('resetLocalData clears onboardingComplete', () async {

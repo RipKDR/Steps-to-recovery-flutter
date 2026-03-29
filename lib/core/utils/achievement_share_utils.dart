@@ -68,7 +68,8 @@ List<Achievement> sortShareableMilestoneAchievements(
   Iterable<Achievement> achievements,
 ) {
   final shareable = achievements
-      .where((achievement) => isShareableMilestoneAchievement(achievement))
+      .where((achievement) =>
+          isShareableMilestoneAchievement(achievement) && !achievement.isViewed)
       .toList()
     ..sort((left, right) {
       final rightRank = _shareableMilestonesByKey[right.achievementKey]!.rank;

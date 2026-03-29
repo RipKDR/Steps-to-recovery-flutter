@@ -13,6 +13,7 @@ import 'database_service.dart';
 import 'encryption_service.dart';
 import 'milestone_service.dart';
 import 'notification_service.dart';
+import 'logger_service.dart';
 
 /// Shared app state for onboarding, local auth/session, and user preferences.
 ///
@@ -38,6 +39,12 @@ class AppStateService extends ChangeNotifier {
   static const String _keyEveningReminder = 'evening_reminder';
   static const String _keyThemeMode = 'app_theme_mode';
   static const String _keyAccounts = 'app_accounts_v1';
+
+  // Rate limiting for authentication attempts
+  static const int _maxFailedAttempts = 5;
+  static const Duration _lockoutDuration = Duration(minutes: 5);
+  static const String _keyFailedAttempts = 'auth_failed_attempts';
+  static const String _keyLockoutUntil = 'auth_lockout_until';
 
   // Supabase configuration (from environment)
   static const String _supabaseUrl = String.fromEnvironment(
@@ -145,6 +152,67 @@ class AppStateService extends ChangeNotifier {
     return '$years year${years == 1 ? '' : 's'} sober';
   }
 
+  // Rate limiting methods for authentication security
+
+  /// Check if authentication is currently locked out
+  bool get isAuthLockedOut {
+    final lockoutUntil = _prefs?.getString(_keyLockoutUntil);
+    if (lockoutUntil == null) return false;
+
+    final lockoutTime = DateTime.tryParse(lockoutUntil);
+    if (lockoutTime == null) return false;
+
+    return DateTime.now().isBefore(lockoutTime);
+  }
+
+  /// Get remaining lockout time in seconds
+  int get remainingLockoutSeconds {
+    if (!isAuthLockedOut) return 0;
+
+    final lockoutUntil = _prefs!.getString(_keyLockoutUntil)!;
+    final lockoutTime = DateTime.parse(lockoutUntil);
+    final remaining = lockoutTime.difference(DateTime.now()).inSeconds;
+    return remaining > 0 ? remaining : 0;
+  }
+
+  /// Get current failed attempt count
+  int get failedAttemptCount => _prefs?.getInt(_keyFailedAttempts) ?? 0;
+
+  /// Record a failed authentication attempt
+  Future<void> _recordFailedAttempt() async {
+    final attempts = (_prefs?.getInt(_keyFailedAttempts) ?? 0) + 1;
+    await _prefs?.setInt(_keyFailedAttempts, attempts);
+
+    LoggerService().debug('Failed login attempt #$attempts for email');
+
+    if (attempts >= _maxFailedAttempts) {
+      // Lock out the account
+      final lockoutUntil = DateTime.now().add(_lockoutDuration);
+      await _prefs?.setString(_keyLockoutUntil, lockoutUntil.toIso8601String());
+      LoggerService().error(
+        'Account locked due to too many failed attempts. '
+        'Lockout until $lockoutUntil',
+      );
+    }
+  }
+
+  /// Clear failed attempts and lockout (called on successful login)
+  Future<void> _clearFailedAttempts() async {
+    await _prefs?.remove(_keyFailedAttempts);
+    await _prefs?.remove(_keyLockoutUntil);
+  }
+
+  /// Validate that authentication is not locked out
+  /// Throws StateError if locked out
+  void _checkAuthLockout() {
+    if (isAuthLockedOut) {
+      final remainingMinutes = (remainingLockoutSeconds / 60).ceil();
+      throw StateError(
+        'Too many failed attempts. Please try again in $remainingMinutes minute${remainingMinutes == 1 ? '' : 's'}.',
+      );
+    }
+  }
+
   Future<void> initialize() async {
     if (_ready || _initializing) {
       return;
@@ -164,7 +232,6 @@ class AppStateService extends ChangeNotifier {
 
     if (_sobrietyDate != null) {
       unawaited(
-        MilestoneService().checkAndScheduleApproachNotifications(_sobrietyDate!),
         MilestoneService().checkAndScheduleApproachNotifications(
           _sobrietyDate!,
         ),
@@ -204,8 +271,8 @@ class AppStateService extends ChangeNotifier {
     _themeMode = themeModeStr == 'light'
         ? ThemeMode.light
         : themeModeStr == 'system'
-            ? ThemeMode.system
-            : ThemeMode.dark;
+        ? ThemeMode.system
+        : ThemeMode.dark;
 
     _accounts = _readAccounts();
   }
@@ -225,6 +292,10 @@ class AppStateService extends ChangeNotifier {
     String? programType,
   }) async {
     await initialize();
+
+    // Check rate limiting first
+    _checkAuthLockout();
+
     final normalizedEmail = email.trim().toLowerCase();
     final trimmedPassword = password.trim();
 

@@ -190,7 +190,7 @@ class FullScreenAudioPlayer extends StatelessWidget {
           icon: const Icon(Icons.replay_10),
           iconSize: 32,
           color: AppColors.textPrimary,
-          onPressed: service.skipBackward,
+          onPressed: () => service.skipBackward(),
         ),
 
         const SizedBox(width: AppSpacing.lg),
@@ -231,7 +231,7 @@ class FullScreenAudioPlayer extends StatelessWidget {
           icon: const Icon(Icons.forward_10),
           iconSize: 32,
           color: AppColors.textPrimary,
-          onPressed: service.skipForward,
+          onPressed: () => service.skipForward(),
         ),
       ],
     );

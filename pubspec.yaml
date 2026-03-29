@@ -4,7 +4,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.11.0
+  sdk: ^3.11.4
 
 dependencies:
   flutter:
@@ -83,10 +83,11 @@ dependencies:
   google_generative_ai: ^0.4.6
 
   # Production
-  sentry_flutter: ^9.15.0
+  # sentry_flutter: ^9.15.0  # Temporarily disabled for build
   flutter_native_splash: ^2.4.7
   flutter_launcher_icons: ^0.14.4
   path_provider_platform_interface: ^2.1.2
+  firebase_core: ^4.6.0
 
 dev_dependencies:
   flutter_test:
@@ -111,6 +112,12 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/audio/breathing/
+    - assets/audio/body_scan/
+    - assets/audio/grounding/
+    - assets/audio/craving/
+    - assets/audio/sleep/
+    - assets/audio/anxiety/
 
 # App icon configuration
 flutter_launcher_icons:

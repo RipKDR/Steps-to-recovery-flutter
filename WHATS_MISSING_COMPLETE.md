@@ -188,7 +188,7 @@ All 12+ major workstreams from `WHATS_MISSING.md` have been implemented across 4
 
 **Pipeline:**
 - ✅ Checkout code
-- ✅ Setup Flutter 3.41.x
+- ✅ Setup Flutter 3.41.6
 - ✅ Install dependencies
 - ✅ Static analysis
 - ✅ Run tests with coverage

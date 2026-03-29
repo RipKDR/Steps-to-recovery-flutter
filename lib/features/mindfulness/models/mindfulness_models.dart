@@ -47,6 +47,9 @@ enum MindfulnessCategory {
   final IconData icon;
 
   const MindfulnessCategory(this.displayName, this.icon);
+
+  /// Get the icon for this category (non-const accessor)
+  IconData getIcon() => icon;
 }
 
 /// Player state enum

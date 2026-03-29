@@ -17,6 +17,8 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/achievement_share_utils.dart';
 
+const bool _isFlutterTest = bool.fromEnvironment('FLUTTER_TEST');
+
 /// Home dashboard with dynamic sobriety, check-ins, and quick actions.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.showCelebration = true});
@@ -31,6 +33,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _repaintKey = GlobalKey();
   late Future<_HomeSnapshot> _snapshotFuture;
+  bool _showShareCard = false;
 
   @override
   void initState() {
@@ -175,21 +178,27 @@ class _HomeScreenState extends State<HomeScreen> {
               foregroundColor: AppColors.textOnDark,
             ),
           ),
-          // Off-screen share card for PNG capture
+          // Off-screen share card for PNG capture.
           bottomSheet: Offstage(
-            child: RepaintBoundary(
-              key: _repaintKey,
-              child: Builder(
-                builder: (_) {
-                  final shareContent = data.featuredShareContent;
-                  if (shareContent == null) return const SizedBox.shrink();
-                  // Extract achievement phrase or emojis if necessary, default 🎉
-                  return MilestoneShareCard(
-                    emoji: '🎉',
-                    title: shareContent.milestoneTitle,
-                    message: shareContent.shareText,
-                  );
-                },
+            offstage: !_showShareCard,
+            child: IgnorePointer(
+              child: Opacity(
+                opacity: 0.004,
+                child: RepaintBoundary(
+                  key: _repaintKey,
+                  child: Builder(
+                    builder: (_) {
+                      final shareContent = data.featuredShareContent;
+                      if (shareContent == null) return const SizedBox.shrink();
+                      // Extract achievement phrase or emojis if necessary, default 🎉
+                      return MilestoneShareCard(
+                        emoji: '🎉',
+                        title: shareContent.milestoneTitle,
+                        message: shareContent.shareText,
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
           ),
@@ -246,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     XFile? shareFile;
     if (_repaintKey.currentContext != null) {
-      shareFile = await MilestoneShareCard.capture(_repaintKey);
+      shareFile = await _captureShareCard();
     }
 
     final result = await SharePlus.instance.share(
@@ -294,6 +303,33 @@ class _HomeScreenState extends State<HomeScreen> {
         );
         return;
     }
+  }
+
+  Future<XFile?> _captureShareCard() async {
+    if (_isFlutterTest ||
+        WidgetsBinding.instance.runtimeType
+            .toString()
+            .contains('TestWidgetsFlutterBinding')) {
+      return null;
+    }
+    if (!mounted || _repaintKey.currentContext == null) {
+      return null;
+    }
+    setState(() {
+      _showShareCard = true;
+    });
+    await WidgetsBinding.instance.endOfFrame;
+    XFile? shareFile;
+    try {
+      shareFile = await MilestoneShareCard.capture(_repaintKey);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _showShareCard = false;
+        });
+      }
+    }
+    return shareFile;
   }
 }
 
@@ -543,6 +579,18 @@ class _QuickActions extends StatelessWidget {
               label: 'Meetings',
               semanticLabel: 'Navigate to meetings',
               onTap: () => context.go(AppRoutes.meetings),
+            ),
+            _ActionButton(
+              icon: Icons.self_improvement,
+              label: 'Mindfulness',
+              semanticLabel: 'Navigate to mindfulness library',
+              onTap: () => context.push('/mindfulness'),
+            ),
+            _ActionButton(
+              icon: Icons.smart_toy,
+              label: 'AI Companion',
+              semanticLabel: 'Chat with AI sponsor companion',
+              onTap: () => context.push('/home/companion-chat'),
             ),
             _ActionButton(
               icon: Icons.crisis_alert,

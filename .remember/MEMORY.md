@@ -19,7 +19,7 @@ Only go back to repo source files (AGENTS.md, PROJECT_SUMMARY.md, etc.) when I n
 
 ## Project: Steps to Recovery
 
-Privacy-first 12-step recovery companion app. Flutter 3.41.x / Dart 3.11.x, offline-first with optional Supabase sync, AES-256 encryption for sensitive data.
+Privacy-first 12-step recovery companion app. Flutter 3.41.6 / Dart 3.11.4, offline-first with optional Supabase sync, AES-256 encryption for sensitive data.
 
 ### Key Architecture Decisions
 - Offline-first: all data in local SQLite via `DatabaseService`, Supabase is optional sync
