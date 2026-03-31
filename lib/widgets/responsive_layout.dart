@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
 
 /// Breakpoints for responsive layout.
@@ -176,10 +179,26 @@ class AdaptiveNavigation extends StatelessWidget {
       case ScreenSize.mobile:
         return Scaffold(
           body: body,
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: selectedIndex,
-            onDestinationSelected: onDestinationSelected,
-            destinations: destinations,
+          bottomNavigationBar: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface.withValues(alpha: 0.85),
+                  border: Border(
+                    top: BorderSide(
+                      color: AppColors.glassBorder.withValues(alpha: 0.12),
+                      width: 0.5,
+                    ),
+                  ),
+                ),
+                child: NavigationBar(
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: onDestinationSelected,
+                  destinations: destinations,
+                ),
+              ),
+            ),
           ),
         );
     }

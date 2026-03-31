@@ -46,6 +46,53 @@ import 'shell_screen.dart';
 class AppRouter {
   AppRouter._();
 
+  /// Fade transition — used for auth screens and tab-level navigations.
+  static Page<void> _fadePage(
+    BuildContext context,
+    GoRouterState state,
+    Widget child,
+  ) {
+    return CustomTransitionPage<void>(
+      key: state.pageKey,
+      child: child,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+          child: child,
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 220),
+    );
+  }
+
+  /// Slide-up + fade transition — used for modal/push screens.
+  static Page<void> _slideUpPage(
+    BuildContext context,
+    GoRouterState state,
+    Widget child,
+  ) {
+    return CustomTransitionPage<void>(
+      key: state.pageKey,
+      child: child,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.08),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+          child: FadeTransition(
+            opacity: CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeIn,
+            ),
+            child: child,
+          ),
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 280),
+    );
+  }
+
   static final GoRouter router = GoRouter(
     initialLocation: '/bootstrap',
     redirect: (context, state) {
@@ -116,37 +163,45 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.onboarding,
         name: 'onboarding',
-        builder: (context, state) => const OnboardingScreen(),
+        pageBuilder: (context, state) =>
+            _fadePage(context, state, const OnboardingScreen()),
       ),
       GoRoute(
         path: AppRoutes.login,
         name: 'login',
-        builder: (context, state) => const LoginScreen(),
+        pageBuilder: (context, state) =>
+            _fadePage(context, state, const LoginScreen()),
       ),
       GoRoute(
         path: AppRoutes.signup,
         name: 'signup',
-        builder: (context, state) => const SignupScreen(),
+        pageBuilder: (context, state) =>
+            _fadePage(context, state, const SignupScreen()),
       ),
       GoRoute(
         path: AppRoutes.forgotPassword,
         name: 'forgotPassword',
-        builder: (context, state) => const ForgotPasswordScreen(),
+        pageBuilder: (context, state) =>
+            _fadePage(context, state, const ForgotPasswordScreen()),
       ),
 
       // NEW: Sponsor intro (post-auth gate — outside ShellRoute)
       GoRoute(
         path: '/sponsor-intro',
         name: 'sponsorIntro',
-        builder: (context, state) =>
-            SponsorIntroScreen(onComplete: () => context.go(AppRoutes.home)),
+        pageBuilder: (context, state) => _fadePage(
+          context,
+          state,
+          SponsorIntroScreen(onComplete: () => context.go(AppRoutes.home)),
+        ),
       ),
 
       // Mindfulness Library (top-level)
       GoRoute(
         path: '/mindfulness',
         name: 'mindfulness',
-        builder: (context, state) => const MindfulnessLibraryScreen(),
+        pageBuilder: (context, state) =>
+            _slideUpPage(context, state, const MindfulnessLibraryScreen()),
       ),
 
       // Main app shell with bottom navigation
@@ -163,67 +218,80 @@ class AppRouter {
               GoRoute(
                 path: 'morning-intention',
                 name: 'morningIntention',
-                builder: (context, state) => const MorningIntentionScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const MorningIntentionScreen()),
               ),
               GoRoute(
                 path: 'evening-pulse',
                 name: 'eveningPulse',
-                builder: (context, state) => const EveningPulseScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const EveningPulseScreen()),
               ),
               GoRoute(
                 path: 'emergency',
                 name: 'emergency',
-                builder: (context, state) => const EmergencyScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const EmergencyScreen()),
               ),
               GoRoute(
                 path: 'daily-reading',
                 name: 'dailyReading',
-                builder: (context, state) => const DailyReadingScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const DailyReadingScreen()),
               ),
               GoRoute(
                 path: 'progress',
                 name: 'progress',
-                builder: (context, state) => const ProgressDashboardScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const ProgressDashboardScreen()),
               ),
               GoRoute(
                 path: 'craving-surf',
                 name: 'cravingSurf',
-                builder: (context, state) => const CravingSurfScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const CravingSurfScreen()),
               ),
               GoRoute(
                 path: 'gratitude',
                 name: 'gratitude',
-                builder: (context, state) => const GratitudeScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const GratitudeScreen()),
               ),
               GoRoute(
                 path: 'inventory',
                 name: 'inventory',
-                builder: (context, state) => const InventoryScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const InventoryScreen()),
               ),
               GoRoute(
                 path: 'safety-plan',
                 name: 'safetyPlan',
-                builder: (context, state) => const SafetyPlanScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const SafetyPlanScreen()),
               ),
               GoRoute(
                 path: 'companion-chat',
                 name: 'companionChat',
-                builder: (context, state) => const SponsorChatScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const SponsorChatScreen()),
               ),
               GoRoute(
                 path: 'danger-zone',
                 name: 'dangerZone',
-                builder: (context, state) => const DangerZoneScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const DangerZoneScreen()),
               ),
               GoRoute(
                 path: 'before-you-use',
                 name: 'beforeYouUse',
-                builder: (context, state) => const BeforeYouUseScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const BeforeYouUseScreen()),
               ),
               GoRoute(
                 path: 'grounding-exercises',
                 name: 'groundingExercises',
-                builder: (context, state) => const GroundingExercisesScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const GroundingExercisesScreen()),
               ),
             ],
           ),
@@ -238,12 +306,16 @@ class AppRouter {
               GoRoute(
                 path: 'editor',
                 name: 'journalEditor',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final entryId = state.uri.queryParameters['entryId'];
                   final mode = state.uri.queryParameters['mode'] == 'edit'
                       ? CreateEditMode.edit
                       : CreateEditMode.create;
-                  return JournalEditorScreen(entryId: entryId, mode: mode);
+                  return _slideUpPage(
+                    context,
+                    state,
+                    JournalEditorScreen(entryId: entryId, mode: mode),
+                  );
                 },
               ),
             ],
@@ -260,27 +332,35 @@ class AppRouter {
               GoRoute(
                 path: 'detail',
                 name: 'stepDetail',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final stepNumber = int.parse(
                     state.uri.queryParameters['stepNumber'] ?? '1',
                   );
                   final initialQuestion = state.uri.queryParameters['question'];
-                  return StepDetailScreen(
-                    stepNumber: stepNumber,
-                    initialQuestion: initialQuestion != null
-                        ? int.parse(initialQuestion)
-                        : null,
+                  return _slideUpPage(
+                    context,
+                    state,
+                    StepDetailScreen(
+                      stepNumber: stepNumber,
+                      initialQuestion: initialQuestion != null
+                          ? int.parse(initialQuestion)
+                          : null,
+                    ),
                   );
                 },
               ),
               GoRoute(
                 path: 'review',
                 name: 'stepReview',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final stepNumber = int.parse(
                     state.uri.queryParameters['stepNumber'] ?? '1',
                   );
-                  return StepReviewScreen(stepNumber: stepNumber);
+                  return _slideUpPage(
+                    context,
+                    state,
+                    StepReviewScreen(stepNumber: stepNumber),
+                  );
                 },
               ),
             ],
@@ -297,21 +377,27 @@ class AppRouter {
               GoRoute(
                 path: 'detail',
                 name: 'meetingDetail',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final meetingId =
                       state.uri.queryParameters['meetingId'] ?? '';
-                  return MeetingDetailScreen(meetingId: meetingId);
+                  return _slideUpPage(
+                    context,
+                    state,
+                    MeetingDetailScreen(meetingId: meetingId),
+                  );
                 },
               ),
               GoRoute(
                 path: 'favorites',
                 name: 'favoriteMeetings',
-                builder: (context, state) => const _FavoriteMeetingsScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const _FavoriteMeetingsScreen()),
               ),
               GoRoute(
                 path: 'stats',
                 name: 'meetingsStats',
-                builder: (context, state) => const MeetingsStatsScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const MeetingsStatsScreen()),
               ),
             ],
           ),
@@ -326,22 +412,26 @@ class AppRouter {
               GoRoute(
                 path: 'sponsor',
                 name: 'sponsor',
-                builder: (context, state) => const SponsorScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const SponsorScreen()),
               ),
               GoRoute(
                 path: 'settings',
                 name: 'settings',
-                builder: (context, state) => const SettingsScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const SettingsScreen()),
               ),
               GoRoute(
                 path: 'ai-settings',
                 name: 'aiSettings',
-                builder: (context, state) => const AiSettingsScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const AiSettingsScreen()),
               ),
               GoRoute(
                 path: 'security',
                 name: 'securitySettings',
-                builder: (context, state) => const SecuritySettingsScreen(),
+                pageBuilder: (context, state) =>
+                    _slideUpPage(context, state, const SecuritySettingsScreen()),
               ),
             ],
           ),

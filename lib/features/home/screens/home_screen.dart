@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/constants/app_constants.dart';
@@ -16,6 +18,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/achievement_share_utils.dart';
+import '../../../widgets/glass_card.dart';
 
 const bool _isFlutterTest = bool.fromEnvironment('FLUTTER_TEST');
 
@@ -95,74 +98,108 @@ class _HomeScreenState extends State<HomeScreen> {
         final data = snapshot.data ?? const _HomeSnapshot.empty();
 
         return Scaffold(
-          body: CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                floating: true,
-                backgroundColor: AppColors.background,
-                title: Semantics(
-                  sortKey: const OrdinalSortKey(0),
-                  header: true,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Steps to Recovery',
-                        style: AppTypography.headlineMedium,
+          body: Stack(
+            children: [
+              // Ambient radial glow top-right (amber at 3% opacity)
+              Positioned(
+                top: -100,
+                right: -50,
+                child: Container(
+                  width: 300,
+                  height: 300,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        AppColors.primaryAmber.withValues(alpha: 0.03),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    floating: true,
+                    backgroundColor: AppColors.background,
+                    title: Semantics(
+                      sortKey: const OrdinalSortKey(0),
+                      header: true,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Steps to Recovery',
+                            style: AppTypography.headlineMedium,
+                          ),
+                          Text(
+                            'Welcome back, ${AppStateService.instance.userLabel}',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Welcome back, ${AppStateService.instance.userLabel}',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textMuted,
-                        ),
+                    ),
+                    actions: [
+                      IconButton(
+                        icon: const Icon(Icons.bar_chart_outlined),
+                        tooltip: 'View progress dashboard',
+                        onPressed: () => context.push('/home/progress'),
                       ),
                     ],
                   ),
-                ),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.bar_chart_outlined),
-                    tooltip: 'View progress dashboard',
-                    onPressed: () => context.push('/home/progress'),
+                  SliverPadding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        Semantics(
+                          sortKey: const OrdinalSortKey(1),
+                          child: _SobrietyCard(
+                            snapshot: data,
+                            onShareMilestone: data.featuredShareContent == null
+                                ? null
+                                : () => _shareMilestone(context, data),
+                          ),
+                        )
+                            .animate()
+                            .fadeIn(duration: 600.ms)
+                            .slideY(begin: 0.1, end: 0, duration: 600.ms),
+                        const SizedBox(height: AppSpacing.lg),
+                        Semantics(
+                          sortKey: const OrdinalSortKey(2),
+                          child: _SupportStrip(snapshot: data),
+                        )
+                            .animate(delay: 150.ms)
+                            .fadeIn(duration: 500.ms)
+                            .slideY(begin: 0.1, end: 0),
+                        const SizedBox(height: AppSpacing.xl),
+                        Semantics(
+                          sortKey: const OrdinalSortKey(3),
+                          child: _QuickActions(snapshot: data),
+                        ).animate(delay: 250.ms).fadeIn(duration: 400.ms),
+                        const SizedBox(height: AppSpacing.xxl),
+                        Semantics(
+                          sortKey: const OrdinalSortKey(4),
+                          header: true,
+                          child: Text(
+                            'Today',
+                            style: AppTypography.headlineSmall,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        Semantics(
+                          sortKey: const OrdinalSortKey(5),
+                          child: _CheckInCards(snapshot: data),
+                        )
+                            .animate(delay: 350.ms)
+                            .fadeIn(duration: 500.ms)
+                            .slideY(begin: 0.1, end: 0),
+                      ]),
+                    ),
                   ),
                 ],
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    Semantics(
-                      sortKey: const OrdinalSortKey(1),
-                      child: _SobrietyCard(
-                        snapshot: data,
-                        onShareMilestone: data.featuredShareContent == null
-                            ? null
-                            : () => _shareMilestone(context, data),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    Semantics(
-                      sortKey: const OrdinalSortKey(2),
-                      child: _SupportStrip(snapshot: data),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    Semantics(
-                      sortKey: const OrdinalSortKey(3),
-                      child: _QuickActions(snapshot: data),
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
-                    Semantics(
-                      sortKey: const OrdinalSortKey(4),
-                      header: true,
-                      child: Text('Today', style: AppTypography.headlineSmall),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Semantics(
-                      sortKey: const OrdinalSortKey(5),
-                      child: _CheckInCards(snapshot: data),
-                    ),
-                  ]),
-                ),
               ),
             ],
           ),
@@ -211,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // Use batch method for better performance - single DB access instead of 6+ calls
     final database = DatabaseService();
     final snapshot = await database.getHomeSnapshot();
-    
+
     final currentUser = snapshot['user'] as UserProfile?;
     final morning = snapshot['morningCheckIn'] as DailyCheckIn?;
     final evening = snapshot['eveningCheckIn'] as DailyCheckIn?;
@@ -369,6 +406,77 @@ class _HomeSnapshot {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Breathing glow animation — pulses behind the day count
+// ---------------------------------------------------------------------------
+
+class _BreathingGlow extends StatefulWidget {
+  const _BreathingGlow();
+
+  @override
+  State<_BreathingGlow> createState() => _BreathingGlowState();
+}
+
+class _BreathingGlowState extends State<_BreathingGlow>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    );
+    _scale = Tween<double>(begin: 1.0, end: 1.08).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+    if (!reduceMotion) {
+      _controller.repeat(reverse: true);
+    } else {
+      _controller.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _scale,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scale.value,
+          child: child,
+        );
+      },
+      child: Container(
+        width: 120,
+        height: 120,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.primaryAmber.withValues(alpha: 0.08),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Sobriety hero card
+// ---------------------------------------------------------------------------
+
 class _SobrietyCard extends StatelessWidget {
   const _SobrietyCard({
     required this.snapshot,
@@ -381,7 +489,8 @@ class _SobrietyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = snapshot.user;
-    final soberLabel = user == null ? 'Recovery starts now' : user.sobrietyMilestone;
+    final soberLabel =
+        user == null ? 'Recovery starts now' : user.sobrietyMilestone;
     final days = AppStateService.instance.sobrietyDays;
 
     return Semantics(
@@ -396,71 +505,92 @@ class _SobrietyCard extends StatelessWidget {
           ),
           borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            Text(
-              'Clean Time',
-              style: AppTypography.labelMedium.copyWith(
-                color: AppColors.textOnDark,
-              ),
+            // Breathing glow positioned behind the day count
+            Positioned(
+              top: 0,
+              left: 0,
+              child: const _BreathingGlow(),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            TweenAnimationBuilder<int>(
-              tween: IntTween(begin: 0, end: days),
-              duration: MediaQuery.of(context).disableAnimations
-                  ? Duration.zero
-                  : const Duration(milliseconds: 1200),
-              curve: Curves.easeOut,
-              builder: (context, value, child) {
-                return Text(
-                  '$value days',
-                  style: AppTypography.displayLarge.copyWith(
+            // Foreground content
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Clean Time',
+                  style: AppTypography.labelMedium.copyWith(
                     color: AppColors.textOnDark,
                   ),
-                );
-              },
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              soberLabel,
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textOnDark.withValues(alpha: 0.84),
-              ),
-            ),
-            if (snapshot.unreadAchievements > 0) ...[
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                '${snapshot.unreadAchievements} new achievement${snapshot.unreadAchievements == 1 ? '' : 's'} waiting',
-                style: AppTypography.labelMedium.copyWith(
-                  color: AppColors.textOnDark,
                 ),
-              ),
-            ],
-            if (snapshot.featuredShareContent != null) ...[
-              const SizedBox(height: AppSpacing.md),
-              Semantics(
-                button: true,
-                label: 'Share milestone: ${snapshot.featuredShareContent!.buttonLabel}',
-                child: OutlinedButton.icon(
-                  onPressed: onShareMilestone,
-                  icon: const Icon(Icons.share_outlined),
-                  label: Text(snapshot.featuredShareContent!.buttonLabel),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textOnDark,
-                    side: BorderSide(
-                      color: AppColors.textOnDark.withValues(alpha: 0.72),
-                    ),
+                const SizedBox(height: AppSpacing.sm),
+                TweenAnimationBuilder<int>(
+                  tween: IntTween(begin: 0, end: days),
+                  duration: MediaQuery.of(context).disableAnimations
+                      ? Duration.zero
+                      : const Duration(milliseconds: 1200),
+                  curve: Curves.easeOut,
+                  builder: (context, value, child) {
+                    return Text(
+                      '$value days',
+                      style: AppTypography.displayLarge.copyWith(
+                        color: AppColors.textOnDark,
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  soberLabel,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textOnDark.withValues(alpha: 0.84),
                   ),
                 ),
-              ),
-            ],
+                if (snapshot.unreadAchievements > 0) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    '${snapshot.unreadAchievements} new achievement${snapshot.unreadAchievements == 1 ? '' : 's'} waiting',
+                    style: AppTypography.labelMedium.copyWith(
+                      color: AppColors.textOnDark,
+                    ),
+                  ),
+                ],
+                if (snapshot.featuredShareContent != null) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  Semantics(
+                    button: true,
+                    label:
+                        'Share milestone: ${snapshot.featuredShareContent!.buttonLabel}',
+                    child: OutlinedButton.icon(
+                      onPressed: onShareMilestone == null
+                          ? null
+                          : () async {
+                              await HapticFeedback.lightImpact();
+                              onShareMilestone?.call();
+                            },
+                      icon: const Icon(Icons.share_outlined),
+                      label: Text(snapshot.featuredShareContent!.buttonLabel),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textOnDark,
+                        side: BorderSide(
+                          color: AppColors.textOnDark.withValues(alpha: 0.72),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ],
         ),
       ),
-    );
+    ).animate().fadeIn(duration: 800.ms);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Support strip
+// ---------------------------------------------------------------------------
 
 class _SupportStrip extends StatelessWidget {
   const _SupportStrip({required this.snapshot});
@@ -470,7 +600,8 @@ class _SupportStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Support info. Sponsor: ${snapshot.sponsor?.name ?? 'Not added'}. Program: ${AppStateService.instance.programType ?? 'Not set'}',
+      label:
+          'Support info. Sponsor: ${snapshot.sponsor?.name ?? 'Not added'}. Program: ${AppStateService.instance.programType ?? 'Not set'}',
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
@@ -489,7 +620,8 @@ class _SupportStrip extends StatelessWidget {
             Expanded(
               child: _InfoColumn(
                 label: 'Program',
-                value: AppStateService.instance.programType ?? 'Choose in settings',
+                value: AppStateService.instance.programType ??
+                    'Choose in settings',
               ),
             ),
             Semantics(
@@ -534,6 +666,10 @@ class _InfoColumn extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Quick actions — premium 2x4 grid
+// ---------------------------------------------------------------------------
+
 class _QuickActions extends StatelessWidget {
   const _QuickActions({required this.snapshot});
 
@@ -541,117 +677,156 @@ class _QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final actions = [
+      _ActionDef(
+        icon: Icons.self_improvement,
+        label: 'Step Work',
+        semanticLabel: 'Navigate to step work',
+        onTap: () => context.go(AppRoutes.steps),
+      ),
+      _ActionDef(
+        icon: Icons.edit_note,
+        label: 'Journal',
+        semanticLabel: 'Navigate to journal',
+        onTap: () => context.go(AppRoutes.journal),
+      ),
+      _ActionDef(
+        icon: Icons.favorite,
+        label: 'Gratitude',
+        semanticLabel: 'Navigate to gratitude entries',
+        onTap: () => context.push('/home/gratitude'),
+      ),
+      _ActionDef(
+        icon: Icons.menu_book_outlined,
+        label: 'Reading',
+        semanticLabel: 'Navigate to daily reading',
+        onTap: () => context.push('/home/daily-reading'),
+      ),
+      _ActionDef(
+        icon: Icons.people_alt_outlined,
+        label: 'Meetings',
+        semanticLabel: 'Navigate to meetings',
+        onTap: () => context.go(AppRoutes.meetings),
+      ),
+      _ActionDef(
+        icon: Icons.self_improvement,
+        label: 'Mindfulness',
+        semanticLabel: 'Navigate to mindfulness library',
+        onTap: () => context.push('/mindfulness'),
+      ),
+      _ActionDef(
+        icon: Icons.smart_toy,
+        label: 'AI Companion',
+        semanticLabel: 'Chat with AI sponsor companion',
+        onTap: () => context.push('/home/companion-chat'),
+      ),
+      _ActionDef(
+        icon: Icons.crisis_alert,
+        label: 'Emergency',
+        semanticLabel: 'Navigate to emergency crisis support',
+        onTap: () => context.push('/home/emergency'),
+      ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Quick Actions', style: AppTypography.headlineSmall),
         const SizedBox(height: AppSpacing.md),
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
-          children: [
-            _ActionButton(
-              icon: Icons.self_improvement,
-              label: 'Step Work',
-              semanticLabel: 'Navigate to step work',
-              onTap: () => context.go(AppRoutes.steps),
-            ),
-            _ActionButton(
-              icon: Icons.edit_note,
-              label: 'Journal',
-              semanticLabel: 'Navigate to journal',
-              onTap: () => context.go(AppRoutes.journal),
-            ),
-            _ActionButton(
-              icon: Icons.favorite,
-              label: 'Gratitude',
-              semanticLabel: 'Navigate to gratitude entries',
-              onTap: () => context.push('/home/gratitude'),
-            ),
-            _ActionButton(
-              icon: Icons.menu_book_outlined,
-              label: 'Reading',
-              semanticLabel: 'Navigate to daily reading',
-              onTap: () => context.push('/home/daily-reading'),
-            ),
-            _ActionButton(
-              icon: Icons.people_alt_outlined,
-              label: 'Meetings',
-              semanticLabel: 'Navigate to meetings',
-              onTap: () => context.go(AppRoutes.meetings),
-            ),
-            _ActionButton(
-              icon: Icons.self_improvement,
-              label: 'Mindfulness',
-              semanticLabel: 'Navigate to mindfulness library',
-              onTap: () => context.push('/mindfulness'),
-            ),
-            _ActionButton(
-              icon: Icons.smart_toy,
-              label: 'AI Companion',
-              semanticLabel: 'Chat with AI sponsor companion',
-              onTap: () => context.push('/home/companion-chat'),
-            ),
-            _ActionButton(
-              icon: Icons.crisis_alert,
-              label: 'Emergency',
-              semanticLabel: 'Navigate to emergency crisis support',
-              onTap: () => context.push('/home/emergency'),
-            ),
-          ],
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: AppSpacing.sm,
+          mainAxisSpacing: AppSpacing.sm,
+          childAspectRatio: 2.8,
+          children: List.generate(actions.length, (index) {
+            final action = actions[index];
+            return _ActionTile(
+              icon: action.icon,
+              label: action.label,
+              semanticLabel: action.semanticLabel,
+              onTap: action.onTap,
+              animationIndex: index,
+            );
+          }),
         ),
       ],
     );
   }
 }
 
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
+class _ActionDef {
+  const _ActionDef({
     required this.icon,
     required this.label,
+    required this.semanticLabel,
     required this.onTap,
-    this.semanticLabel,
   });
 
   final IconData icon;
   final String label;
+  final String semanticLabel;
   final VoidCallback onTap;
-  final String? semanticLabel;
+}
+
+class _ActionTile extends StatelessWidget {
+  const _ActionTile({
+    required this.icon,
+    required this.label,
+    required this.semanticLabel,
+    required this.onTap,
+    required this.animationIndex,
+  });
+
+  final IconData icon;
+  final String label;
+  final String semanticLabel;
+  final VoidCallback onTap;
+  final int animationIndex;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: semanticLabel ?? label,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: AppSpacing.touchTargetComfortable),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg,
-              vertical: AppSpacing.md,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceCard,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: AppSpacing.iconMd, color: AppColors.primaryAmber),
-                const SizedBox(width: AppSpacing.sm),
-                Text(label, style: AppTypography.labelMedium),
-              ],
-            ),
+      label: semanticLabel,
+      child: GestureDetector(
+        onTap: () async {
+          await HapticFeedback.lightImpact();
+          onTap();
+        },
+        child: GlassCard(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 28, color: AppColors.primaryAmber),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppTypography.labelMedium,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
         ),
       ),
-    );
+    )
+        .animate(
+          delay: Duration(milliseconds: animationIndex * 80),
+        )
+        .fadeIn(duration: 400.ms)
+        .slideY(begin: 0.2, end: 0);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Check-in cards
+// ---------------------------------------------------------------------------
 
 class _CheckInCards extends StatelessWidget {
   const _CheckInCards({required this.snapshot});
@@ -664,9 +839,10 @@ class _CheckInCards extends StatelessWidget {
       children: [
         _CheckInCard(
           title: 'Morning Intention',
-          subtitle: snapshot.morningCheckIn?.intention?.trim().isNotEmpty == true
-              ? snapshot.morningCheckIn!.intention!
-              : 'Set your intention for the day',
+          subtitle:
+              snapshot.morningCheckIn?.intention?.trim().isNotEmpty == true
+                  ? snapshot.morningCheckIn!.intention!
+                  : 'Set your intention for the day',
           icon: Icons.wb_sunny_outlined,
           isComplete: snapshot.morningCheckIn != null,
           onTap: () => context.push('/home/morning-intention'),
@@ -674,9 +850,10 @@ class _CheckInCards extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         _CheckInCard(
           title: 'Evening Pulse',
-          subtitle: snapshot.eveningCheckIn?.reflection?.trim().isNotEmpty == true
-              ? snapshot.eveningCheckIn!.reflection!
-              : 'Reflect on your day and log cravings',
+          subtitle:
+              snapshot.eveningCheckIn?.reflection?.trim().isNotEmpty == true
+                  ? snapshot.eveningCheckIn!.reflection!
+                  : 'Reflect on your day and log cravings',
           icon: Icons.nightlight_outlined,
           isComplete: snapshot.eveningCheckIn != null,
           onTap: () => context.push('/home/evening-pulse'),
@@ -706,63 +883,88 @@ class _CheckInCard extends StatelessWidget {
     return Semantics(
       button: true,
       label: '$title. ${isComplete ? 'Completed' : 'Not completed'}. $subtitle',
-      child: Card(
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryAmber.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: AppColors.primaryAmber,
-                    size: AppSpacing.iconLg,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.lg),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+      child: GlassCard(
+        padding: EdgeInsets.zero,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusStandard),
+          child: Container(
+            decoration: isComplete
+                ? BoxDecoration(
+                    border: const Border(
+                      left: BorderSide(
+                        color: AppColors.success,
+                        width: 3,
+                      ),
+                    ),
+                    borderRadius:
+                        BorderRadius.circular(AppSpacing.radiusStandard),
+                  )
+                : null,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusStandard),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryAmber.withValues(alpha: 0.2),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusMd),
+                      ),
+                      child: Icon(
+                        icon,
+                        color: AppColors.primaryAmber,
+                        size: AppSpacing.iconLg,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.lg),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Text(title, style: AppTypography.titleMedium),
-                          ),
-                          if (isComplete)
-                            Semantics(
-                              label: 'Completed',
-                              child: const Icon(
-                                Icons.check_circle,
-                                color: AppColors.success,
-                                size: AppSpacing.iconMd,
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  title,
+                                  style: AppTypography.titleMedium,
+                                ),
                               ),
+                              if (isComplete)
+                                Semantics(
+                                  label: 'Completed',
+                                  child: const Icon(
+                                    Icons.check_circle,
+                                    color: AppColors.success,
+                                    size: AppSpacing.iconMd,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            subtitle,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textMuted,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ],
                       ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        subtitle,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textMuted,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                    ),
+                    const ExcludeSemantics(
+                      child: Icon(
+                        Icons.chevron_right,
+                        color: AppColors.textMuted,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const ExcludeSemantics(
-                  child: Icon(Icons.chevron_right, color: AppColors.textMuted),
-                ),
-              ],
+              ),
             ),
           ),
         ),

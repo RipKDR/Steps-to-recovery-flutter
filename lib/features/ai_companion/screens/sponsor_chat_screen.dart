@@ -1,5 +1,7 @@
 // lib/features/ai_companion/screens/sponsor_chat_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/crisis_constants.dart';
 import '../../../core/models/sponsor_models.dart';
@@ -124,6 +126,13 @@ class _SponsorChatScreenState extends State<SponsorChatScreen>
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(0.5),
+          child: Container(
+            height: 0.5,
+            color: AppColors.primaryAmber.withValues(alpha: 0.3),
+          ),
+        ),
         title: Row(
           children: [
             CircleAvatar(
@@ -141,7 +150,12 @@ class _SponsorChatScreenState extends State<SponsorChatScreen>
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_sponsorName, style: AppTypography.labelLarge),
+                Text(
+                  _sponsorName,
+                  style: AppTypography.labelLarge.copyWith(
+                    color: AppColors.primaryAmber,
+                  ),
+                ),
                 Row(
                   children: [
                     Container(
@@ -186,11 +200,39 @@ class _SponsorChatScreenState extends State<SponsorChatScreen>
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(AppSpacing.md),
-              itemCount: _messages.length,
+              itemCount: _messages.length + (_isSending ? 1 : 0),
               itemBuilder: (context, index) {
+                // Typing indicator as last item while sending
+                if (_isSending && index == _messages.length) {
+                  return Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.xs),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceCard,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(4),
+                          topRight: Radius.circular(16),
+                          bottomLeft: Radius.circular(16),
+                          bottomRight: Radius.circular(16),
+                        ),
+                        border: const Border(
+                          left: BorderSide(
+                              color: AppColors.primaryAmber, width: 2),
+                        ),
+                      ),
+                      child: const _TypingIndicator(),
+                    ),
+                  ).animate().fadeIn(duration: 250.ms).slideY(
+                      begin: 0.1, end: 0);
+                }
                 final msg = _messages[index];
-                final isLast = index == _messages.length - 1;
-                final isCrisisMsg = isLast && !msg.isUser && _isCrisisMode;
+                final isLastMessage = index == _messages.length - 1;
+                final isCrisisMsg =
+                    isLastMessage && !msg.isUser && _isCrisisMode;
                 return _MessageBubble(
                   message: msg,
                   isCrisisMode: isCrisisMsg,
@@ -239,7 +281,7 @@ class _SponsorChatScreenState extends State<SponsorChatScreen>
             onSend: () => _sendMessage(_messageController.text),
           ),
         ],
-      ),
+      ).animate().fadeIn(duration: 400.ms),
     );
   }
 }
@@ -261,7 +303,10 @@ class _MessageBubble extends StatelessWidget {
     return Semantics(
       label: isUser ? 'Your message' : 'Message from $sponsorName',
       child: _buildBubble(isUser, context),
-    );
+    )
+        .animate()
+        .fadeIn(duration: 250.ms)
+        .slideY(begin: 0.1, end: 0);
   }
 
   Align _buildBubble(bool isUser, BuildContext context) {
@@ -270,38 +315,136 @@ class _MessageBubble extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.82),
-        decoration: BoxDecoration(
-          color: isUser ? AppColors.primaryAmber : AppColors.surfaceBubble,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(20),
-            topRight: const Radius.circular(20),
-            bottomLeft: Radius.circular(isUser ? 20 : 4),
-            bottomRight: Radius.circular(isUser ? 4 : 20),
-          ),
-          border: isCrisisMode && !isUser
-              ? Border.all(
-                  color: AppColors.danger.withValues(alpha: 0.5),
-                  width: 1,
-                )
-              : null,
-          boxShadow: isCrisisMode && !isUser
-              ? [
+            maxWidth: MediaQuery.of(context).size.width * 0.82),
+        decoration: isUser
+            ? BoxDecoration(
+                gradient: const LinearGradient(
+                    colors: AppColors.primaryGradient),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(4),
+                ),
+                boxShadow: [
                   BoxShadow(
-                    color: AppColors.danger.withValues(alpha: 0.15),
-                    blurRadius: 12,
+                    color: AppColors.primaryAmber.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
-                ]
-              : null,
-        ),
+                ],
+              )
+            : BoxDecoration(
+                color: AppColors.surfaceCard,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(4),
+                  topRight: Radius.circular(16),
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                ),
+                border: Border(
+                  left: const BorderSide(
+                      color: AppColors.primaryAmber, width: 2),
+                  top: isCrisisMode
+                      ? BorderSide(
+                          color: AppColors.danger.withValues(alpha: 0.5),
+                          width: 1)
+                      : BorderSide.none,
+                  right: isCrisisMode
+                      ? BorderSide(
+                          color: AppColors.danger.withValues(alpha: 0.5),
+                          width: 1)
+                      : BorderSide.none,
+                  bottom: isCrisisMode
+                      ? BorderSide(
+                          color: AppColors.danger.withValues(alpha: 0.5),
+                          width: 1)
+                      : BorderSide.none,
+                ),
+                boxShadow: isCrisisMode
+                    ? [
+                        BoxShadow(
+                          color: AppColors.danger.withValues(alpha: 0.15),
+                          blurRadius: 12,
+                        ),
+                      ]
+                    : null,
+              ),
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
+          horizontal: AppSpacing.md,
+          vertical: 10,
         ),
         child: Text(
           message.content,
           style: AppTypography.bodyMedium.copyWith(
-            color: isUser ? AppColors.background : AppColors.textPrimary,
+            color:
+                isUser ? AppColors.textOnDark : AppColors.textPrimary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TypingIndicator extends StatefulWidget {
+  const _TypingIndicator();
+
+  @override
+  State<_TypingIndicator> createState() => _TypingIndicatorState();
+}
+
+class _TypingIndicatorState extends State<_TypingIndicator>
+    with TickerProviderStateMixin {
+  late final List<AnimationController> _controllers;
+
+  @override
+  void initState() {
+    super.initState();
+    final reduceMotion =
+        WidgetsBinding.instance.platformDispatcher.accessibilityFeatures
+            .disableAnimations;
+
+    _controllers = List.generate(3, (i) {
+      final ctrl = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 600),
+      );
+      if (!reduceMotion) {
+        Future.delayed(Duration(milliseconds: i * 150), () {
+          if (mounted) {
+            ctrl.repeat(reverse: true);
+          }
+        });
+      }
+      return ctrl;
+    });
+  }
+
+  @override
+  void dispose() {
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(
+        3,
+        (i) => AnimatedBuilder(
+          animation: _controllers[i],
+          builder: (_, __) => Container(
+            margin: const EdgeInsets.symmetric(horizontal: 2),
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.textMuted
+                  .withValues(alpha: 0.4 + _controllers[i].value * 0.6),
+            ),
           ),
         ),
       ),
@@ -355,7 +498,8 @@ class _InputBar extends StatelessWidget {
         decoration: const BoxDecoration(
           color: AppColors.background,
           border: Border(
-              top: BorderSide(color: AppColors.border)),
+            top: BorderSide(color: AppColors.border, width: 0.5),
+          ),
         ),
         child: Row(
           children: [
@@ -379,25 +523,37 @@ class _InputBar extends StatelessWidget {
                     vertical: AppSpacing.sm,
                   ),
                 ),
-                onSubmitted: (_) => onSend(),
+                onSubmitted: (_) {
+                  HapticFeedback.lightImpact();
+                  onSend();
+                },
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Semantics(
               label: 'Send message',
               button: true,
-              child: SizedBox(
-                width: AppSpacing.touchTargetComfortable,
-                height: AppSpacing.touchTargetComfortable,
-                child: IconButton(
-                  onPressed: isSending ? null : onSend,
-                  style: IconButton.styleFrom(
-                    backgroundColor: isSending
+              child: GestureDetector(
+                onTap: isSending
+                    ? null
+                    : () {
+                        HapticFeedback.lightImpact();
+                        onSend();
+                      },
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isSending
                         ? AppColors.primaryAmber.withValues(alpha: 0.4)
                         : AppColors.primaryAmber,
-                    shape: const CircleBorder(),
                   ),
-                  icon: const Icon(Icons.send, color: AppColors.textOnDark, size: 20),
+                  child: const Icon(
+                    Icons.arrow_upward,
+                    color: AppColors.textOnDark,
+                    size: 20,
+                  ),
                 ),
               ),
             ),

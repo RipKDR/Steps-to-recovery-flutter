@@ -1,5 +1,7 @@
 // lib/features/ai_companion/screens/sponsor_intro_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/models/sponsor_models.dart';
 import '../../../core/services/sponsor_service.dart';
 import '../../../core/theme/app_colors.dart';
@@ -43,12 +45,14 @@ class _SponsorIntroScreenState extends State<SponsorIntroScreen> {
   Future<void> _submit() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
+    HapticFeedback.lightImpact();
     setState(() => _submitting = true);
     await _service.setupIdentity(name, _selectedVibe);
     widget.onComplete();
   }
 
   Future<void> _skip() async {
+    HapticFeedback.lightImpact();
     await _service.setupIdentity('Alex', SponsorVibe.warm);
     widget.onComplete();
   }
@@ -236,13 +240,13 @@ class _SponsorIntroScreenState extends State<SponsorIntroScreen> {
                             ),
                           ),
                         ),
-                      );
+                      ).animate(delay: 300.ms).fadeIn(duration: 400.ms);
                     },
                   ),
                   const SizedBox(height: AppSpacing.xxl),
                 ],
               ),
-            ),
+            ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0),
           ],
         ),
       ),
