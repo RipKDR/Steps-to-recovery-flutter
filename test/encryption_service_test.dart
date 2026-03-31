@@ -15,6 +15,7 @@ void main() {
       TestWidgetsFlutterBinding.ensureInitialized();
       SharedPreferences.setMockInitialValues(<String, Object>{});
       PreferencesService().resetForTest();
+      EncryptionService().resetForTest();
       FlutterSecureStoragePlatform.instance = TestFlutterSecureStoragePlatform(
         <String, String>{},
       );
@@ -78,5 +79,69 @@ void main() {
       final encrypted = service.encrypt(plainText);
       expect(encrypted, isNot(plainText));
     });
+
+    test('initialize surfaces secure storage failures explicitly', () async {
+      EncryptionService().resetForTest();
+      FlutterSecureStoragePlatform.instance = _FailingSecureStoragePlatform();
+      final failingService = EncryptionService();
+
+      await expectLater(failingService.initialize(), throwsStateError);
+
+      expect(failingService.isInitialized, isFalse);
+      expect(failingService.isSecureStorageAvailable, isFalse);
+      expect(
+        failingService.initializationError,
+        contains('Secure storage is unavailable'),
+      );
+      expect(
+        () => failingService.encrypt('journal entry'),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains('Secure storage is unavailable'),
+          ),
+        ),
+      );
+    });
   });
+}
+
+class _FailingSecureStoragePlatform extends FlutterSecureStoragePlatform {
+  @override
+  Future<bool> containsKey({
+    required String key,
+    required Map<String, String> options,
+  }) async => false;
+
+  @override
+  Future<void> delete({
+    required String key,
+    required Map<String, String> options,
+  }) async {}
+
+  @override
+  Future<void> deleteAll({required Map<String, String> options}) async {}
+
+  @override
+  Future<String?> read({
+    required String key,
+    required Map<String, String> options,
+  }) async {
+    throw StateError('Secure storage read failed');
+  }
+
+  @override
+  Future<Map<String, String>> readAll({
+    required Map<String, String> options,
+  }) async => <String, String>{};
+
+  @override
+  Future<void> write({
+    required String key,
+    required String value,
+    required Map<String, String> options,
+  }) async {
+    throw StateError('Secure storage write failed');
+  }
 }

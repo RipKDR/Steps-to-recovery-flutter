@@ -1,4 +1,7 @@
 param(
+    [Alias('d')]
+    [string]$DeviceId,
+
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$FlutterArgs
 )
@@ -47,7 +50,22 @@ function Quote-PowerShellArg {
 
 $flutterExecutable = Get-FlutterExecutable
 $commandParts = @("&", (Quote-PowerShellArg -Value $flutterExecutable))
-$commandParts += $FlutterArgs | ForEach-Object { Quote-PowerShellArg -Value $_ }
+
+if ($FlutterArgs.Count -gt 0) {
+    $commandParts += Quote-PowerShellArg -Value $FlutterArgs[0]
+}
+
+if ($PSBoundParameters.ContainsKey('DeviceId')) {
+    $commandParts += Quote-PowerShellArg -Value "-d"
+    $commandParts += Quote-PowerShellArg -Value $DeviceId
+}
+
+if ($FlutterArgs.Count -gt 1) {
+    $commandParts += $FlutterArgs[1..($FlutterArgs.Count - 1)] | ForEach-Object {
+        Quote-PowerShellArg -Value $_
+    }
+}
+
 $command = $commandParts -join " "
 
 Push-Location $projectRoot

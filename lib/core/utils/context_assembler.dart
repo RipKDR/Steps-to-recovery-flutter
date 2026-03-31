@@ -4,7 +4,7 @@ import '../models/sponsor_models.dart';
 
 /// Aggregated signals passed into ContextAssembler.
 class SponsorSignals {
-  final String moodTrend;       // 'improving' | 'stable' | 'declining' | 'no data'
+  final String moodTrend; // 'improving' | 'stable' | 'declining' | 'no data'
   final String cravingVsBaseline; // 'above' | 'at' | 'below' | 'no data'
   final int checkInStreak;
   final int daysSinceJournal;
@@ -47,7 +47,9 @@ class ContextAssembler {
     buffer.writeln(_identitySection(identity));
     buffer.writeln(_stageSection(stage, sobrietyDays));
     buffer.writeln(_memorySection(memories));
-    buffer.writeln(_signalsSection(sobrietyDays, signals, stageData.engagementScore));
+    buffer.writeln(
+      _signalsSection(sobrietyDays, signals, stageData.engagementScore),
+    );
     buffer.writeln(_contractSection(identity.name, identity.vibe));
     if (isCrisis) buffer.writeln(_crisisAddendum());
     buffer.writeln('[USER MESSAGE]');
@@ -56,7 +58,8 @@ class ContextAssembler {
     return buffer.toString().trim();
   }
 
-  static String _soulSection() => '''
+  static String _soulSection() =>
+      '''
 [SOUL DOCUMENT]
 ${SponsorSoul.document}
 ''';
@@ -85,11 +88,11 @@ Your vibe: $vibeGuidance.
       SponsorStage.new_ =>
         'Professional warmth. Max 1 nudge reference per session. Ask up to 3 gentle onboarding questions to learn about this person.',
       SponsorStage.building =>
-        'Reference past conversations naturally. Begin recognising patterns. Slightly more direct.',
+        'Reference past conversations naturally. Begin recognizing patterns. Slightly more direct.',
       SponsorStage.trusted =>
         'Call out avoidance when you see it. Initiate on drift. Less formal — you know each other.',
       SponsorStage.close =>
-        'Deep references. Push gently on growth. Summarise journey arcs when relevant.',
+        'Deep references. Push gently on growth. Summarize journey arcs when relevant.',
       SponsorStage.deep =>
         'Full journey awareness. Growth-oriented challenges. You have history together — use it.',
     };
@@ -104,13 +107,18 @@ $stageRules
     if (memories.isEmpty) {
       return '[MEMORY]\nNo long-term memories yet. This is an early conversation.\n';
     }
-    final lines = memories.take(8).map((m) {
-      final cat = m.category.name.replaceAllMapped(
-        RegExp(r'([A-Z])'),
-        (match) => ' ${match.group(0)}',
-      ).trim();
-      return '- $cat: ${m.summary}';
-    }).join('\n');
+    final lines = memories
+        .take(8)
+        .map((m) {
+          final cat = m.category.name
+              .replaceAllMapped(
+                RegExp(r'([A-Z])'),
+                (match) => ' ${match.group(0)}',
+              )
+              .trim();
+          return '- $cat: ${m.summary}';
+        })
+        .join('\n');
     return '''
 [MEMORY]
 What you know about this person (never reference raw journal text):
@@ -122,7 +130,8 @@ $lines
     int sobrietyDays,
     SponsorSignals signals,
     int engagementScore,
-  ) => '''
+  ) =>
+      '''
 [SIGNALS]
 - Sobriety days: $sobrietyDays
 - Mood trend (last 7 days): ${signals.moodTrend}
@@ -133,7 +142,8 @@ $lines
 - Engagement score: $engagementScore
 ''';
 
-  static String _contractSection(String name, SponsorVibe vibe) => '''
+  static String _contractSection(String name, SponsorVibe vibe) =>
+      '''
 [RESPONSE CONTRACT]
 - Respond as $name, first person, never break character
 - Never say "As an AI" or anything that breaks the sponsor persona
@@ -147,6 +157,6 @@ $lines
 Shift immediately. Be direct, grounded, present.
 Acknowledge the pain first. Then: one concrete next step.
 Always include: "988 is there right now if you need it."
-Do not give lists. Do not minimise. Stay with them.
+Do not give lists. Do not minimize. Stay with them.
 ''';
 }

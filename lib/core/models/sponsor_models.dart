@@ -91,8 +91,11 @@ class SponsorStageData {
     }
 
     // Take the highest of the three — never go backward
-    return [scoreBased, daysBased, stage]
-        .reduce((a, b) => a.index > b.index ? a : b);
+    return [
+      scoreBased,
+      daysBased,
+      stage,
+    ].reduce((a, b) => a.index > b.index ? a : b);
   }
 
   SponsorStageData copyWith({
@@ -157,7 +160,7 @@ class SponsorMemory {
   );
 }
 
-/// Container for all 3 memory tiers — serialised to/from sponsor_memory.json
+/// Container for all 3 memory tiers — serialized to/from sponsor_memory.json
 class SponsorMemoryFile {
   final List<SponsorMemory> session;
   final List<SponsorMemory> digest;

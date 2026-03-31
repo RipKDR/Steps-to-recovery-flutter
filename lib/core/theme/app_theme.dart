@@ -269,7 +269,7 @@ class AppTheme {
   }
 
   /// Light accessibility theme — off-white base, amber primary.
-  /// Amber brand colour is unchanged so milestones/CTAs read identically.
+  /// Amber brand color is unchanged so milestones/CTAs read identically.
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
@@ -291,21 +291,51 @@ class AppTheme {
         onSurfaceVariant: AppColors.lightTextSecondary,
       ),
       textTheme: TextTheme(
-        displayLarge: AppTypography.displayLarge.copyWith(color: AppColors.lightTextPrimary),
-        displayMedium: AppTypography.displayMedium.copyWith(color: AppColors.lightTextPrimary),
-        displaySmall: AppTypography.displaySmall.copyWith(color: AppColors.lightTextPrimary),
-        headlineLarge: AppTypography.headlineLarge.copyWith(color: AppColors.lightTextPrimary),
-        headlineMedium: AppTypography.headlineMedium.copyWith(color: AppColors.lightTextPrimary),
-        headlineSmall: AppTypography.headlineSmall.copyWith(color: AppColors.lightTextPrimary),
-        titleLarge: AppTypography.titleLarge.copyWith(color: AppColors.lightTextPrimary),
-        titleMedium: AppTypography.titleMedium.copyWith(color: AppColors.lightTextPrimary),
-        titleSmall: AppTypography.titleSmall.copyWith(color: AppColors.lightTextPrimary),
-        bodyLarge: AppTypography.bodyLarge.copyWith(color: AppColors.lightTextPrimary),
-        bodyMedium: AppTypography.bodyMedium.copyWith(color: AppColors.lightTextPrimary),
-        bodySmall: AppTypography.bodySmall.copyWith(color: AppColors.lightTextSecondary),
-        labelLarge: AppTypography.labelLarge.copyWith(color: AppColors.lightTextPrimary),
-        labelMedium: AppTypography.labelMedium.copyWith(color: AppColors.lightTextSecondary),
-        labelSmall: AppTypography.labelSmall.copyWith(color: AppColors.lightTextMuted),
+        displayLarge: AppTypography.displayLarge.copyWith(
+          color: AppColors.lightTextPrimary,
+        ),
+        displayMedium: AppTypography.displayMedium.copyWith(
+          color: AppColors.lightTextPrimary,
+        ),
+        displaySmall: AppTypography.displaySmall.copyWith(
+          color: AppColors.lightTextPrimary,
+        ),
+        headlineLarge: AppTypography.headlineLarge.copyWith(
+          color: AppColors.lightTextPrimary,
+        ),
+        headlineMedium: AppTypography.headlineMedium.copyWith(
+          color: AppColors.lightTextPrimary,
+        ),
+        headlineSmall: AppTypography.headlineSmall.copyWith(
+          color: AppColors.lightTextPrimary,
+        ),
+        titleLarge: AppTypography.titleLarge.copyWith(
+          color: AppColors.lightTextPrimary,
+        ),
+        titleMedium: AppTypography.titleMedium.copyWith(
+          color: AppColors.lightTextPrimary,
+        ),
+        titleSmall: AppTypography.titleSmall.copyWith(
+          color: AppColors.lightTextPrimary,
+        ),
+        bodyLarge: AppTypography.bodyLarge.copyWith(
+          color: AppColors.lightTextPrimary,
+        ),
+        bodyMedium: AppTypography.bodyMedium.copyWith(
+          color: AppColors.lightTextPrimary,
+        ),
+        bodySmall: AppTypography.bodySmall.copyWith(
+          color: AppColors.lightTextSecondary,
+        ),
+        labelLarge: AppTypography.labelLarge.copyWith(
+          color: AppColors.lightTextPrimary,
+        ),
+        labelMedium: AppTypography.labelMedium.copyWith(
+          color: AppColors.lightTextSecondary,
+        ),
+        labelSmall: AppTypography.labelSmall.copyWith(
+          color: AppColors.lightTextMuted,
+        ),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.lightSurface,

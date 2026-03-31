@@ -1,8 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_secure_storage/test/test_flutter_secure_storage_platform.dart';
+// ignore: depend_on_referenced_packages
+import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage_platform_interface.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:steps_recovery_flutter/core/constants/app_constants.dart';
 import 'package:steps_recovery_flutter/core/constants/step_prompts.dart';
 import 'package:steps_recovery_flutter/core/models/database_models.dart';
 import 'package:steps_recovery_flutter/core/services/database_service.dart';
+import 'package:steps_recovery_flutter/core/services/encryption_service.dart';
+import 'package:steps_recovery_flutter/core/services/preferences_service.dart';
 
 import 'test_helpers.dart';
 
@@ -215,9 +221,64 @@ void main() {
       expect(stepOne.status, StepStatus.completed);
       expect(stepOne.completionPercentage, 1);
     });
+
+    test('marks recovery as required when secure storage initialization fails', () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      PreferencesService().resetForTest();
+      EncryptionService().resetForTest();
+      DatabaseService().resetForTest();
+      FlutterSecureStoragePlatform.instance = _FailingSecureStoragePlatform();
+      final database = DatabaseService();
+
+      await expectLater(database.initialize(), throwsStateError);
+
+      expect(database.isInitialized, isFalse);
+      expect(database.isEncryptionSecure, isFalse);
+      expect(database.requiresRecovery, isTrue);
+      expect(database.recoveryMessage, contains('Secure storage is unavailable'));
+    });
   });
 }
 
 List<String> _flattenQuestions(StepPrompt step) {
   return step.sections.expand((section) => section.prompts).toList();
+}
+
+class _FailingSecureStoragePlatform extends FlutterSecureStoragePlatform {
+  @override
+  Future<bool> containsKey({
+    required String key,
+    required Map<String, String> options,
+  }) async => false;
+
+  @override
+  Future<void> delete({
+    required String key,
+    required Map<String, String> options,
+  }) async {}
+
+  @override
+  Future<void> deleteAll({required Map<String, String> options}) async {}
+
+  @override
+  Future<String?> read({
+    required String key,
+    required Map<String, String> options,
+  }) async {
+    throw StateError('Secure storage read failed');
+  }
+
+  @override
+  Future<Map<String, String>> readAll({
+    required Map<String, String> options,
+  }) async => <String, String>{};
+
+  @override
+  Future<void> write({
+    required String key,
+    required String value,
+    required Map<String, String> options,
+  }) async {
+    throw StateError('Secure storage write failed');
+  }
 }

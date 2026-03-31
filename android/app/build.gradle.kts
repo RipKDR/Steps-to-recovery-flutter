@@ -2,12 +2,16 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    // START: FlutterFire Configuration
-    id("com.google.gms.google-services")
-    // END: FlutterFire Configuration
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+val googleServicesJson = file("google-services.json")
+if (googleServicesJson.exists()) {
+    // START: FlutterFire Configuration
+    apply(plugin = "com.google.gms.google-services")
+    // END: FlutterFire Configuration
 }
 
 android {
@@ -49,7 +53,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.steps_recovery_flutter"
-        minSdk = flutter.minSdkVersion
+        minSdk = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
