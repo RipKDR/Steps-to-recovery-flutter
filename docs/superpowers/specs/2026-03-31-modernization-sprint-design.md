@@ -95,7 +95,7 @@ A `StatefulWidget` with `SingleTickerProviderStateMixin`:
 
 - **`breathing` type:** Amber circle, `AnimationController` drives scale via `CurvedAnimation(parent: controller, curve: Curves.easeInOut)`. Phase label centered. Countdown beneath. Loops phases.
 - **`textGuided` type:** No circle. `GuidedPhase.instruction` text centered (large, readable). Countdown beneath.
-- **`progressive` type:** Body outline SVG with highlighted zone per phase (or simplified text list if SVG adds complexity — implementor calls this).
+- **`progressive` type:** Text-list format by default — each `GuidedPhase.instruction` shown as centered text with phase countdown, zones called out by name ("Feet and calves", "Lower back", etc.). A body-outline SVG is an enhancement for a later pass. `flutter_svg` is NOT added in this sprint. This avoids a new package dependency for a feature that works equally well with text.
 - All types: play/pause FAB, phase progress ring (`percent_indicator` package, already in pubspec), session complete screen, haptic on phase start.
 
 **Replaces `_MiniPlayer`**: The existing `_MiniPlayer` widget in `MindfulnessLibraryScreen` reads from `MindfulnessAudioService`. In the redesign, `GuidedSessionPlayer` is presented as a `showModalBottomSheet` from the track card — not an always-on mini player. The `_MiniPlayer` widget is removed. There is no in-library persistent playback indicator in v1. A persistent mini-player can be added when real audio is introduced.
@@ -217,7 +217,7 @@ String labelFor(AppLabel label) {
 }
 ```
 
-**`AppLabel` enum** — added alongside `AppStateService` or in `app_constants.dart`:
+**`AppLabel` enum** — added to `lib/core/models/recovery_path.dart` (same file as `RecoveryPath`, consistent with enum-in-models pattern):
 ```dart
 enum AppLabel { stepWork, cleanTime, cravings, aiCompanion }
 ```
@@ -273,17 +273,20 @@ On submit (or skip): stores via `AppStateService.setOnboardingContext(text ?? ''
 ```dart
 RecoveryPath _inferPath(String text) {
   final lower = text.toLowerCase();
-  if (RegExp(r'\b(aa|na|ga|12.step|12 step|sober|sobriety|clean)\b').hasMatch(lower))
+  // Word-boundary guards prevent false positives (e.g. "food" in "good food choices")
+  if (RegExp(r'\b(aa|na|ga|12[- ]step|sober|sobriety|clean time|step work)\b').hasMatch(lower))
     return RecoveryPath.twelveStep;
-  if (RegExp(r'\b(cut back|drink less|manage|reduce|harm reduction)\b').hasMatch(lower))
+  if (RegExp(r'\b(cut back|drink less|harm reduction|manage my use|reduce)\b').hasMatch(lower))
     return RecoveryPath.harmReduction;
-  if (RegExp(r'\b(gambl|screen|food|sex|porn|relationship|binge)\b').hasMatch(lower))
+  if (RegExp(r'\b(gambling|screens|porn|pornography|binge eating|sex addiction)\b').hasMatch(lower))
     return RecoveryPath.behavioralAddiction;
-  if (RegExp(r'\b(smart recovery|secular|evidence.based|no program)\b').hasMatch(lower))
+  if (RegExp(r'\b(smart recovery|secular|evidence.based|no program|not 12.step)\b').hasMatch(lower))
     return RecoveryPath.nonTwelveStep;
   return RecoveryPath.unknown;
 }
 ```
+Note: false negatives (defaulting to `unknown`) are safe and expected — `unknown` gets neutral language which is always appropriate. False positives are the risk to avoid, hence specific phrases over single words like "food" or "relationship".
+
 Calls `AppStateService.setRecoveryPath(_inferPath(text))` after storing context.
 
 If skipped: `RecoveryPath.unknown` (default — already set at init).
@@ -299,7 +302,7 @@ Static — no chat bubble. Clean card with:
 Simple settings. Heading: *"Your data is encrypted on your device."*
 
 Two `SwitchListTile`s:
-- **Biometric Lock** — off by default. On toggle-on: calls `BiometricService.isAvailable()` first. If not available (no enrolled biometrics), shows a `SnackBar`: *"No biometrics set up on this device. You can enable this in Settings later."* Leaves the switch off. Does NOT call `setBiometricEnabled(true)` if unavailable.
+- **Biometric Lock** — off by default. On toggle-on: calls `BiometricService().isAvailable()` first (`lib/core/services/biometric_service.dart` — singleton, `isAvailable()` returns `Future<bool>`). If returns `false` (no enrolled biometrics or hardware unavailable), shows a `SnackBar`: *"No biometrics set up on this device. You can enable this in Settings later."* Leaves the switch off. Does NOT call `AppStateService.setBiometricEnabled(true)` if unavailable. If `isAvailable()` returns `true`, proceeds with `setBiometricEnabled(true)` as normal.
 - **Notifications** — on by default.
 
 One footer line: *"Configure everything else in Settings."*
