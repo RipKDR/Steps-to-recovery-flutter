@@ -72,8 +72,6 @@ class AppStateService extends ChangeNotifier {
   SharedPreferences? _prefs;
   bool _ready = false;
   bool _initializing = false;
-  Future<void> Function()? _databaseInitializerForTest;
-  String? _initializationError;
 
   bool _onboardingComplete = false;
   bool _signedIn = false;
@@ -180,8 +178,6 @@ class AppStateService extends ChangeNotifier {
   /// Get current failed attempt count
   int get failedAttemptCount => _prefs?.getInt(_keyFailedAttempts) ?? 0;
 
-  String? get initializationError => _initializationError;
-
   /// Record a failed authentication attempt
   Future<void> _recordFailedAttempt() async {
     final attempts = (_prefs?.getInt(_keyFailedAttempts) ?? 0) + 1;
@@ -224,42 +220,28 @@ Account locked due to too many failed attempts. """
     }
 
     _initializing = true;
-    _initializationError = null;
+    _prefs ??= await SharedPreferences.getInstance();
+    await DatabaseService().initialize();
+    _hydrateFromPrefs();
 
-    try {
-      _prefs ??= await SharedPreferences.getInstance();
-      final databaseInitializer =
-          _databaseInitializerForTest ?? DatabaseService().initialize;
-      await databaseInitializer();
-      _hydrateFromPrefs();
-
-      if (_signedIn && _userId != null) {
-        await DatabaseService().setActiveUser(_userId);
-        await _ensureCurrentUserProfile();
-      } else {
-        await DatabaseService().setActiveUser(null);
-      }
-
-      if (_sobrietyDate != null) {
-        unawaited(
-          MilestoneService().checkAndScheduleApproachNotifications(
-            _sobrietyDate!,
-          ),
-        );
-      }
-
-      _ready = true;
-    } catch (error, stackTrace) {
-      _initializationError = error.toString();
-      LoggerService().error(
-        'Failed to initialize AppStateService',
-        error: error,
-        stackTrace: stackTrace,
-      );
-    } finally {
-      _initializing = false;
-      notifyListeners();
+    if (_signedIn && _userId != null) {
+      await DatabaseService().setActiveUser(_userId);
+      await _ensureCurrentUserProfile();
+    } else {
+      await DatabaseService().setActiveUser(null);
     }
+
+    if (_sobrietyDate != null) {
+      unawaited(
+        MilestoneService().checkAndScheduleApproachNotifications(
+          _sobrietyDate!,
+        ),
+      );
+    }
+
+    _ready = true;
+    _initializing = false;
+    notifyListeners();
   }
 
   void _hydrateFromPrefs() {
@@ -489,8 +471,6 @@ Account locked due to too many failed attempts. """
     await _prefs?.remove(_keyEmail);
     await _prefs?.remove(_keyDisplayName);
     await _prefs?.remove(_keyUserId);
-    await _prefs?.remove(_keySobrietyDate);
-    await _prefs?.remove(_keyProgramType);
     await _syncReminderPreferences();
     notifyListeners();
   }
@@ -802,8 +782,6 @@ Account locked due to too many failed attempts. """
     _prefs = null;
     _ready = false;
     _initializing = false;
-    _initializationError = null;
-    _databaseInitializerForTest = null;
     _onboardingComplete = false;
     _signedIn = false;
     _sessionToken = null;
@@ -821,9 +799,6 @@ Account locked due to too many failed attempts. """
     _accounts = <_LocalAccount>[];
   }
 
-  void setDatabaseInitializerForTest(Future<void> Function()? initializer) {
-    _databaseInitializerForTest = initializer;
-  }
 }
 
 class _LocalAccount {

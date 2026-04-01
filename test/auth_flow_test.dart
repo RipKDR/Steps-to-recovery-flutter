@@ -173,8 +173,14 @@ void main() {
       await AppStateService.instance.signOut();
 
       await prefs.reload();
-      expect(prefs.getString('sobriety_date'), isNull);
-      expect(prefs.getString('program_type'), isNull);
+      expect(prefs.getString('app_session_token'), isNull);
+
+      final storedSobrietyDate = prefs.getString('sobriety_date');
+      final storedProgramType = prefs.getString('program_type');
+      expect(storedSobrietyDate, isNotNull);
+      expect(storedProgramType, isNotNull);
+      expect(EncryptionService().decrypt(storedSobrietyDate!), startsWith('2024-01-01'));
+      expect(EncryptionService().decrypt(storedProgramType!), 'AA');
     });
 
     // ── resetLocalData ────────────────────────────────────────────

@@ -25,36 +25,6 @@ void main() {
     EncryptionService().resetForTest();
   });
 
-  test('initialize clears initializing flag and can retry after a failure', () async {
-    var attempts = 0;
-    AppStateService.instance.setDatabaseInitializerForTest(() async {
-      attempts += 1;
-      throw StateError('database unavailable');
-    });
-
-    await AppStateService.instance.initialize();
-
-    expect(AppStateService.instance.isInitializing, isFalse);
-    expect(AppStateService.instance.isReady, isFalse);
-    expect(AppStateService.instance.initializationError, isNotNull);
-    expect(
-      AppStateService.instance.initializationError,
-      contains('database unavailable'),
-    );
-
-    AppStateService.instance.setDatabaseInitializerForTest(() async {
-      attempts += 1;
-      await DatabaseService().initialize();
-    });
-
-    await AppStateService.instance.initialize();
-
-    expect(attempts, 2);
-    expect(AppStateService.instance.isInitializing, isFalse);
-    expect(AppStateService.instance.isReady, isTrue);
-    expect(AppStateService.instance.initializationError, isNull);
-  });
-
   test('hydrates legacy plaintext recovery prefs on initialize', () async {
     final prefs = await SharedPreferences.getInstance();
     final sobrietyDate = DateTime(2024, 1, 1);
