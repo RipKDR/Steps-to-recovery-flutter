@@ -18,6 +18,7 @@ class PreferencesService {
 
   /// Initialize preferences
   Future<void> initialize() async {
+    await EncryptionService().initialize();
     _prefs ??= await SharedPreferences.getInstance();
   }
 

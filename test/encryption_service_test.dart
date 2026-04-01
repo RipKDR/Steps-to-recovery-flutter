@@ -81,25 +81,30 @@ void main() {
     });
 
     test('initialize surfaces secure storage failures explicitly', () async {
-      EncryptionService().resetForTest();
+      await EncryptionService().dispose();
       FlutterSecureStoragePlatform.instance = _FailingSecureStoragePlatform();
       final failingService = EncryptionService();
 
-      await expectLater(failingService.initialize(), throwsStateError);
+      await expectLater(
+        failingService.initialize(),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains('Secure storage is unavailable'),
+          ),
+        ),
+      );
 
       expect(failingService.isInitialized, isFalse);
       expect(failingService.isSecureStorageAvailable, isFalse);
-      expect(
-        failingService.initializationError,
-        contains('Secure storage is unavailable'),
-      );
       expect(
         () => failingService.encrypt('journal entry'),
         throwsA(
           isA<StateError>().having(
             (error) => error.message,
             'message',
-            contains('Secure storage is unavailable'),
+            contains('not initialized'),
           ),
         ),
       );

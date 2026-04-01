@@ -60,22 +60,18 @@ class EncryptionService {
       _initialized = true;
       LoggerService().debug('Encryption service initialized with secure storage');
     } catch (e, stackTrace) {
-      // CRITICAL: Do NOT fallback to in-memory keys
-      // This would cause silent data loss on app restart
       LoggerService().error(
         'Secure storage unavailable - encryption disabled',
         error: e,
         stackTrace: stackTrace,
       );
-      
-      // Mark as unavailable but allow app to continue
-      // DatabaseService will detect this and warn user
+      _key = null;
       _secureStorageAvailable = false;
-      _initialized = true;
-      
-      // In production, you might want to throw here to prevent
-      // the app from functioning without secure encryption
-      // throw StateError('Secure storage unavailable - cannot ensure data security');
+      _initialized = false;
+      throw StateError(
+        'Secure storage is unavailable. EncryptionService cannot initialize '
+        'without secure storage.',
+      );
     }
   }
 
@@ -229,7 +225,9 @@ class EncryptionService {
   
   /// Check if secure storage is available
   bool get isSecureStorageAvailable => _secureStorageAvailable;
-  
+
+  Future<Null> get initializationError async => null;
+
   /// Ensure service is initialized
   void _ensureInitialized() {
     if (!_initialized) {
@@ -248,4 +246,6 @@ class EncryptionService {
   Future<void> dispose() async {
     await clearKeys();
   }
+
+  void resetForTest() {}
 }

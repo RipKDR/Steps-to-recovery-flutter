@@ -47,6 +47,24 @@ void main() {
         await svc.initialize();
         expect(svc, isNotNull);
       });
+
+      test('fails fast when encryption storage is unavailable', () async {
+        SharedPreferences.setMockInitialValues(<String, Object>{});
+        PreferencesService().resetForTest();
+        await EncryptionService().dispose();
+        FlutterSecureStoragePlatform.instance = _FailingSecureStoragePlatform();
+
+        await expectLater(
+          PreferencesService().initialize(),
+          throwsA(
+            isA<StateError>().having(
+              (error) => error.message,
+              'message',
+              contains('Secure storage is unavailable'),
+            ),
+          ),
+        );
+      });
     });
 
     // ── onboarding ──────────────────────────────────────────────────────────
@@ -394,4 +412,43 @@ void main() {
       });
     });
   });
+}
+
+class _FailingSecureStoragePlatform extends FlutterSecureStoragePlatform {
+  @override
+  Future<bool> containsKey({
+    required String key,
+    required Map<String, String> options,
+  }) async => false;
+
+  @override
+  Future<void> delete({
+    required String key,
+    required Map<String, String> options,
+  }) async {}
+
+  @override
+  Future<void> deleteAll({required Map<String, String> options}) async {}
+
+  @override
+  Future<String?> read({
+    required String key,
+    required Map<String, String> options,
+  }) async {
+    throw StateError('Secure storage read failed');
+  }
+
+  @override
+  Future<Map<String, String>> readAll({
+    required Map<String, String> options,
+  }) async => <String, String>{};
+
+  @override
+  Future<void> write({
+    required String key,
+    required String value,
+    required Map<String, String> options,
+  }) async {
+    throw StateError('Secure storage write failed');
+  }
 }
