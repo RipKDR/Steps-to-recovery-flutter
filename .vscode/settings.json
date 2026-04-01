@@ -21,6 +21,7 @@
         "ciphertext",
         "cmdline",
         "conv",
+        "cupertino",
         "defusion",
         "dotenvx",
         "encrypter",
@@ -43,6 +44,7 @@
         "longterm",
         "LTWH",
         "messagebird",
+        "mocktail",
         "Normalise",
         "nunito",
         "oneshot",
@@ -76,6 +78,7 @@
         "unawaited",
         "vonage",
         "Wbem",
+        "workmanager",
         "workos",
         "worktrees",
         "xcworkspace"

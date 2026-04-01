@@ -1,8 +1,20 @@
-name: PR Check
+name: PR Gate
 
 on:
   pull_request:
     branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - ".github/**/*.md"
+      - "LICENSE"
+
+concurrency:
+  group: pr-gate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   check:
@@ -15,17 +27,13 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: "3.41.6"
           channel: stable
           cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: PR quality gate
+        shell: pwsh
+        run: ./tool/ci.ps1 pr-gate
 
-      - name: Generate localizations
-        run: flutter gen-l10n
-
-      - name: Analyze
-        run: flutter analyze --fatal-infos
-
-      - name: Test
-        run: flutter test
+      - name: Coverage gate
+        run: dart run tool/coverage_gate.dart --file coverage/lcov.info --min 20

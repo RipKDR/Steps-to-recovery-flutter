@@ -32,7 +32,9 @@ void main() {
   ) async {
     await createSignedInUser(sobrietyDate: DateTime.now());
 
-    await tester.pumpWidget(const MaterialApp(home: HomeScreen(showCelebration: false)));
+    await tester.pumpWidget(
+      const MaterialApp(home: HomeScreen(showCelebration: false)),
+    );
     await _pumpHomeScreen(tester);
 
     expect(find.textContaining('Share '), findsNothing);
@@ -50,7 +52,9 @@ void main() {
         sobrietyDate: DateTime.now().subtract(const Duration(days: 30)),
       );
 
-      await tester.pumpWidget(const MaterialApp(home: HomeScreen(showCelebration: false)));
+      await tester.pumpWidget(
+        const MaterialApp(home: HomeScreen(showCelebration: false)),
+      );
       await _pumpHomeScreen(tester);
 
       expect(find.text('Share 1 Month'), findsOneWidget);
@@ -88,7 +92,9 @@ void main() {
         sobrietyDate: DateTime.now().subtract(const Duration(days: 7)),
       );
 
-      await tester.pumpWidget(const MaterialApp(home: HomeScreen(showCelebration: false)));
+      await tester.pumpWidget(
+        const MaterialApp(home: HomeScreen(showCelebration: false)),
+      );
       await _pumpHomeScreen(tester);
 
       expect(find.text('Share 1 Week'), findsOneWidget);

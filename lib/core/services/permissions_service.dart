@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:permission_handler/permission_handler.dart';
+import 'package:permission_handler/permission_handler.dart'
+    as permission_handler;
 
 import 'logger_service.dart';
 
@@ -15,7 +16,7 @@ class PermissionsService {
     if (kIsWeb) return false;
 
     try {
-      final status = await Permission.microphone.request();
+      final status = await permission_handler.Permission.microphone.request();
       LoggerService().debug('Microphone permission status: $status');
       return status.isGranted;
     } catch (e, stackTrace) {
@@ -34,7 +35,7 @@ class PermissionsService {
     if (!Platform.isIOS) return true; // Android handles this differently
 
     try {
-      final status = await Permission.speech.request();
+      final status = await permission_handler.Permission.speech.request();
       LoggerService().debug('Speech recognition permission status: $status');
       return status.isGranted;
     } catch (e, stackTrace) {
@@ -52,7 +53,8 @@ class PermissionsService {
     if (kIsWeb) return false;
 
     try {
-      final status = await Permission.locationWhenInUse.request();
+      final status =
+          await permission_handler.Permission.locationWhenInUse.request();
       LoggerService().debug('Location permission status: $status');
       return status.isGranted;
     } catch (e, stackTrace) {
@@ -70,7 +72,7 @@ class PermissionsService {
     if (kIsWeb) return false;
 
     try {
-      final status = await Permission.phone.request();
+      final status = await permission_handler.Permission.phone.request();
       LoggerService().debug('Phone permission status: $status');
       return status.isGranted;
     } catch (e, stackTrace) {
@@ -88,7 +90,7 @@ class PermissionsService {
     if (kIsWeb) return false;
 
     try {
-      final status = await Permission.microphone.status;
+      final status = await permission_handler.Permission.microphone.status;
       return status.isGranted;
     } catch (e) {
       return false;
@@ -100,7 +102,7 @@ class PermissionsService {
     if (kIsWeb) return false;
 
     try {
-      final status = await Permission.locationWhenInUse.status;
+      final status = await permission_handler.Permission.locationWhenInUse.status;
       return status.isGranted;
     } catch (e) {
       return false;
@@ -110,7 +112,7 @@ class PermissionsService {
   /// Open app settings if permissions denied
   Future<void> openAppSettings() async {
     try {
-      await openAppSettings();
+      await permission_handler.openAppSettings();
     } catch (e, stackTrace) {
       LoggerService().error(
         'Failed to open app settings',

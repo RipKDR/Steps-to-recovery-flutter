@@ -8,15 +8,34 @@ import 'test_helpers.dart';
 
 void main() {
   testWidgets(
-    'signed-in shell uses the richer feature home, journal, and meetings screens',
+    'signed-in shell keeps the guided daily hub and dedicated daily routes reachable',
     (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await createSignedInUser();
 
       await tester.pumpWidget(const StepsToRecoveryApp());
       await _pumpShell(tester);
 
-      expect(find.text('Quick Actions'), findsOneWidget);
-      expect(find.text('Quick Journal'), findsOneWidget);
+      expect(find.text("Today's path"), findsOneWidget);
+      AppRouter.router.go('/home/morning-intention');
+      await _pumpShell(tester);
+
+      expect(find.text('Morning Intention'), findsOneWidget);
+
+      AppRouter.router.go(AppRoutes.home);
+      await _pumpShell(tester);
+
+      AppRouter.router.go('/home/evening-pulse');
+      await _pumpShell(tester);
+
+      expect(find.text('Evening Pulse'), findsOneWidget);
+
+      AppRouter.router.go(AppRoutes.home);
+      await _pumpShell(tester);
 
       AppRouter.router.go(AppRoutes.journal);
       await _pumpShell(tester);

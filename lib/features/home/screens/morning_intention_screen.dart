@@ -33,7 +33,9 @@ class _MorningIntentionScreenState extends State<MorningIntentionScreen> {
   }
 
   Future<void> _loadExisting() async {
-    final existing = await DatabaseService().getTodayCheckIn(CheckInType.morning);
+    final existing = await DatabaseService().getTodayCheckIn(
+      CheckInType.morning,
+    );
     if (existing == null || !mounted) {
       return;
     }
@@ -79,44 +81,56 @@ class _MorningIntentionScreenState extends State<MorningIntentionScreen> {
             backgroundColor: AppColors.background,
           ),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.md,
+              AppSpacing.lg,
+              AppSpacing.lg,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text('Set the tone', style: AppTypography.headlineSmall),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
-                  'How are you feeling this morning?',
-                  style: AppTypography.headlineSmall,
+                  'Notice your state, name one intention, and keep the rest simple.',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                _MoodSelector(
-                  selectedMood: _selectedMood,
-                  onMoodSelected: (mood) => setState(() => _selectedMood = mood),
-                ),
-                const SizedBox(height: AppSpacing.xxl),
-                Text(
-                  'What is your intention for today?',
-                  style: AppTypography.headlineSmall,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextField(
-                  controller: _intentionController,
-                  maxLines: 5,
-                  style: AppTypography.bodyMedium,
-                  decoration: InputDecoration(
-                    hintText: 'Today, I intend to stay present by...',
-                    hintStyle: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textMuted,
-                    ),
+                _SectionCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'How are you feeling this morning?',
+                        style: AppTypography.titleMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _MoodSelector(
+                        selectedMood: _selectedMood,
+                        onMoodSelected: (mood) =>
+                            setState(() => _selectedMood = mood),
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+                      Text(
+                        'What is your intention for today?',
+                        style: AppTypography.titleMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextField(
+                        controller: _intentionController,
+                        maxLines: 3,
+                        style: AppTypography.bodyMedium,
+                        decoration: _fieldDecoration(
+                          'Today, I intend to stay present by...',
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                Text(
-                  'This saves locally and updates your progress immediately, even offline.',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textMuted,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xxl),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -124,11 +138,72 @@ class _MorningIntentionScreenState extends State<MorningIntentionScreen> {
                     child: Text(_isSaving ? 'Saving...' : 'Save Intention'),
                   ),
                 ),
+                const SizedBox(height: AppSpacing.md),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+                    border: Border.all(color: AppColors.borderSubtle),
+                  ),
+                  child: Text(
+                    'This saves locally first, then syncs later if you have it enabled.',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
         );
       },
+    );
+  }
+}
+
+InputDecoration _fieldDecoration(String hintText) {
+  return InputDecoration(
+    hintText: hintText,
+    hintStyle: AppTypography.bodyMedium.copyWith(color: AppColors.textMuted),
+    filled: true,
+    fillColor: AppColors.surfaceElevated,
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: AppSpacing.lg,
+      vertical: AppSpacing.md,
+    ),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusStandard),
+      borderSide: const BorderSide(color: AppColors.border),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusStandard),
+      borderSide: const BorderSide(color: AppColors.border),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusStandard),
+      borderSide: const BorderSide(color: AppColors.primaryAmber),
+    ),
+  );
+}
+
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: child,
     );
   }
 }
@@ -144,50 +219,58 @@ class _MoodSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Wrap(
+      alignment: WrapAlignment.spaceEvenly,
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
       children: List<Widget>.generate(5, (index) {
         final mood = index + 1;
         final isSelected = selectedMood == mood;
 
-        return Semantics(
-          button: true,
-          label: 'Mood ${_getMoodLabel(mood)}',
-          selected: isSelected,
-          child: InkWell(
-            onTap: () => onMoodSelected(mood),
-            customBorder: const CircleBorder(),
-            child: Column(
-              children: [
-                Container(
-                  width: AppSpacing.quint,
-                  height: AppSpacing.quint,
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primaryAmber
-                        : AppColors.surfaceInteractive,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isSelected ? AppColors.primaryAmber : AppColors.border,
+        return SizedBox(
+          width: 56,
+          child: Semantics(
+            button: true,
+            label: 'Mood ${_getMoodLabel(mood)}',
+            selected: isSelected,
+            child: InkWell(
+              onTap: () => onMoodSelected(mood),
+              customBorder: const CircleBorder(),
+              child: Column(
+                children: [
+                  Container(
+                    width: AppSpacing.quint,
+                    height: AppSpacing.quint,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.primaryAmber
+                          : AppColors.surfaceInteractive,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.primaryAmber
+                            : AppColors.border,
+                      ),
+                    ),
+                    child: Icon(
+                      _getMoodIcon(mood),
+                      color: isSelected
+                          ? AppColors.textOnDark
+                          : AppColors.textSecondary,
                     ),
                   ),
-                  child: Icon(
-                    _getMoodIcon(mood),
-                    color: isSelected
-                        ? AppColors.textOnDark
-                        : AppColors.textSecondary,
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    _getMoodLabel(mood),
+                    style: AppTypography.labelSmall.copyWith(
+                      color: isSelected
+                          ? AppColors.primaryAmber
+                          : AppColors.textMuted,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  _getMoodLabel(mood),
-                  style: AppTypography.labelSmall.copyWith(
-                    color: isSelected
-                        ? AppColors.primaryAmber
-                        : AppColors.textMuted,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );

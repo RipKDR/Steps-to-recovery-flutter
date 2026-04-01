@@ -36,7 +36,9 @@ class _EveningPulseScreenState extends State<EveningPulseScreen> {
   }
 
   Future<void> _loadExisting() async {
-    final existing = await DatabaseService().getTodayCheckIn(CheckInType.evening);
+    final existing = await DatabaseService().getTodayCheckIn(
+      CheckInType.evening,
+    );
     if (existing != null && mounted) {
       _reflectionController.text = existing.reflection ?? '';
       _selectedMood = existing.mood?.clamp(1, 5) ?? 3;
@@ -94,52 +96,50 @@ class _EveningPulseScreenState extends State<EveningPulseScreen> {
             backgroundColor: AppColors.background,
           ),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.md,
+              AppSpacing.lg,
+              AppSpacing.lg,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('How was your day?', style: AppTypography.headlineSmall),
+                Text('Wind down', style: AppTypography.headlineSmall),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Keep the first pass simple: mood, craving, then any extra reflection.',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.lg),
-                _MoodSelector(
-                  selectedMood: _selectedMood,
-                  onMoodSelected: (mood) => setState(() => _selectedMood = mood),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                Text('Craving level (0-10)', style: AppTypography.titleMedium),
-                const SizedBox(height: AppSpacing.md),
-                _CravingSlider(
-                  value: _selectedCraving,
-                  onChanged: (value) => setState(() => _selectedCraving = value),
-                ),
-                const SizedBox(height: AppSpacing.xxl),
-                Text(
-                  'What are you grateful for today?',
-                  style: AppTypography.titleMedium,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextField(
-                  controller: _gratitudeController,
-                  maxLines: 2,
-                  style: AppTypography.bodyMedium,
-                  decoration: const InputDecoration(
-                    hintText: 'I am grateful for...',
+                _SectionCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'How was your day?',
+                        style: AppTypography.titleMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _MoodSelector(
+                        selectedMood: _selectedMood,
+                        onMoodSelected: (mood) =>
+                            setState(() => _selectedMood = mood),
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+                      Text('Craving level', style: AppTypography.titleMedium),
+                      const SizedBox(height: AppSpacing.sm),
+                      _CravingSlider(
+                        value: _selectedCraving,
+                        onChanged: (value) =>
+                            setState(() => _selectedCraving = value),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xl),
-                Text(
-                  'Reflection on the day',
-                  style: AppTypography.titleMedium,
-                ),
                 const SizedBox(height: AppSpacing.md),
-                TextField(
-                  controller: _reflectionController,
-                  maxLines: 6,
-                  style: AppTypography.bodyMedium,
-                  decoration: const InputDecoration(
-                    hintText: 'What helped? What needs support tomorrow?',
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xxl),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -147,11 +147,101 @@ class _EveningPulseScreenState extends State<EveningPulseScreen> {
                     child: Text(_isSaving ? 'Saving...' : 'Save Reflection'),
                   ),
                 ),
+                const SizedBox(height: AppSpacing.lg),
+                _SectionCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Optional reflection',
+                        style: AppTypography.titleMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'Use this space only if you want to capture gratitude or the shape of the day.',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      Text(
+                        'What are you grateful for today?',
+                        style: AppTypography.bodyMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextField(
+                        controller: _gratitudeController,
+                        maxLines: 2,
+                        style: AppTypography.bodyMedium,
+                        decoration: _fieldDecoration('I am grateful for...'),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      Text(
+                        'Reflection on the day',
+                        style: AppTypography.bodyMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextField(
+                        controller: _reflectionController,
+                        maxLines: 5,
+                        style: AppTypography.bodyMedium,
+                        decoration: _fieldDecoration(
+                          'What helped? What needs support tomorrow?',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
         );
       },
+    );
+  }
+}
+
+InputDecoration _fieldDecoration(String hintText) {
+  return InputDecoration(
+    hintText: hintText,
+    hintStyle: AppTypography.bodyMedium.copyWith(color: AppColors.textMuted),
+    filled: true,
+    fillColor: AppColors.surfaceElevated,
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: AppSpacing.lg,
+      vertical: AppSpacing.md,
+    ),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusStandard),
+      borderSide: const BorderSide(color: AppColors.border),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusStandard),
+      borderSide: const BorderSide(color: AppColors.border),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusStandard),
+      borderSide: const BorderSide(color: AppColors.primaryAmber),
+    ),
+  );
+}
+
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: child,
     );
   }
 }
@@ -167,47 +257,53 @@ class _MoodSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Wrap(
+      alignment: WrapAlignment.spaceEvenly,
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
       children: List<Widget>.generate(5, (index) {
         final mood = index + 1;
         final isSelected = selectedMood == mood;
 
-        return Semantics(
-          button: true,
-          label: 'Mood $mood',
-          selected: isSelected,
-          child: InkWell(
-            onTap: () => onMoodSelected(mood),
-            customBorder: const CircleBorder(),
-            child: Column(
-              children: [
-                Container(
-                  width: AppSpacing.quint,
-                  height: AppSpacing.quint,
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primaryAmber
-                        : AppColors.surfaceInteractive,
-                    shape: BoxShape.circle,
+        return SizedBox(
+          width: 56,
+          child: Semantics(
+            button: true,
+            label: 'Mood $mood',
+            selected: isSelected,
+            child: InkWell(
+              onTap: () => onMoodSelected(mood),
+              customBorder: const CircleBorder(),
+              child: Column(
+                children: [
+                  Container(
+                    width: AppSpacing.quint,
+                    height: AppSpacing.quint,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.primaryAmber
+                          : AppColors.surfaceInteractive,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      _getMoodIcon(mood),
+                      color: isSelected
+                          ? AppColors.textOnDark
+                          : AppColors.textSecondary,
+                    ),
                   ),
-                  child: Icon(
-                    _getMoodIcon(mood),
-                    color: isSelected
-                        ? AppColors.textOnDark
-                        : AppColors.textSecondary,
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    '$mood',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: isSelected
+                          ? AppColors.primaryAmber
+                          : AppColors.textMuted,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  '$mood',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: isSelected
-                        ? AppColors.primaryAmber
-                        : AppColors.textMuted,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -234,10 +330,7 @@ class _MoodSelector extends StatelessWidget {
 }
 
 class _CravingSlider extends StatelessWidget {
-  const _CravingSlider({
-    required this.value,
-    required this.onChanged,
-  });
+  const _CravingSlider({required this.value, required this.onChanged});
 
   final int value;
   final ValueChanged<int> onChanged;
@@ -261,8 +354,8 @@ class _CravingSlider extends StatelessWidget {
                 color: value > 7
                     ? AppColors.danger
                     : value > 4
-                        ? AppColors.warning
-                        : AppColors.success,
+                    ? AppColors.warning
+                    : AppColors.success,
               ),
             ),
             Text(

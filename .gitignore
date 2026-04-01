@@ -54,6 +54,7 @@ app.*.map.json
 # Preserved duplicate project snapshot; the runnable app is the repo root.
 /app/
 /.worktrees/
+/.claude/worktrees/
 
 #Ignore vscode AI rules
 .github/instructions/codacy.instructions.md

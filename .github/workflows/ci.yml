@@ -1,9 +1,21 @@
-name: CI
+name: Main Build
 
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - ".github/**/*.md"
+      - "LICENSE"
   workflow_dispatch:
+
+concurrency:
+  group: main-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -16,20 +28,9 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: "3.41.6"
           channel: stable
           cache: true
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Generate localizations
-        run: flutter gen-l10n
-
-      - name: Analyze
-        run: flutter analyze --fatal-infos
-
-      - name: Test
-        run: flutter test --coverage
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -38,20 +39,24 @@ jobs:
           java-version: '17'
 
       - name: Decode keystore (CI signing)
-        if: ${{ env.KEY_STORE_BASE64 != '' }}
+        if: ${{ secrets.KEY_STORE_BASE64 != '' }}
         env:
           KEY_STORE_BASE64: ${{ secrets.KEY_STORE_BASE64 }}
         run: |
           echo "$KEY_STORE_BASE64" | base64 --decode > android/app/steps-recovery-release.jks
           echo "KEY_STORE_FILE=steps-recovery-release.jks" >> $GITHUB_ENV
 
-      - name: Build release APK
+      - name: Main quality/build gate
+        shell: pwsh
         env:
           KEY_STORE_FILE: ${{ env.KEY_STORE_FILE }}
           KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: flutter build apk --release
+        run: ./tool/ci.ps1 main-build
+
+      - name: Coverage gate
+        run: dart run tool/coverage_gate.dart --file coverage/lcov.info --min 20
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

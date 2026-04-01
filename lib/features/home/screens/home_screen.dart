@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -10,20 +9,21 @@ import '../../../core/services/database_service.dart';
 import '../../../core/services/logger_service.dart';
 import '../../../core/services/milestone_service.dart';
 import '../../../core/services/preferences_service.dart';
-import '../../milestone/screens/milestone_celebration_screen.dart';
-import '../../milestone/widgets/milestone_share_card.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/achievement_share_utils.dart';
+import '../models/home_hub_models.dart';
+import '../widgets/home_hub_inputs.dart';
+import '../widgets/home_hub_sections.dart';
+import '../../milestone/screens/milestone_celebration_screen.dart';
+import '../../milestone/widgets/milestone_share_card.dart';
 
 const bool _isFlutterTest = bool.fromEnvironment('FLUTTER_TEST');
 
-/// Home dashboard with dynamic sobriety, check-ins, and quick actions.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.showCelebration = true});
 
-  /// Whether to trigger the milestone celebration dialog on first load.
   final bool showCelebration;
 
   @override
@@ -32,13 +32,21 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _repaintKey = GlobalKey();
-  late Future<_HomeSnapshot> _snapshotFuture;
+  final _morningIntentionController = TextEditingController();
+  late Future<HomeHubSnapshot> _snapshotFuture;
+
+  int _morningMood = 3;
+  int _eveningMood = 3;
+  int _eveningCraving = 0;
+  bool _isSavingMorning = false;
+  bool _isSavingEvening = false;
   bool _showShareCard = false;
 
   @override
   void initState() {
     super.initState();
     _snapshotFuture = _loadSnapshot();
+    _morningIntentionController.addListener(_handleMorningDraftChanged);
     if (widget.showCelebration) {
       _snapshotFuture.then((data) {
         WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -66,7 +74,15 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     AppStateService.instance.removeListener(_refreshSnapshot);
     DatabaseService().removeListener(_refreshSnapshot);
+    _morningIntentionController.removeListener(_handleMorningDraftChanged);
+    _morningIntentionController.dispose();
     super.dispose();
+  }
+
+  void _handleMorningDraftChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _refreshSnapshot() {
@@ -78,156 +94,21 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<_HomeSnapshot>(
-      future: _snapshotFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Scaffold(
-            backgroundColor: AppColors.background,
-            body: Center(
-              child: CircularProgressIndicator(color: AppColors.primaryAmber),
-            ),
-          );
-        }
-
-        final data = snapshot.data ?? const _HomeSnapshot.empty();
-
-        return Scaffold(
-          body: CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                floating: true,
-                backgroundColor: AppColors.background,
-                title: Semantics(
-                  sortKey: const OrdinalSortKey(0),
-                  header: true,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Steps to Recovery',
-                        style: AppTypography.headlineMedium,
-                      ),
-                      Text(
-                        'Welcome back, ${AppStateService.instance.userLabel}',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textMuted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.bar_chart_outlined),
-                    tooltip: 'View progress dashboard',
-                    onPressed: () => context.push('/home/progress'),
-                  ),
-                ],
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    Semantics(
-                      sortKey: const OrdinalSortKey(1),
-                      child: _SobrietyCard(
-                        snapshot: data,
-                        onShareMilestone: data.featuredShareContent == null
-                            ? null
-                            : () => _shareMilestone(context, data),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    Semantics(
-                      sortKey: const OrdinalSortKey(2),
-                      child: _SupportStrip(snapshot: data),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    Semantics(
-                      sortKey: const OrdinalSortKey(3),
-                      child: _QuickActions(snapshot: data),
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
-                    Semantics(
-                      sortKey: const OrdinalSortKey(4),
-                      header: true,
-                      child: Text('Today', style: AppTypography.headlineSmall),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Semantics(
-                      sortKey: const OrdinalSortKey(5),
-                      child: _CheckInCards(snapshot: data),
-                    ),
-                  ]),
-                ),
-              ),
-            ],
-          ),
-          floatingActionButton: Semantics(
-            sortKey: const OrdinalSortKey(6),
-            button: true,
-            label: 'Create a new journal entry',
-            child: FloatingActionButton.extended(
-              onPressed: () => context.push('/journal/editor?mode=create'),
-              icon: const Icon(Icons.add),
-              label: const Text('Quick Journal'),
-              backgroundColor: AppColors.primaryAmber,
-              foregroundColor: AppColors.textOnDark,
-            ),
-          ),
-          // Off-screen share card for PNG capture.
-          bottomSheet: Offstage(
-            offstage: !_showShareCard,
-            child: IgnorePointer(
-              child: Opacity(
-                opacity: 0.004,
-                child: RepaintBoundary(
-                  key: _repaintKey,
-                  child: Builder(
-                    builder: (_) {
-                      final shareContent = data.featuredShareContent;
-                      if (shareContent == null) return const SizedBox.shrink();
-                      // Extract achievement phrase or emojis if necessary, default 🎉
-                      return MilestoneShareCard(
-                        emoji: '🎉',
-                        title: shareContent.milestoneTitle,
-                        message: shareContent.shareText,
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<_HomeSnapshot> _loadSnapshot() async {
-    // Use batch method for better performance - single DB access instead of 6+ calls
-    final database = DatabaseService();
-    final snapshot = await database.getHomeSnapshot();
-    
-    final currentUser = snapshot['user'] as UserProfile?;
-    final morning = snapshot['morningCheckIn'] as DailyCheckIn?;
-    final evening = snapshot['eveningCheckIn'] as DailyCheckIn?;
-    final sponsor = snapshot['sponsor'] as Contact?;
+  Future<HomeHubSnapshot> _loadSnapshot() async {
+    final snapshot = await DatabaseService().getHomeSnapshot();
     final achievements = snapshot['achievements'] as List<Achievement>;
-    final unreadShareableMilestones =
-        sortShareableMilestoneAchievements(achievements);
+    final unreadShareableMilestones = sortShareableMilestoneAchievements(
+      achievements,
+    );
     final featuredAchievement = unreadShareableMilestones.isEmpty
         ? null
         : unreadShareableMilestones.first;
 
-    return _HomeSnapshot(
-      user: currentUser,
-      morningCheckIn: morning,
-      eveningCheckIn: evening,
-      sponsor: sponsor,
+    return HomeHubSnapshot(
+      user: snapshot['user'] as UserProfile?,
+      morningCheckIn: snapshot['morningCheckIn'] as DailyCheckIn?,
+      eveningCheckIn: snapshot['eveningCheckIn'] as DailyCheckIn?,
+      sponsor: snapshot['sponsor'] as Contact?,
       unreadAchievements: achievements.length,
       unreadShareableMilestones: unreadShareableMilestones,
       featuredShareContent: featuredAchievement == null
@@ -236,9 +117,74 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _saveMorning(HomeHubSnapshot snapshot) async {
+    final intention = _morningIntentionController.text.trim();
+    if (_isSavingMorning || intention.isEmpty) {
+      return;
+    }
+
+    setState(() => _isSavingMorning = true);
+    try {
+      await DatabaseService().saveCheckIn(
+        DailyCheckIn(
+          id: '',
+          userId: DatabaseService().activeUserId ?? '',
+          checkInType: CheckInType.morning,
+          checkInDate: DateTime.now(),
+          intention: intention,
+          mood: _morningMood,
+          createdAt: snapshot.morningCheckIn?.createdAt ?? DateTime.now(),
+          syncStatus: SyncStatus.pending,
+        ),
+      );
+      if (!mounted) return;
+      FocusScope.of(context).unfocus();
+      _refreshSnapshot();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Morning intention saved.')));
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingMorning = false);
+      }
+    }
+  }
+
+  Future<void> _saveEvening(HomeHubSnapshot snapshot) async {
+    if (_isSavingEvening) {
+      return;
+    }
+
+    setState(() => _isSavingEvening = true);
+    try {
+      await DatabaseService().saveCheckIn(
+        DailyCheckIn(
+          id: '',
+          userId: DatabaseService().activeUserId ?? '',
+          checkInType: CheckInType.evening,
+          checkInDate: DateTime.now(),
+          mood: _eveningMood,
+          craving: _eveningCraving,
+          reflection: snapshot.eveningCheckIn?.reflection,
+          createdAt: snapshot.eveningCheckIn?.createdAt ?? DateTime.now(),
+          syncStatus: SyncStatus.pending,
+        ),
+      );
+      if (!mounted) return;
+      _refreshSnapshot();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Evening pulse saved.')));
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingEvening = false);
+      }
+    }
+  }
+
   Future<void> _shareMilestone(
     BuildContext context,
-    _HomeSnapshot snapshot,
+    HomeHubSnapshot snapshot,
   ) async {
     final featuredAchievement = snapshot.featuredShareAchievement;
     final shareContent = snapshot.featuredShareContent;
@@ -276,16 +222,14 @@ class _HomeScreenState extends State<HomeScreen> {
         logger.info(
           'event=achievement_share_completed achievementKey=${featuredAchievement.achievementKey}',
         );
-        final database = DatabaseService();
         for (final achievement in snapshot.unreadShareableMilestones) {
-          await database.markAchievementViewed(achievement.id);
+          await DatabaseService().markAchievementViewed(achievement.id);
         }
-        if (!context.mounted) {
-          return;
-        }
+        if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${shareContent.milestoneTitle} shared.')),
         );
+        _refreshSnapshot();
         return;
       case ShareResultStatus.dismissed:
         logger.info(
@@ -307,465 +251,359 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<XFile?> _captureShareCard() async {
     if (_isFlutterTest ||
-        WidgetsBinding.instance.runtimeType
-            .toString()
-            .contains('TestWidgetsFlutterBinding')) {
+        WidgetsBinding.instance.runtimeType.toString().contains(
+          'TestWidgetsFlutterBinding',
+        )) {
       return null;
     }
     if (!mounted || _repaintKey.currentContext == null) {
       return null;
     }
-    setState(() {
-      _showShareCard = true;
-    });
+    setState(() => _showShareCard = true);
     await WidgetsBinding.instance.endOfFrame;
     XFile? shareFile;
     try {
       shareFile = await MilestoneShareCard.capture(_repaintKey);
     } finally {
       if (mounted) {
-        setState(() {
-          _showShareCard = false;
-        });
+        setState(() => _showShareCard = false);
       }
     }
     return shareFile;
   }
-}
 
-class _HomeSnapshot {
-  const _HomeSnapshot({
-    required this.user,
-    required this.morningCheckIn,
-    required this.eveningCheckIn,
-    required this.sponsor,
-    required this.unreadAchievements,
-    required this.unreadShareableMilestones,
-    required this.featuredShareContent,
-  });
-
-  const _HomeSnapshot.empty()
-      : user = null,
-        morningCheckIn = null,
-        eveningCheckIn = null,
-        sponsor = null,
-        unreadAchievements = 0,
-        unreadShareableMilestones = const <Achievement>[],
-        featuredShareContent = null;
-
-  final UserProfile? user;
-  final DailyCheckIn? morningCheckIn;
-  final DailyCheckIn? eveningCheckIn;
-  final Contact? sponsor;
-  final int unreadAchievements;
-  final List<Achievement> unreadShareableMilestones;
-  final MilestoneShareContent? featuredShareContent;
-
-  Achievement? get featuredShareAchievement {
-    if (unreadShareableMilestones.isEmpty) {
-      return null;
-    }
-    return unreadShareableMilestones.first;
-  }
-}
-
-class _SobrietyCard extends StatelessWidget {
-  const _SobrietyCard({
-    required this.snapshot,
-    required this.onShareMilestone,
-  });
-
-  final _HomeSnapshot snapshot;
-  final VoidCallback? onShareMilestone;
-
-  @override
-  Widget build(BuildContext context) {
-    final user = snapshot.user;
-    final soberLabel = user == null ? 'Recovery starts now' : user.sobrietyMilestone;
-    final days = AppStateService.instance.sobrietyDays;
-
-    return Semantics(
-      label: '$days days clean. $soberLabel',
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: AppColors.primaryGradient,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Clean Time',
-              style: AppTypography.labelMedium.copyWith(
-                color: AppColors.textOnDark,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            TweenAnimationBuilder<int>(
-              tween: IntTween(begin: 0, end: days),
-              duration: MediaQuery.of(context).disableAnimations
-                  ? Duration.zero
-                  : const Duration(milliseconds: 1200),
-              curve: Curves.easeOut,
-              builder: (context, value, child) {
-                return Text(
-                  '$value days',
-                  style: AppTypography.displayLarge.copyWith(
-                    color: AppColors.textOnDark,
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              soberLabel,
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textOnDark.withValues(alpha: 0.84),
-              ),
-            ),
-            if (snapshot.unreadAchievements > 0) ...[
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                '${snapshot.unreadAchievements} new achievement${snapshot.unreadAchievements == 1 ? '' : 's'} waiting',
-                style: AppTypography.labelMedium.copyWith(
-                  color: AppColors.textOnDark,
+  void _showSupportSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        final maxHeight = MediaQuery.sizeOf(sheetContext).height * 0.85;
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                  AppSpacing.lg,
+                  AppSpacing.xl,
                 ),
-              ),
-            ],
-            if (snapshot.featuredShareContent != null) ...[
-              const SizedBox(height: AppSpacing.md),
-              Semantics(
-                button: true,
-                label: 'Share milestone: ${snapshot.featuredShareContent!.buttonLabel}',
-                child: OutlinedButton.icon(
-                  onPressed: onShareMilestone,
-                  icon: const Icon(Icons.share_outlined),
-                  label: Text(snapshot.featuredShareContent!.buttonLabel),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textOnDark,
-                    side: BorderSide(
-                      color: AppColors.textOnDark.withValues(alpha: 0.72),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('More support', style: AppTypography.headlineSmall),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Jump into the tools you use when you need extra support, reflection, or connection.',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textMuted,
+                      ),
                     ),
+                    const SizedBox(height: AppSpacing.lg),
+                    SupportSheetAction(
+                      icon: Icons.edit_note_outlined,
+                      title: 'Quick journal',
+                      subtitle:
+                          'Capture a thought without leaving the daily flow.',
+                      onTap: () {
+                        Navigator.of(sheetContext).pop();
+                        context.push('/journal/editor?mode=create');
+                      },
+                    ),
+                    SupportSheetAction(
+                      icon: Icons.favorite_outline,
+                      title: 'Gratitude',
+                      subtitle:
+                          'Add gratitude without opening the full evening screen.',
+                      onTap: () {
+                        Navigator.of(sheetContext).pop();
+                        context.push('/home/gratitude');
+                      },
+                    ),
+                    SupportSheetAction(
+                      icon: Icons.menu_book_outlined,
+                      title: 'Daily reading',
+                      subtitle:
+                          'Read today’s reflection or save a thought for later.',
+                      onTap: () {
+                        Navigator.of(sheetContext).pop();
+                        context.push('/home/daily-reading');
+                      },
+                    ),
+                    SupportSheetAction(
+                      icon: Icons.people_alt_outlined,
+                      title: 'Meetings',
+                      subtitle: 'Find a meeting or revisit favorites.',
+                      onTap: () {
+                        Navigator.of(sheetContext).pop();
+                        context.go(AppRoutes.meetings);
+                      },
+                    ),
+                    SupportSheetAction(
+                      icon: Icons.smart_toy_outlined,
+                      title: 'AI companion',
+                      subtitle:
+                          'Talk through cravings, setbacks, or next steps.',
+                      onTap: () {
+                        Navigator.of(sheetContext).pop();
+                        context.push('/home/companion-chat');
+                      },
+                    ),
+                    SupportSheetAction(
+                      icon: Icons.crisis_alert_outlined,
+                      title: 'Emergency tools',
+                      subtitle:
+                          'Open crisis support, grounding, or danger-zone tools.',
+                      onTap: () {
+                        Navigator.of(sheetContext).pop();
+                        context.push('/home/emergency');
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<HomeHubSnapshot>(
+      future: _snapshotFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(
+              child: CircularProgressIndicator(color: AppColors.primaryAmber),
+            ),
+          );
+        }
+
+        final data = snapshot.data ?? const HomeHubSnapshot.empty();
+        final recommendation = HomeActionRecommendation.fromSnapshot(data);
+
+        return Scaffold(
+          body: CustomScrollView(
+            slivers: [
+              SliverAppBar.large(
+                backgroundColor: AppColors.background,
+                title: Text('Today', style: AppTypography.headlineLarge),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.bar_chart_outlined),
+                    tooltip: 'View progress dashboard',
+                    onPressed: () => context.push('/home/progress'),
                   ),
+                ],
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  0,
+                  AppSpacing.lg,
+                  AppSpacing.xxl,
+                ),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    RecoveryHeroCard(
+                      semanticsKey: const Key('home-hero-semantics'),
+                      snapshot: data,
+                      recommendation: recommendation,
+                      onShareMilestone: data.featuredShareContent == null
+                          ? null
+                          : () => _shareMilestone(context, data),
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        "Today's path",
+                        style: AppTypography.headlineSmall,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      recommendation.sectionCopy,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    _buildMorningCard(data, recommendation),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildEveningCard(data, recommendation),
+                    const SizedBox(height: AppSpacing.xl),
+                    SupportSummaryPanel(
+                      semanticsKey: const Key('home-support-summary-semantics'),
+                      snapshot: data,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        key: const Key('home-more-support'),
+                        onPressed: _showSupportSheet,
+                        icon: const Icon(Icons.grid_view_rounded),
+                        label: const Text('More support'),
+                      ),
+                    ),
+                  ]),
                 ),
               ),
             ],
-          ],
-        ),
+          ),
+          bottomSheet: Offstage(
+            offstage: !_showShareCard,
+            child: IgnorePointer(
+              child: Opacity(
+                opacity: 0.004,
+                child: RepaintBoundary(
+                  key: _repaintKey,
+                  child: Builder(
+                    builder: (_) {
+                      final shareContent = data.featuredShareContent;
+                      if (shareContent == null) return const SizedBox.shrink();
+                      return MilestoneShareCard(
+                        emoji: '🎉',
+                        title: shareContent.milestoneTitle,
+                        message: shareContent.shareText,
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMorningCard(
+    HomeHubSnapshot data,
+    HomeActionRecommendation recommendation,
+  ) {
+    return DailyActionCard(
+      semanticsKey: const Key('home-morning-card-semantics'),
+      title: 'Morning intention',
+      description: 'Set the tone for the day with one clear intention.',
+      icon: Icons.wb_sunny_outlined,
+      status: recommendation.morningStatus,
+      detail: data.morningCheckIn?.intention?.trim().isNotEmpty == true
+          ? data.morningCheckIn!.intention!.trim()
+          : 'Mood ${moodLabel(data.morningCheckIn?.mood ?? _morningMood)}',
+      highlight: recommendation.morningStatus == DailyCardStatus.nextUp,
+      onOpenFull: () => context.push('/home/morning-intention'),
+      openButtonKey: const Key('home-open-morning-screen'),
+      completeBody: data.morningCheckIn?.intention?.trim().isNotEmpty == true
+          ? data.morningCheckIn!.intention!.trim()
+          : 'Mood ${moodLabel(data.morningCheckIn?.mood ?? _morningMood)} saved for today.',
+      incompleteBody: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: AppSpacing.sm),
+          InlineMoodSelector(
+            selectedMood: _morningMood,
+            onChanged: (value) => setState(() => _morningMood = value),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextField(
+            key: const Key('home-morning-intention-field'),
+            controller: _morningIntentionController,
+            minLines: 2,
+            maxLines: 3,
+            textInputAction: TextInputAction.done,
+            decoration: const InputDecoration(
+              hintText: 'Set a short intention',
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  key: const Key('home-morning-save'),
+                  onPressed:
+                      _morningIntentionController.text.trim().isEmpty ||
+                          _isSavingMorning
+                      ? null
+                      : () => _saveMorning(data),
+                  child: Text(_isSavingMorning ? 'Saving...' : 'Save morning'),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: TextButton(
+                  key: const Key('home-open-morning-screen'),
+                  onPressed: () => context.push('/home/morning-intention'),
+                  child: const Text('Open full check-in'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
-}
 
-class _SupportStrip extends StatelessWidget {
-  const _SupportStrip({required this.snapshot});
-
-  final _HomeSnapshot snapshot;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: 'Support info. Sponsor: ${snapshot.sponsor?.name ?? 'Not added'}. Program: ${AppStateService.instance.programType ?? 'Not set'}',
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceCard,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: _InfoColumn(
-                label: 'Sponsor',
-                value: snapshot.sponsor?.name ?? 'Not added',
-              ),
-            ),
-            Expanded(
-              child: _InfoColumn(
-                label: 'Program',
-                value: AppStateService.instance.programType ?? 'Choose in settings',
-              ),
-            ),
-            Semantics(
-              button: true,
-              label: 'Manage sponsor and support network',
-              child: TextButton(
-                onPressed: () => context.push(AppRoutes.sponsor),
-                child: const Text('Manage'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoColumn extends StatelessWidget {
-  const _InfoColumn({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTypography.labelSmall.copyWith(
-            color: AppColors.textMuted,
+  Widget _buildEveningCard(
+    HomeHubSnapshot data,
+    HomeActionRecommendation recommendation,
+  ) {
+    return DailyActionCard(
+      semanticsKey: const Key('home-evening-card-semantics'),
+      title: 'Evening pulse',
+      description: 'Log how the day felt before it gets away from you.',
+      icon: Icons.nightlight_outlined,
+      status: recommendation.eveningStatus,
+      detail: data.eveningCheckIn?.reflection?.trim().isNotEmpty == true
+          ? data.eveningCheckIn!.reflection!.trim()
+          : 'Mood ${moodLabel(data.eveningCheckIn?.mood ?? _eveningMood)} • Craving ${data.eveningCheckIn?.craving ?? _eveningCraving}/10',
+      highlight: recommendation.eveningStatus == DailyCardStatus.nextUp,
+      onOpenFull: () => context.push('/home/evening-pulse'),
+      openButtonKey: const Key('home-open-evening-screen'),
+      completeBody:
+          'Mood ${moodLabel(data.eveningCheckIn?.mood ?? _eveningMood)} • Craving ${data.eveningCheckIn?.craving ?? _eveningCraving}/10',
+      incompleteBody: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: AppSpacing.sm),
+          InlineMoodSelector(
+            selectedMood: _eveningMood,
+            onChanged: (value) => setState(() => _eveningMood = value),
           ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(value, style: AppTypography.titleMedium),
-      ],
-    );
-  }
-}
-
-class _QuickActions extends StatelessWidget {
-  const _QuickActions({required this.snapshot});
-
-  final _HomeSnapshot snapshot;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Quick Actions', style: AppTypography.headlineSmall),
-        const SizedBox(height: AppSpacing.md),
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
-          children: [
-            _ActionButton(
-              icon: Icons.self_improvement,
-              label: 'Step Work',
-              semanticLabel: 'Navigate to step work',
-              onTap: () => context.go(AppRoutes.steps),
-            ),
-            _ActionButton(
-              icon: Icons.edit_note,
-              label: 'Journal',
-              semanticLabel: 'Navigate to journal',
-              onTap: () => context.go(AppRoutes.journal),
-            ),
-            _ActionButton(
-              icon: Icons.favorite,
-              label: 'Gratitude',
-              semanticLabel: 'Navigate to gratitude entries',
-              onTap: () => context.push('/home/gratitude'),
-            ),
-            _ActionButton(
-              icon: Icons.menu_book_outlined,
-              label: 'Reading',
-              semanticLabel: 'Navigate to daily reading',
-              onTap: () => context.push('/home/daily-reading'),
-            ),
-            _ActionButton(
-              icon: Icons.people_alt_outlined,
-              label: 'Meetings',
-              semanticLabel: 'Navigate to meetings',
-              onTap: () => context.go(AppRoutes.meetings),
-            ),
-            _ActionButton(
-              icon: Icons.self_improvement,
-              label: 'Mindfulness',
-              semanticLabel: 'Navigate to mindfulness library',
-              onTap: () => context.push('/mindfulness'),
-            ),
-            _ActionButton(
-              icon: Icons.smart_toy,
-              label: 'AI Companion',
-              semanticLabel: 'Chat with AI sponsor companion',
-              onTap: () => context.push('/home/companion-chat'),
-            ),
-            _ActionButton(
-              icon: Icons.crisis_alert,
-              label: 'Emergency',
-              semanticLabel: 'Navigate to emergency crisis support',
-              onTap: () => context.push('/home/emergency'),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.semanticLabel,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final String? semanticLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: semanticLabel ?? label,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: AppSpacing.touchTargetComfortable),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg,
-              vertical: AppSpacing.md,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceCard,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: AppSpacing.iconMd, color: AppColors.primaryAmber),
-                const SizedBox(width: AppSpacing.sm),
-                Text(label, style: AppTypography.labelMedium),
-              ],
-            ),
+          const SizedBox(height: AppSpacing.md),
+          InlineCravingControl(
+            value: _eveningCraving,
+            onChanged: (value) => setState(() => _eveningCraving = value),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CheckInCards extends StatelessWidget {
-  const _CheckInCards({required this.snapshot});
-
-  final _HomeSnapshot snapshot;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _CheckInCard(
-          title: 'Morning Intention',
-          subtitle: snapshot.morningCheckIn?.intention?.trim().isNotEmpty == true
-              ? snapshot.morningCheckIn!.intention!
-              : 'Set your intention for the day',
-          icon: Icons.wb_sunny_outlined,
-          isComplete: snapshot.morningCheckIn != null,
-          onTap: () => context.push('/home/morning-intention'),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        _CheckInCard(
-          title: 'Evening Pulse',
-          subtitle: snapshot.eveningCheckIn?.reflection?.trim().isNotEmpty == true
-              ? snapshot.eveningCheckIn!.reflection!
-              : 'Reflect on your day and log cravings',
-          icon: Icons.nightlight_outlined,
-          isComplete: snapshot.eveningCheckIn != null,
-          onTap: () => context.push('/home/evening-pulse'),
-        ),
-      ],
-    );
-  }
-}
-
-class _CheckInCard extends StatelessWidget {
-  const _CheckInCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.isComplete,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final bool isComplete;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: '$title. ${isComplete ? 'Completed' : 'Not completed'}. $subtitle',
-      child: Card(
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryAmber.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: AppColors.primaryAmber,
-                    size: AppSpacing.iconLg,
-                  ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  key: const Key('home-evening-save'),
+                  onPressed: _isSavingEvening ? null : () => _saveEvening(data),
+                  child: Text(_isSavingEvening ? 'Saving...' : 'Save evening'),
                 ),
-                const SizedBox(width: AppSpacing.lg),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(title, style: AppTypography.titleMedium),
-                          ),
-                          if (isComplete)
-                            Semantics(
-                              label: 'Completed',
-                              child: const Icon(
-                                Icons.check_circle,
-                                color: AppColors.success,
-                                size: AppSpacing.iconMd,
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        subtitle,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textMuted,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: TextButton(
+                  key: const Key('home-open-evening-screen'),
+                  onPressed: () => context.push('/home/evening-pulse'),
+                  child: const Text('Open full check-in'),
                 ),
-                const ExcludeSemantics(
-                  child: Icon(Icons.chevron_right, color: AppColors.textMuted),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ),
+        ],
       ),
     );
   }
