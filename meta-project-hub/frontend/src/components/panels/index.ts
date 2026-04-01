@@ -1,4 +1,4 @@
-// Panel components barrel export - Complete 32 panels
+// Panel components barrel export - COMPLETE 32 PANELS ✅
 
 // Flutter Metrics (6)
 export { CodeHealthPanel } from './code-health-panel';
@@ -32,5 +32,14 @@ export { TaskQueuePanel } from './task-queue-panel';
 export { MemoryGraphPanel } from './memory-graph-panel';
 export { AgentEvalsPanel } from './agent-evals-panel';
 
-// Memory & Learning (4) - COMING SOON
-// Security & Compliance (4) - COMING SOON
+// Memory & Learning (4)
+export { SemanticMemoryPanel } from './semantic-memory-panel';
+export { EpisodicMemoryPanel } from './episodic-memory-panel';
+export { WorkingMemoryPanel } from './working-memory-panel';
+export { PatternEvolutionPanel } from './pattern-evolution-panel';
+
+// Security & Compliance (4)
+export { PIIDetectionPanel } from './pii-detection-panel';
+export { EncryptionStatusPanel } from './encryption-status-panel';
+export { CompliancePanel } from './compliance-panel';
+export { SecurityAuditPanel } from './security-audit-panel';
