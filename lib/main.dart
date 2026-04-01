@@ -23,6 +23,7 @@ import 'navigation/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final logger = LoggerService();
 
   // Initialize Firebase
   try {
@@ -30,7 +31,7 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
   } catch (e) {
-    debugPrint('Firebase initialization failed: $e');
+    logger.error('Firebase initialization failed', error: e);
   }
 
   // Enable edge-to-edge display
@@ -60,8 +61,8 @@ void main() async {
   // Initialize all services
   await _initializeServices();
 
-  // Wrap app with Sentry if DSN is configured
-  // Temporarily disabled - Sentry causing build issues
+  // Sentry integration is currently disabled.
+  // Keep the app runner direct until the integration is restored.
   // if (AppConfig.sentryDsn.isNotEmpty) {
   //   await SentryFlutter.init((options) {
   //     options.dsn = AppConfig.sentryDsn;
@@ -74,12 +75,11 @@ void main() async {
   //     };
   //   }, appRunner: () => runApp(const StepsToRecoveryApp()));
   // } else {
-    runApp(const StepsToRecoveryApp());
+  runApp(const StepsToRecoveryApp());
   // }
 }
 
 /// Strip PII from Sentry events — no recovery content, names, or journal text.
-// Temporarily disabled with Sentry
 // SentryEvent? _scrubPii(SentryEvent event, Hint hint) {
 //   // Remove user email/name (we only send anonymous device info)
 //   final user = event.user;

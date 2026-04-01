@@ -1,5 +1,5 @@
 import 'package:workmanager/workmanager.dart';
-// import 'package:sentry_flutter/sentry_flutter.dart';  // Temporarily disabled
+// import 'package:sentry_flutter/sentry_flutter.dart';  // Sentry integration currently disabled
 
 import 'app_config.dart';
 import 'core/services/encryption_service.dart';
@@ -37,8 +37,7 @@ void recoverySyncDispatcher() {
         stackTrace: stackTrace,
       );
 
-      // If Sentry is configured, capture the error
-      // Temporarily disabled with Sentry
+      // Sentry capture remains disabled while the integration is offline.
       // if (AppConfig.sentryDsn.isNotEmpty) {
       //   try {
       //     await Sentry.captureException(e, stackTrace: stackTrace);
