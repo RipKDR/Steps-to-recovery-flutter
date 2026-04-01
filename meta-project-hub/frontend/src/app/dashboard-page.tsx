@@ -39,6 +39,8 @@ import {
   CompliancePanel,
   SecurityAuditPanel,
 } from '@/components/panels';
+import { FadeIn, SlideIn, gridStagger, gridItem } from '@/lib/animations';
+import { motion } from 'framer-motion';
 
 export default function Dashboard() {
   const { metrics, loading, error, fetchMetrics } = useDashboardStore();
@@ -52,10 +54,26 @@ export default function Dashboard() {
   if (loading && !metrics) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-zinc-400">Loading Meta Project HUB...</p>
-        </div>
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-center"
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full mb-4"
+          />
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-zinc-400"
+          >
+            Loading Meta Project HUB...
+          </motion.p>
+        </motion.div>
       </div>
     );
   }
@@ -70,152 +88,233 @@ export default function Dashboard() {
         <main className="p-6">
           {/* Error State */}
           {error && (
-            <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center gap-3">
-              <div className="text-red-500">⚠️</div>
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center gap-3"
+            >
+              <motion.span
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 0.5, repeat: 3 }}
+                className="text-red-500"
+              >
+                ⚠️
+              </motion.span>
               <p className="text-red-400">{error}</p>
-            </div>
+            </motion.div>
           )}
 
           {/* Tab Filter */}
-          <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
-                activeTab === 'all'
-                  ? 'bg-amber-500 text-zinc-950'
-                  : 'bg-zinc-900 text-zinc-400 hover:text-zinc-100'
-              }`}
-            >
-              All Panels ({32})
-            </button>
-            <button
-              onClick={() => setActiveTab('flutter')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
-                activeTab === 'flutter'
-                  ? 'bg-cyan-500 text-zinc-950'
-                  : 'bg-zinc-900 text-zinc-400 hover:text-zinc-100'
-              }`}
-            >
-              Flutter Metrics (6)
-            </button>
-            <button
-              onClick={() => setActiveTab('agents')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
-                activeTab === 'agents'
-                  ? 'bg-indigo-500 text-zinc-950'
-                  : 'bg-zinc-900 text-zinc-400 hover:text-zinc-100'
-              }`}
-            >
-              Agents (6)
-            </button>
-            <button
-              onClick={() => setActiveTab('tasks')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
-                activeTab === 'tasks'
-                  ? 'bg-green-500 text-zinc-950'
-                  : 'bg-zinc-900 text-zinc-400 hover:text-zinc-100'
-              }`}
-            >
-              Tasks (6)
-            </button>
-            <button
-              onClick={() => setActiveTab('security')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
-                activeTab === 'security'
-                  ? 'bg-red-500 text-zinc-950'
-                  : 'bg-zinc-900 text-zinc-400 hover:text-zinc-100'
-              }`}
-            >
-              Security (4)
-            </button>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mb-6 flex gap-2 overflow-x-auto pb-2"
+          >
+            {[
+              { id: 'all', label: 'All Panels', count: 32, color: 'amber' },
+              { id: 'flutter', label: 'Flutter', count: 6, color: 'cyan' },
+              { id: 'agents', label: 'Agents', count: 6, color: 'indigo' },
+              { id: 'tasks', label: 'Tasks', count: 6, color: 'green' },
+              { id: 'security', label: 'Security', count: 4, color: 'red' },
+            ].map((tab, index) => (
+              <motion.button
+                key={tab.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 + index * 0.05 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? `bg-${tab.color}-500 text-zinc-950`
+                    : 'bg-zinc-900 text-zinc-400 hover:text-zinc-100'
+                }`}
+              >
+                {tab.label} ({tab.count})
+              </motion.button>
+            ))}
+          </motion.div>
 
           {/* Connection Status */}
-          <div className="mb-6 text-center text-sm text-zinc-500">
-            {connected ? (
-              <span className="text-emerald-500">●</span>
-            ) : (
-              <span className="text-amber-500">●</span>
-            )}{' '}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mb-6 text-center text-sm text-zinc-500"
+          >
+            <motion.span
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className={connected ? 'text-emerald-500' : 'text-amber-500'}
+            >
+              ●
+            </motion.span>{' '}
             {connected ? 'Connected to backend' : 'Disconnected - Using mock data'}
-          </div>
+          </motion.div>
 
-          {/* Dashboard Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {/* Dashboard Grid with Stagger Animation */}
+          <motion.div
+            variants={gridStagger}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          >
             {/* Flutter Metrics */}
             {(activeTab === 'all' || activeTab === 'flutter') && (
               <>
-                <CodeHealthPanel />
-                <TestCoveragePanel />
-                <BuildStatusPanel />
-                <DependenciesPanel />
-                <PerformancePanel />
-                <FeatureTrackerPanel />
+                <motion.div variants={gridItem} className="col-span-1">
+                  <CodeHealthPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <TestCoveragePanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <BuildStatusPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <DependenciesPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <PerformancePanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <FeatureTrackerPanel />
+                </motion.div>
               </>
             )}
 
             {/* Meta-Systems */}
             {(activeTab === 'all' || activeTab === 'security') && (
               <>
-                <SecurityScanPanel />
-                <CodeSmellsPanel />
-                <AutoFixLogPanel />
-                <GitStatusPanel />
-                <CICDStatusPanel />
-                <ActivityFeedPanel />
+                <motion.div variants={gridItem} className="col-span-1">
+                  <SecurityScanPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <CodeSmellsPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <AutoFixLogPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <GitStatusPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <CICDStatusPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <ActivityFeedPanel />
+                </motion.div>
               </>
             )}
 
             {/* Task Management */}
             {(activeTab === 'all' || activeTab === 'tasks') && (
               <>
-                <KanbanBoardPanel />
-                <SprintPlanningPanel />
-                <BacklogPanel />
-                <RoadmapPanel />
-                <BugTrackerPanel />
-                <FeatureRequestsPanel />
+                <motion.div variants={gridItem} className="col-span-1">
+                  <KanbanBoardPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <SprintPlanningPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <BacklogPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <RoadmapPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <BugTrackerPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <FeatureRequestsPanel />
+                </motion.div>
               </>
             )}
 
             {/* Agent Operations */}
             {(activeTab === 'all' || activeTab === 'agents') && (
               <>
-                <AgentStatusPanel />
-                <SessionTrackingPanel />
-                <SkillManagementPanel />
-                <TaskQueuePanel />
-                <MemoryGraphPanel />
-                <AgentEvalsPanel />
+                <motion.div variants={gridItem} className="col-span-1">
+                  <AgentStatusPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <SessionTrackingPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <SkillManagementPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <TaskQueuePanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <MemoryGraphPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <AgentEvalsPanel />
+                </motion.div>
               </>
             )}
 
             {/* Memory & Learning */}
             {activeTab === 'all' && (
               <>
-                <SemanticMemoryPanel />
-                <EpisodicMemoryPanel />
-                <WorkingMemoryPanel />
-                <PatternEvolutionPanel />
+                <motion.div variants={gridItem} className="col-span-1">
+                  <SemanticMemoryPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <EpisodicMemoryPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <WorkingMemoryPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <PatternEvolutionPanel />
+                </motion.div>
               </>
             )}
 
             {/* Security & Compliance */}
             {(activeTab === 'all' || activeTab === 'security') && (
               <>
-                <PIIDetectionPanel />
-                <EncryptionStatusPanel />
-                <CompliancePanel />
-                <SecurityAuditPanel />
+                <motion.div variants={gridItem} className="col-span-1">
+                  <PIIDetectionPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <EncryptionStatusPanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <CompliancePanel />
+                </motion.div>
+                <motion.div variants={gridItem} className="col-span-1">
+                  <SecurityAuditPanel />
+                </motion.div>
               </>
             )}
-          </div>
+          </motion.div>
 
           {/* Footer */}
-          <div className="mt-12 text-center text-xs text-zinc-600">
-            <p>Meta Project HUB v1.0.0 • 32 Panels • Mission Control Inspired</p>
-            <p className="mt-1">Built for Steps to Recovery Flutter App</p>
-          </div>
+          <motion.footer
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+            className="mt-12 text-center text-xs text-zinc-600"
+          >
+            <motion.p
+              animate={{ opacity: [0.6, 1, 0.6] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              Meta Project HUB v1.0.0 • 32 Panels • Mission Control Inspired
+            </motion.p>
+            <motion.p
+              animate={{ opacity: [0.6, 1, 0.6] }}
+              transition={{ duration: 3, repeat: Infinity, delay: 0.5 }}
+              className="mt-1"
+            >
+              Built for Steps to Recovery Flutter App
+            </motion.p>
+          </motion.footer>
         </main>
       </div>
     </div>
