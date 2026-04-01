@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
-// import 'package:sentry_flutter/sentry_flutter.dart';  // Temporarily disabled
+// import 'package:sentry_flutter/sentry_flutter.dart';  // Sentry integration disabled
 
 import 'core/theme/app_theme.dart';
 import 'core/services/app_state_service.dart';
@@ -61,7 +61,7 @@ void main() async {
   // Initialize all services
   await _initializeServices();
 
-  // Sentry integration is currently disabled.
+  // Sentry integration is disabled for now.
   // Keep the app runner direct until the integration is restored.
   // if (AppConfig.sentryDsn.isNotEmpty) {
   //   await SentryFlutter.init((options) {
@@ -142,7 +142,7 @@ Future<void> _initializeServices() async {
       error: e,
       stackTrace: stackTrace,
     );
-    // Continue anyway - app can function with limited services
+    rethrow;
   }
 }
 

@@ -87,6 +87,8 @@ class AppStateService extends ChangeNotifier {
   String _morningReminderTime = '08:00';
   String _eveningReminderTime = '20:00';
   bool _sessionTokenNeedsMigration = false;
+  bool _sobrietyDateNeedsMigration = false;
+  bool _programTypeNeedsMigration = false;
   ThemeMode _themeMode = ThemeMode.dark;
 
   List<_LocalAccount> _accounts = <_LocalAccount>[];
@@ -191,9 +193,7 @@ class AppStateService extends ChangeNotifier {
       final lockoutUntil = DateTime.now().add(_lockoutDuration);
       await _prefs?.setString(_keyLockoutUntil, lockoutUntil.toIso8601String());
       LoggerService().error(
-        """
-Account locked due to too many failed attempts. """
-        'Lockout until $lockoutUntil',
+        'Account locked due to too many failed attempts. Lockout until $lockoutUntil',
       );
     }
   }
@@ -225,6 +225,9 @@ Account locked due to too many failed attempts. """
       _prefs ??= await SharedPreferences.getInstance();
       await DatabaseService().initialize();
       _hydrateFromPrefs();
+      if (_sobrietyDateNeedsMigration || _programTypeNeedsMigration) {
+        await _persistRecoveryPreferences();
+      }
       if (_sessionTokenNeedsMigration) {
         await _persistSession();
         _sessionTokenNeedsMigration = false;
@@ -272,11 +275,24 @@ Account locked due to too many failed attempts. """
     _displayName = _readMaybeEncryptedString(_keyDisplayName);
     _userId = prefs.getString(_keyUserId);
 
+    final rawSobrietyDate = prefs.getString(_keySobrietyDate);
     final sobrietyDate = _readMaybeEncryptedString(_keySobrietyDate);
     _sobrietyDate = sobrietyDate == null
         ? null
         : DateTime.tryParse(sobrietyDate);
+    _sobrietyDateNeedsMigration =
+        rawSobrietyDate != null &&
+        rawSobrietyDate.isNotEmpty &&
+        sobrietyDate == rawSobrietyDate &&
+        !_looksEncryptedValue(rawSobrietyDate);
+
+    final rawProgramType = prefs.getString(_keyProgramType);
     _programType = _readMaybeEncryptedString(_keyProgramType);
+    _programTypeNeedsMigration =
+        rawProgramType != null &&
+        rawProgramType.isNotEmpty &&
+        _programType == rawProgramType &&
+        !_looksEncryptedValue(rawProgramType);
     _notificationsEnabled = prefs.getBool(_keyNotificationsEnabled) ?? true;
     _biometricEnabled = prefs.getBool(_keyBiometricEnabled) ?? false;
     _aiProxyEnabled = prefs.getBool(_keyAiProxyEnabled) ?? false;
@@ -657,6 +673,20 @@ Account locked due to too many failed attempts. """
     _sessionTokenNeedsMigration = false;
   }
 
+  Future<void> _persistRecoveryPreferences() async {
+    if (_sobrietyDate != null) {
+      await _writeEncryptedString(
+        _keySobrietyDate,
+        _sobrietyDate!.toIso8601String(),
+      );
+    }
+    if (_programType != null) {
+      await _writeEncryptedString(_keyProgramType, _programType!);
+    }
+    _sobrietyDateNeedsMigration = false;
+    _programTypeNeedsMigration = false;
+  }
+
   Future<void> _persistAccounts() async {
     final payload = jsonEncode(
       _accounts.map((account) => account.toJson()).toList(),
@@ -814,6 +844,8 @@ Account locked due to too many failed attempts. """
     _sobrietyDate = null;
     _programType = null;
     _sessionTokenNeedsMigration = false;
+    _sobrietyDateNeedsMigration = false;
+    _programTypeNeedsMigration = false;
     _notificationsEnabled = true;
     _biometricEnabled = false;
     _aiProxyEnabled = false;

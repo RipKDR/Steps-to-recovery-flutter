@@ -109,6 +109,26 @@ void main() {
         ),
       );
     });
+
+    test('resetForTest clears runtime initialization state', () async {
+      expect(service.isInitialized, isTrue);
+      expect(service.isSecureStorageAvailable, isTrue);
+
+      service.resetForTest();
+
+      expect(service.isInitialized, isFalse);
+      expect(service.isSecureStorageAvailable, isFalse);
+      expect(
+        () => service.encrypt('journal entry'),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains('not initialized'),
+          ),
+        ),
+      );
+    });
   });
 }
 

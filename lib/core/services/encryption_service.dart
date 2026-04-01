@@ -226,6 +226,8 @@ class EncryptionService {
   /// Check if secure storage is available
   bool get isSecureStorageAvailable => _secureStorageAvailable;
 
+  /// Compatibility shim for older callers and tests.
+  @Deprecated('Always null. Retained for compatibility only.')
   Future<Null> get initializationError async => null;
 
   /// Ensure service is initialized
@@ -247,5 +249,9 @@ class EncryptionService {
     await clearKeys();
   }
 
-  void resetForTest() {}
+  void resetForTest() {
+    _key = null;
+    _initialized = false;
+    _secureStorageAvailable = false;
+  }
 }

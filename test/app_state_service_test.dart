@@ -57,6 +57,49 @@ void main() {
       EncryptionService().decrypt(storedSessionToken!),
       'legacy-session-token',
     );
+
+    final storedSobrietyDate = prefs.getString('sobriety_date');
+    expect(storedSobrietyDate, isNotNull);
+    expect(storedSobrietyDate, contains(':'));
+    expect(
+      EncryptionService().decrypt(storedSobrietyDate!),
+      sobrietyDate.toIso8601String(),
+    );
+
+    final storedProgramType = prefs.getString('program_type');
+    expect(storedProgramType, isNotNull);
+    expect(storedProgramType, contains(':'));
+    expect(EncryptionService().decrypt(storedProgramType!), 'AA');
+  });
+
+  test('hydrates legacy recovery prefs while signed out and migrates them',
+      () async {
+    final prefs = await SharedPreferences.getInstance();
+    final sobrietyDate = DateTime(2024, 3, 10);
+
+    await prefs.setBool('app_signed_in', false);
+    await prefs.setString('sobriety_date', sobrietyDate.toIso8601String());
+    await prefs.setString('program_type', 'NA');
+
+    await AppStateService.instance.initialize();
+    await prefs.reload();
+
+    expect(AppStateService.instance.isAuthenticated, isFalse);
+    expect(AppStateService.instance.sobrietyDate, sobrietyDate);
+    expect(AppStateService.instance.programType, 'NA');
+
+    final storedSobrietyDate = prefs.getString('sobriety_date');
+    expect(storedSobrietyDate, isNotNull);
+    expect(storedSobrietyDate, contains(':'));
+    expect(
+      EncryptionService().decrypt(storedSobrietyDate!),
+      sobrietyDate.toIso8601String(),
+    );
+
+    final storedProgramType = prefs.getString('program_type');
+    expect(storedProgramType, isNotNull);
+    expect(storedProgramType, contains(':'));
+    expect(EncryptionService().decrypt(storedProgramType!), 'NA');
   });
 
   test('initialize clears isInitializing when database initialization fails',
