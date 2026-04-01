@@ -15,3 +15,11 @@ export { AutoFixLogPanel } from './auto-fix-log-panel';
 export { GitStatusPanel } from './git-status-panel';
 export { CICDStatusPanel } from './cicd-status-panel';
 export { ActivityFeedPanel } from './activity-feed-panel';
+
+// Task Management (6)
+export { KanbanBoardPanel } from './kanban-board-panel';
+export { SprintPlanningPanel } from './sprint-planning-panel';
+export { BacklogPanel } from './backlog-panel';
+export { RoadmapPanel } from './roadmap-panel';
+export { BugTrackerPanel } from './bug-tracker-panel';
+export { FeatureRequestsPanel } from './feature-requests-panel';
