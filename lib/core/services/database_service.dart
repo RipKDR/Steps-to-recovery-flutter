@@ -1171,7 +1171,7 @@ class DatabaseService extends ChangeNotifier {
     }
 
     try {
-      final data = jsonDecode(raw) as Map<String, dynamic>;
+      final data = _decodeStore(raw);
       await _applyStoreData(data);
     } catch (error, stackTrace) {
       LoggerService().error(
@@ -1203,7 +1203,7 @@ class DatabaseService extends ChangeNotifier {
 
   Future<void> _persist() async {
     final data = _serializeStore();
-    await _prefs?.setString(_storeKey, jsonEncode(data));
+    await _prefs?.setString(_storeKey, EncryptionService().encrypt(jsonEncode(data)));
     notifyListeners();
   }
 
@@ -1271,6 +1271,23 @@ class DatabaseService extends ChangeNotifier {
       'readingReflections': _readingReflections.map(_readingReflectionToJson).toList(),
       'dailyInventories': _dailyInventories.map(_dailyInventoryToJson).toList(),
     };
+  }
+
+  Map<String, dynamic> _decodeStore(String raw) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+      return Map<String, dynamic>.from(decoded as Map);
+    } catch (_) {
+      final decrypted = EncryptionService().decrypt(raw);
+      final decoded = jsonDecode(decrypted);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+      return Map<String, dynamic>.from(decoded as Map);
+    }
   }
 
   List<T> _readList<T>(
@@ -1576,11 +1593,35 @@ class DatabaseService extends ChangeNotifier {
         .toList();
   }
 
+  String? _readEncryptedString(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is String) {
+      return _decryptNullable(value);
+    }
+    return value.toString();
+  }
+
+  int? _readEncryptedInt(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    if (value is String) {
+      return int.tryParse(_decryptNullable(value) ?? value);
+    }
+    return int.tryParse(value.toString());
+  }
+
   Map<String, dynamic> _userToJson(UserProfile user) => {
         'id': user.id,
         'email': _encryptNullable(user.email),
-        'sobrietyStartDate': user.sobrietyStartDate.toIso8601String(),
-        'programType': user.programType,
+        'sobrietyStartDate':
+            EncryptionService().encrypt(user.sobrietyStartDate.toIso8601String()),
+        'programType': _encryptNullable(user.programType),
         'createdAt': user.createdAt.toIso8601String(),
         'updatedAt': user.updatedAt.toIso8601String(),
       };
@@ -1588,8 +1629,10 @@ class DatabaseService extends ChangeNotifier {
   UserProfile _userFromJson(Map<String, dynamic> json) => UserProfile(
         id: json['id'] as String,
         email: _decryptNullable(json['email']) ?? '',
-        sobrietyStartDate: DateTime.parse(json['sobrietyStartDate'] as String),
-        programType: json['programType'] as String?,
+        sobrietyStartDate: DateTime.parse(
+          _readEncryptedString(json['sobrietyStartDate']) ?? '',
+        ),
+        programType: _readEncryptedString(json['programType']),
         createdAt: DateTime.parse(json['createdAt'] as String),
         updatedAt: DateTime.parse(json['updatedAt'] as String),
       );
@@ -1601,8 +1644,9 @@ class DatabaseService extends ChangeNotifier {
         'checkInDate': checkIn.checkInDate.toIso8601String(),
         'intention': _encryptNullable(checkIn.intention),
         'reflection': _encryptNullable(checkIn.reflection),
-        'mood': checkIn.mood,
-        'craving': checkIn.craving,
+        'mood': checkIn.mood == null ? null : EncryptionService().encrypt(checkIn.mood.toString()),
+        'craving':
+            checkIn.craving == null ? null : EncryptionService().encrypt(checkIn.craving.toString()),
         'syncStatus': checkIn.syncStatus.value,
         'createdAt': checkIn.createdAt.toIso8601String(),
       };
@@ -1614,8 +1658,8 @@ class DatabaseService extends ChangeNotifier {
         checkInDate: DateTime.parse(json['checkInDate'] as String),
         intention: _decryptNullable(json['intention']),
         reflection: _decryptNullable(json['reflection']),
-        mood: (json['mood'] as num?)?.toInt(),
-        craving: (json['craving'] as num?)?.toInt(),
+        mood: _readEncryptedInt(json['mood']),
+        craving: _readEncryptedInt(json['craving']),
         syncStatus: SyncStatus.fromString(json['syncStatus'] as String? ?? 'pending'),
         createdAt: DateTime.parse(json['createdAt'] as String),
       );
@@ -1966,6 +2010,28 @@ class DatabaseService extends ChangeNotifier {
     _prefs = null;
     _initialized = false;
     super.dispose();
+  }
+
+  void resetForTest() {
+    _activeUserId = null;
+    _users = <UserProfile>[];
+    _checkIns = <DailyCheckIn>[];
+    _journalEntries = <JournalEntry>[];
+    _stepAnswers = <StepWorkAnswer>[];
+    _stepProgress = <StepProgress>[];
+    _achievements = <Achievement>[];
+    _contacts = <Contact>[];
+    _meetings = <Meeting>[];
+    _chatConversations = <ChatConversation>[];
+    _chatMessages = <ChatMessage>[];
+    _gratitudeEntries = <GratitudeEntry>[];
+    _safetyPlans = <SafetyPlan>[];
+    _challenges = <Challenge>[];
+    _readingReflections = <ReadingReflection>[];
+    _dailyInventories = <DailyInventory>[];
+    _prefs = null;
+    _initialized = false;
+    _encryptionSecure = false;
   }
 }
 

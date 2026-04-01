@@ -72,6 +72,8 @@ class AppStateService extends ChangeNotifier {
   SharedPreferences? _prefs;
   bool _ready = false;
   bool _initializing = false;
+  Future<void> Function()? _databaseInitializerForTest;
+  String? _initializationError;
 
   bool _onboardingComplete = false;
   bool _signedIn = false;
@@ -178,6 +180,8 @@ class AppStateService extends ChangeNotifier {
   /// Get current failed attempt count
   int get failedAttemptCount => _prefs?.getInt(_keyFailedAttempts) ?? 0;
 
+  String? get initializationError => _initializationError;
+
   /// Record a failed authentication attempt
   Future<void> _recordFailedAttempt() async {
     final attempts = (_prefs?.getInt(_keyFailedAttempts) ?? 0) + 1;
@@ -190,7 +194,8 @@ class AppStateService extends ChangeNotifier {
       final lockoutUntil = DateTime.now().add(_lockoutDuration);
       await _prefs?.setString(_keyLockoutUntil, lockoutUntil.toIso8601String());
       LoggerService().error(
-        'Account locked due to too many failed attempts. '
+        """
+Account locked due to too many failed attempts. """
         'Lockout until $lockoutUntil',
       );
     }
@@ -219,28 +224,42 @@ class AppStateService extends ChangeNotifier {
     }
 
     _initializing = true;
-    _prefs ??= await SharedPreferences.getInstance();
-    await DatabaseService().initialize();
-    _hydrateFromPrefs();
+    _initializationError = null;
 
-    if (_signedIn && _userId != null) {
-      await DatabaseService().setActiveUser(_userId);
-      await _ensureCurrentUserProfile();
-    } else {
-      await DatabaseService().setActiveUser(null);
-    }
+    try {
+      _prefs ??= await SharedPreferences.getInstance();
+      final databaseInitializer =
+          _databaseInitializerForTest ?? DatabaseService().initialize;
+      await databaseInitializer();
+      _hydrateFromPrefs();
 
-    if (_sobrietyDate != null) {
-      unawaited(
-        MilestoneService().checkAndScheduleApproachNotifications(
-          _sobrietyDate!,
-        ),
+      if (_signedIn && _userId != null) {
+        await DatabaseService().setActiveUser(_userId);
+        await _ensureCurrentUserProfile();
+      } else {
+        await DatabaseService().setActiveUser(null);
+      }
+
+      if (_sobrietyDate != null) {
+        unawaited(
+          MilestoneService().checkAndScheduleApproachNotifications(
+            _sobrietyDate!,
+          ),
+        );
+      }
+
+      _ready = true;
+    } catch (error, stackTrace) {
+      _initializationError = error.toString();
+      LoggerService().error(
+        'Failed to initialize AppStateService',
+        error: error,
+        stackTrace: stackTrace,
       );
+    } finally {
+      _initializing = false;
+      notifyListeners();
     }
-
-    _ready = true;
-    _initializing = false;
-    notifyListeners();
   }
 
   void _hydrateFromPrefs() {
@@ -251,16 +270,16 @@ class AppStateService extends ChangeNotifier {
 
     _onboardingComplete = prefs.getBool(_keyOnboardingComplete) ?? false;
     _signedIn = prefs.getBool(_keySignedIn) ?? false;
-    _sessionToken = prefs.getString(_keySessionToken);
+    _sessionToken = _readMaybeEncryptedString(_keySessionToken);
     _email = _readMaybeEncryptedString(_keyEmail);
     _displayName = _readMaybeEncryptedString(_keyDisplayName);
     _userId = prefs.getString(_keyUserId);
 
-    final sobrietyDate = prefs.getString(_keySobrietyDate);
+    final sobrietyDate = _readMaybeEncryptedString(_keySobrietyDate);
     _sobrietyDate = sobrietyDate == null
         ? null
         : DateTime.tryParse(sobrietyDate);
-    _programType = prefs.getString(_keyProgramType);
+    _programType = _readMaybeEncryptedString(_keyProgramType);
     _notificationsEnabled = prefs.getBool(_keyNotificationsEnabled) ?? true;
     _biometricEnabled = prefs.getBool(_keyBiometricEnabled) ?? false;
     _aiProxyEnabled = prefs.getBool(_keyAiProxyEnabled) ?? false;
@@ -470,6 +489,8 @@ class AppStateService extends ChangeNotifier {
     await _prefs?.remove(_keyEmail);
     await _prefs?.remove(_keyDisplayName);
     await _prefs?.remove(_keyUserId);
+    await _prefs?.remove(_keySobrietyDate);
+    await _prefs?.remove(_keyProgramType);
     await _syncReminderPreferences();
     notifyListeners();
   }
@@ -498,7 +519,7 @@ class AppStateService extends ChangeNotifier {
     if (value == null) {
       await _prefs?.remove(_keySobrietyDate);
     } else {
-      await _prefs?.setString(_keySobrietyDate, value.toIso8601String());
+      await _writeEncryptedString(_keySobrietyDate, value.toIso8601String());
     }
     if (value != null) {
       unawaited(
@@ -515,7 +536,7 @@ class AppStateService extends ChangeNotifier {
     if (_programType == null) {
       await _prefs?.remove(_keyProgramType);
     } else {
-      await _prefs?.setString(_keyProgramType, _programType!);
+      await _writeEncryptedString(_keyProgramType, _programType!);
     }
     await _syncCurrentUserProfile();
     notifyListeners();
@@ -617,7 +638,7 @@ class AppStateService extends ChangeNotifier {
   Future<void> _persistSession() async {
     await _prefs?.setBool(_keySignedIn, _signedIn);
     if (_sessionToken != null) {
-      await _prefs?.setString(_keySessionToken, _sessionToken!);
+      await _writeEncryptedString(_keySessionToken, _sessionToken!);
     }
     if (_userId != null) {
       await _prefs?.setString(_keyUserId, _userId!);
@@ -629,13 +650,13 @@ class AppStateService extends ChangeNotifier {
       await _writeEncryptedString(_keyDisplayName, _displayName!);
     }
     if (_sobrietyDate != null) {
-      await _prefs?.setString(
+      await _writeEncryptedString(
         _keySobrietyDate,
         _sobrietyDate!.toIso8601String(),
       );
     }
     if (_programType != null) {
-      await _prefs?.setString(_keyProgramType, _programType!);
+      await _writeEncryptedString(_keyProgramType, _programType!);
     }
   }
 
@@ -709,13 +730,13 @@ class AppStateService extends ChangeNotifier {
       _sobrietyDate ??= existing.sobrietyStartDate;
       _programType ??= existing.programType;
       if (_sobrietyDate != null) {
-        await _prefs?.setString(
+        await _writeEncryptedString(
           _keySobrietyDate,
           _sobrietyDate!.toIso8601String(),
         );
       }
       if (_programType != null) {
-        await _prefs?.setString(_keyProgramType, _programType!);
+        await _writeEncryptedString(_keyProgramType, _programType!);
       }
       return;
     }
@@ -775,6 +796,33 @@ class AppStateService extends ChangeNotifier {
       morningTime: _morningReminderTime,
       eveningTime: _eveningReminderTime,
     );
+  }
+
+  void resetForTest() {
+    _prefs = null;
+    _ready = false;
+    _initializing = false;
+    _initializationError = null;
+    _databaseInitializerForTest = null;
+    _onboardingComplete = false;
+    _signedIn = false;
+    _sessionToken = null;
+    _email = null;
+    _displayName = null;
+    _userId = null;
+    _sobrietyDate = null;
+    _programType = null;
+    _notificationsEnabled = true;
+    _biometricEnabled = false;
+    _aiProxyEnabled = false;
+    _morningReminderTime = '08:00';
+    _eveningReminderTime = '20:00';
+    _themeMode = ThemeMode.dark;
+    _accounts = <_LocalAccount>[];
+  }
+
+  void setDatabaseInitializerForTest(Future<void> Function()? initializer) {
+    _databaseInitializerForTest = initializer;
   }
 }
 

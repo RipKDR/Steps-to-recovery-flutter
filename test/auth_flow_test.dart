@@ -153,11 +153,26 @@ void main() {
       );
 
       final prefs = await getTestSharedPreferences();
-      expect(prefs.getString('sobriety_date'), isNotNull);
-      expect(prefs.getString('program_type'), 'AA');
+      final encryptedSessionToken = prefs.getString('app_session_token');
+      final encryptedSobrietyDate = prefs.getString('sobriety_date');
+      final encryptedProgramType = prefs.getString('program_type');
+
+      expect(encryptedSessionToken, isNotNull);
+      expect(encryptedSobrietyDate, isNotNull);
+      expect(encryptedProgramType, isNotNull);
+      expect(encryptedSessionToken, contains(':'));
+      expect(encryptedSobrietyDate, contains(':'));
+      expect(encryptedProgramType, contains(':'));
+      expect(EncryptionService().decrypt(encryptedSessionToken!), isNotEmpty);
+      expect(
+        EncryptionService().decrypt(encryptedSobrietyDate!),
+        startsWith('2024-01-01'),
+      );
+      expect(EncryptionService().decrypt(encryptedProgramType!), 'AA');
 
       await AppStateService.instance.signOut();
 
+      await prefs.reload();
       expect(prefs.getString('sobriety_date'), isNull);
       expect(prefs.getString('program_type'), isNull);
     });

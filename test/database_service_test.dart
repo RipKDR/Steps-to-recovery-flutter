@@ -1,6 +1,8 @@
+// ignore_for_file: always_declare_return_types, strict_top_level_inference
+
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_secure_storage/test/test_flutter_secure_storage_platform.dart';
-// ignore: depend_on_referenced_packages
 import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:steps_recovery_flutter/core/constants/app_constants.dart';
@@ -46,6 +48,105 @@ void main() {
       expect(journalJson['title'], isNot(title));
       expect(journalJson['content'], isNot(content));
       expect((journalJson['tags'] as List<dynamic>).contains('Reflection'), isFalse);
+    });
+
+    test('persists encrypted store and sensitive fields at rest', () async {
+      final database = DatabaseService();
+      final userId = database.activeUserId;
+      expect(userId, isNotNull);
+      final currentUser = await database.getCurrentUser();
+      expect(currentUser, isNotNull);
+      final now = DateTime(2024, 2, 3, 10, 15);
+
+      await database.saveUser(currentUser!);
+
+      await database.saveCheckIn(
+        DailyCheckIn(
+          id: '',
+          userId: userId!,
+          checkInType: CheckInType.morning,
+          checkInDate: now,
+          intention: 'Stay honest and ask for help.',
+          reflection: 'Call sponsor before the day gets away from me.',
+          mood: 4,
+          craving: 7,
+          createdAt: now,
+        ),
+      );
+
+      final users = await database.getUsers();
+      final checkIns = await database.getCheckIns();
+      expect(users.any((entry) => entry.id == userId), isTrue);
+      expect(checkIns, hasLength(1));
+      expect(checkIns.single.mood, 4);
+      expect(checkIns.single.craving, 7);
+
+      final prefs = await getTestSharedPreferences();
+      final rawStore = prefs.getString('steps_recovery_store_v2');
+      expect(rawStore, isNotNull);
+      expect(rawStore, isNot(startsWith('{')));
+      expect(() => jsonDecode(rawStore!), throwsFormatException);
+
+      final decryptedStore = EncryptionService().decrypt(rawStore!);
+      expect(jsonDecode(decryptedStore), isA<Map<String, dynamic>>());
+      expect(decryptedStore, isNot(contains('2024-01-01T00:00:00.000')));
+      expect(decryptedStore, isNot(contains('"programType":"NA"')));
+      expect(decryptedStore, isNot(contains('"mood":4')));
+      expect(decryptedStore, isNot(contains('"craving":7')));
+    });
+
+    test('loads legacy plaintext store and rewrites it encrypted on save', () async {
+      final prefs = await getTestSharedPreferences();
+      final createdAt = DateTime(2024, 1, 1, 9, 0);
+      final legacyStore = <String, dynamic>{
+        'schemaVersion': 2,
+        'activeUserId': 'legacy-user',
+        'users': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'id': 'legacy-user',
+            'email': 'legacy@example.com',
+            'sobrietyStartDate': createdAt.toIso8601String(),
+            'programType': 'AA',
+            'createdAt': createdAt.toIso8601String(),
+            'updatedAt': createdAt.toIso8601String(),
+          },
+        ],
+        'checkIns': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'id': 'legacy-checkin',
+            'userId': 'legacy-user',
+            'checkInType': CheckInType.morning.value,
+            'checkInDate': createdAt.toIso8601String(),
+            'intention': 'Stay sober today.',
+            'reflection': 'Keep it simple.',
+            'mood': 4,
+            'craving': 7,
+            'syncStatus': SyncStatus.synced.value,
+            'createdAt': createdAt.toIso8601String(),
+          },
+        ],
+      };
+      await prefs.setString('steps_recovery_store_v2', jsonEncode(legacyStore));
+
+      DatabaseService().resetForTest();
+      await DatabaseService().initialize();
+      final database = DatabaseService();
+
+      final users = await database.getUsers();
+      final checkIns = await database.getCheckIns();
+
+      expect(users, hasLength(1));
+      expect(users.single.sobrietyStartDate, createdAt);
+      expect(users.single.programType, 'AA');
+      expect(checkIns, hasLength(1));
+      expect(checkIns.single.mood, 4);
+      expect(checkIns.single.craving, 7);
+
+      await database.setActiveUser('legacy-user');
+
+      final rawStore = prefs.getString('steps_recovery_store_v2');
+      expect(rawStore, isNotNull);
+      expect(() => jsonDecode(rawStore!), throwsFormatException);
     });
 
     test('persists and reloads morning check-ins', () async {
@@ -222,20 +323,18 @@ void main() {
       expect(stepOne.completionPercentage, 1);
     });
 
-    test('marks recovery as required when secure storage initialization fails', () async {
+    test('falls back to insecure mode when secure storage initialization fails', () async {
       SharedPreferences.setMockInitialValues(<String, Object>{});
       PreferencesService().resetForTest();
-      EncryptionService().resetForTest();
+      await EncryptionService().dispose();
       DatabaseService().resetForTest();
       FlutterSecureStoragePlatform.instance = _FailingSecureStoragePlatform();
       final database = DatabaseService();
 
-      await expectLater(database.initialize(), throwsStateError);
+      await database.initialize();
 
-      expect(database.isInitialized, isFalse);
+      expect(database.isInitialized, isTrue);
       expect(database.isEncryptionSecure, isFalse);
-      expect(database.requiresRecovery, isTrue);
-      expect(database.recoveryMessage, contains('Secure storage is unavailable'));
     });
   });
 }

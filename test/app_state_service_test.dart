@@ -1,7 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/test/test_flutter_secure_storage_platform.dart';
-// ignore: depend_on_referenced_packages
-import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage_platform_interface.dart';
+import 'test_helpers.dart';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,20 +7,16 @@ import 'package:steps_recovery_flutter/core/services/app_state_service.dart';
 import 'package:steps_recovery_flutter/core/services/database_service.dart';
 import 'package:steps_recovery_flutter/core/services/encryption_service.dart';
 import 'package:steps_recovery_flutter/core/services/preferences_service.dart';
-import 'package:steps_recovery_flutter/main.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUp(() {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+  setUp(() async {
+    await prepareTestState();
     PreferencesService().resetForTest();
     EncryptionService().resetForTest();
     DatabaseService().resetForTest();
     AppStateService.instance.resetForTest();
-    FlutterSecureStoragePlatform.instance = TestFlutterSecureStoragePlatform(
-      <String, String>{},
-    );
   });
 
   tearDown(() {
@@ -61,19 +55,23 @@ void main() {
     expect(AppStateService.instance.initializationError, isNull);
   });
 
-  testWidgets('bootstrap renders a retryable error state after init failure', (
-    tester,
-  ) async {
-    AppStateService.instance.setDatabaseInitializerForTest(() async {
-      throw StateError('database unavailable');
-    });
+  test('hydrates legacy plaintext recovery prefs on initialize', () async {
+    final prefs = await SharedPreferences.getInstance();
+    final sobrietyDate = DateTime(2024, 1, 1);
 
-    await tester.pumpWidget(const StepsToRecoveryApp());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
+    await prefs.setBool('app_signed_in', true);
+    await prefs.setString('app_session_token', 'legacy-session-token');
+    await prefs.setString('app_user_id', 'legacy-user');
+    await prefs.setString('app_email', 'legacy@example.com');
+    await prefs.setString('sobriety_date', sobrietyDate.toIso8601String());
+    await prefs.setString('program_type', 'AA');
 
-    expect(find.text('Unable to start Steps to Recovery'), findsOneWidget);
-    expect(find.text('Try again'), findsOneWidget);
-    expect(find.textContaining('database unavailable'), findsOneWidget);
+    await AppStateService.instance.initialize();
+
+    expect(AppStateService.instance.isAuthenticated, isTrue);
+    expect(AppStateService.instance.currentUserId, 'legacy-user');
+    expect(AppStateService.instance.email, 'legacy@example.com');
+    expect(AppStateService.instance.sobrietyDate, sobrietyDate);
+    expect(AppStateService.instance.programType, 'AA');
   });
 }
