@@ -77,7 +77,7 @@ dependencies:
   package_info_plus: ^9.0.0
   connectivity_plus: ^7.0.0
   battery_plus: ^7.0.0
-  device_info_plus: ^12.3.0
+  device_info_plus: ^12.4.0
 
   # AI/ML
   google_generative_ai: ^0.4.6
