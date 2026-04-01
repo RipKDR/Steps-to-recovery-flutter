@@ -44,33 +44,44 @@ void main() {
 
   testWidgets('renders headline and subtext', (tester) async {
     await tester.pumpWidget(buildScreen());
+    await tester.pump(const Duration(milliseconds: 50));
     expect(find.text('One more thing.'), findsOneWidget);
     expect(find.textContaining('sponsor waiting'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 700));
   });
 
   testWidgets('CTA button is disabled when name is empty', (tester) async {
     await tester.pumpWidget(buildScreen());
-    // Clear the default placeholder to ensure the field is empty
+    await tester.pump(const Duration(milliseconds: 50));
     final nameField = find.byType(TextFormField);
     await tester.tap(nameField);
     await tester.enterText(nameField, '');
     await tester.pump();
     final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton).first);
     expect(button.onPressed, isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 700));
   });
 
   testWidgets('CTA button text updates when name is entered', (tester) async {
     await tester.pumpWidget(buildScreen());
+    await tester.pump(const Duration(milliseconds: 50));
     await tester.enterText(find.byType(TextFormField), 'Rex');
     await tester.pump();
     expect(find.textContaining('Rex'), findsWidgets);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 700));
   });
 
   testWidgets('vibe pills are tappable', (tester) async {
     await tester.pumpWidget(buildScreen());
+    await tester.pump(const Duration(milliseconds: 50));
     await tester.tap(find.text('Direct'));
     await tester.pump();
     // No crash = pass
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 700));
   });
 
   testWidgets('skip creates default identity and calls onComplete', (tester) async {

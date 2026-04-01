@@ -10,7 +10,7 @@ void main() {
 
     expect(find.byType(MaterialApp), findsOneWidget);
     await tester.pumpAndSettle();
-    expect(find.text('Welcome to Steps to Recovery'), findsOneWidget);
-    expect(find.text('Next'), findsOneWidget);
+    expect(find.text('What are you\nworking through?'), findsOneWidget);
+    expect(find.text('Continue'), findsOneWidget);
   });
 }

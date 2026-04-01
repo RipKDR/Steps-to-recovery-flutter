@@ -20,7 +20,6 @@ void main() {
 
       AppRouter.router.go(AppRoutes.journal);
       await _pumpShell(tester);
-      await tester.pumpAndSettle();
 
       final journalSearchField = find.byWidgetPredicate(
         (widget) =>
@@ -31,7 +30,6 @@ void main() {
 
       AppRouter.router.go(AppRoutes.meetings);
       await _pumpShell(tester);
-      await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.filter_list), findsOneWidget);
       expect(find.text('Favorites'), findsWidgets);
@@ -41,7 +39,8 @@ void main() {
 
 Future<void> _pumpShell(WidgetTester tester) async {
   await tester.pump();
-  await tester.pump(const Duration(milliseconds: 200));
-  await tester.pump(const Duration(milliseconds: 200));
-  await tester.pumpAndSettle();
+  // Pump past entrance animations (longest ~800ms). Cannot use pumpAndSettle
+  // because _BreathingGlow uses a looping AnimationController.
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.pump(const Duration(milliseconds: 600));
 }

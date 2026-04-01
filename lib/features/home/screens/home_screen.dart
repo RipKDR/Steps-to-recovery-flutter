@@ -24,10 +24,15 @@ const bool _isFlutterTest = bool.fromEnvironment('FLUTTER_TEST');
 
 /// Home dashboard with dynamic sobriety, check-ins, and quick actions.
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, this.showCelebration = true});
+  const HomeScreen({super.key, this.showCelebration = true, this.sharePlus});
 
   /// Whether to trigger the milestone celebration dialog on first load.
   final bool showCelebration;
+
+  /// Override for testing — inject a [SharePlus.custom] instance.
+  /// Production code leaves this null and uses [SharePlus.instance].
+  @visibleForTesting
+  final SharePlus? sharePlus;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -295,7 +300,7 @@ class _HomeScreenState extends State<HomeScreen> {
       shareFile = await _captureShareCard();
     }
 
-    final result = await SharePlus.instance.share(
+    final result = await (widget.sharePlus ?? SharePlus.instance).share(
       ShareParams(
         files: shareFile != null ? [shareFile] : null,
         text: shareContent.shareText,
@@ -484,7 +489,7 @@ class _SobrietyCard extends StatelessWidget {
   });
 
   final _HomeSnapshot snapshot;
-  final VoidCallback? onShareMilestone;
+  final Future<void> Function()? onShareMilestone;
 
   @override
   Widget build(BuildContext context) {
@@ -566,7 +571,7 @@ class _SobrietyCard extends StatelessWidget {
                           ? null
                           : () async {
                               await HapticFeedback.lightImpact();
-                              onShareMilestone?.call();
+                              await onShareMilestone?.call();
                             },
                       icon: const Icon(Icons.share_outlined),
                       label: Text(snapshot.featuredShareContent!.buttonLabel),

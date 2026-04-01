@@ -66,8 +66,11 @@ void main() {
     await tester.pumpWidget(MaterialApp(
       home: SponsorChatScreen(responder: fakeService),
     ));
+    await tester.pump(const Duration(milliseconds: 50));
     expect(find.text('Rex'), findsOneWidget);
     expect(find.text('Building'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 500));
   });
 
   testWidgets('sends message and shows response', (tester) async {
@@ -75,11 +78,14 @@ void main() {
     await tester.pumpWidget(MaterialApp(
       home: SponsorChatScreen(responder: fake),
     ));
+    await tester.pump(const Duration(milliseconds: 50));
     await tester.enterText(find.byType(TextField), 'Hello Rex');
-    await tester.tap(find.byIcon(Icons.send));
+    await tester.tap(find.byIcon(Icons.arrow_upward));
     await tester.pump(); // starts async
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.textContaining('Hello Rex'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 500));
   });
 
   testWidgets('shows 988 chip when crisis keyword sent', (tester) async {
@@ -88,9 +94,13 @@ void main() {
       routes: {'/emergency': (_) => const Scaffold()},
       home: SponsorChatScreen(responder: fake),
     ));
+    await tester.pump(const Duration(milliseconds: 50));
     await tester.enterText(find.byType(TextField), 'I want to kill myself');
-    await tester.tap(find.byIcon(Icons.send));
-    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.arrow_upward));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.textContaining('988'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 500));
   });
 }

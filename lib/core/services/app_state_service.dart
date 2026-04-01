@@ -470,6 +470,8 @@ class AppStateService extends ChangeNotifier {
     await _prefs?.remove(_keyEmail);
     await _prefs?.remove(_keyDisplayName);
     await _prefs?.remove(_keyUserId);
+    await _prefs?.remove(_keySobrietyDate);
+    await _prefs?.remove(_keyProgramType);
     await _syncReminderPreferences();
     notifyListeners();
   }
@@ -581,6 +583,7 @@ class AppStateService extends ChangeNotifier {
     await initialize();
     await DatabaseService().clearAllData();
     await _prefs?.clear();
+    _prefs = null;
 
     _ready = false;
     _initializing = false;
