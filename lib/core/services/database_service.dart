@@ -59,14 +59,12 @@ class DatabaseService extends ChangeNotifier {
     final encryptionService = EncryptionService();
     await encryptionService.initialize();
     _encryptionSecure = encryptionService.isSecureStorageAvailable;
-    
+
     if (!_encryptionSecure) {
-      LoggerService().error(
-        'SECURITY WARNING: Secure storage unavailable. '
-        'Sensitive data will not be encrypted.',
+      throw StateError(
+        'Secure storage is unavailable. DatabaseService cannot initialize '
+        'without encrypted at-rest storage.',
       );
-      // Continue initialization but mark as insecure
-      // UI can check isEncryptionSecure and warn user
     }
 
     _prefs = await SharedPreferences.getInstance();

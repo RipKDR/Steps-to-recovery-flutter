@@ -144,7 +144,7 @@ void main() {
       expect(AppStateService.instance.email, isNull);
     });
 
-    test('signOut clears persisted recovery metadata', () async {
+    test('signOut clears session token and preserves recovery metadata', () async {
       await AppStateService.instance.signUp(
         email: 'grace@example.com',
         password: 'password123',

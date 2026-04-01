@@ -8,8 +8,12 @@
 */
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_secure_storage/test/test_flutter_secure_storage_platform.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+// ignore: depend_on_referenced_packages
+import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage_platform_interface.dart';
 
+import 'package:steps_recovery_flutter/core/services/encryption_service.dart';
 import 'package:steps_recovery_flutter/core/services/preferences_service.dart';
 
 /// Helper: reset singleton + mock prefs before every test.
@@ -17,6 +21,10 @@ Future<PreferencesService> _freshService() async {
   TestWidgetsFlutterBinding.ensureInitialized();
   SharedPreferences.setMockInitialValues(<String, Object>{});
   final svc = PreferencesService()..resetForTest();
+  EncryptionService().resetForTest();
+  FlutterSecureStoragePlatform.instance = TestFlutterSecureStoragePlatform(
+    <String, String>{},
+  );
   await svc.initialize();
   return svc;
 }
@@ -140,6 +148,20 @@ void main() {
         expect(svc.sobrietyDate, isNull);
       });
 
+      test('sobrietyDate reads encrypted values', () async {
+        final svc = await _freshService();
+        await EncryptionService().initialize();
+
+        final prefs = await SharedPreferences.getInstance();
+        final date = DateTime(2024, 1, 1, 8, 30);
+        await prefs.setString(
+          'sobriety_date',
+          EncryptionService().encrypt(date.toIso8601String()),
+        );
+
+        expect(svc.sobrietyDate, equals(date));
+      });
+
       test('setSobrietyDate stores and retrieves the date', () async {
         final svc = await _freshService();
         final date = DateTime(2023, 6, 15);
@@ -174,6 +196,19 @@ void main() {
       test('programType defaults to null', () async {
         final svc = await _freshService();
         expect(svc.programType, isNull);
+      });
+
+      test('programType reads encrypted values', () async {
+        final svc = await _freshService();
+        await EncryptionService().initialize();
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(
+          'program_type',
+          EncryptionService().encrypt('AA'),
+        );
+
+        expect(svc.programType, equals('AA'));
       });
 
       test('setProgramType stores and retrieves the value', () async {

@@ -86,6 +86,7 @@ class AppStateService extends ChangeNotifier {
   bool _aiProxyEnabled = false;
   String _morningReminderTime = '08:00';
   String _eveningReminderTime = '20:00';
+  bool _sessionTokenNeedsMigration = false;
   ThemeMode _themeMode = ThemeMode.dark;
 
   List<_LocalAccount> _accounts = <_LocalAccount>[];
@@ -223,6 +224,10 @@ Account locked due to too many failed attempts. """
     _prefs ??= await SharedPreferences.getInstance();
     await DatabaseService().initialize();
     _hydrateFromPrefs();
+    if (_sessionTokenNeedsMigration) {
+      await _persistSession();
+      _sessionTokenNeedsMigration = false;
+    }
 
     if (_signedIn && _userId != null) {
       await DatabaseService().setActiveUser(_userId);
@@ -252,7 +257,14 @@ Account locked due to too many failed attempts. """
 
     _onboardingComplete = prefs.getBool(_keyOnboardingComplete) ?? false;
     _signedIn = prefs.getBool(_keySignedIn) ?? false;
+    final rawSessionToken = prefs.getString(_keySessionToken);
     _sessionToken = _readMaybeEncryptedString(_keySessionToken);
+    _sessionTokenNeedsMigration =
+        _signedIn &&
+        rawSessionToken != null &&
+        rawSessionToken.isNotEmpty &&
+        _sessionToken == rawSessionToken &&
+        !_looksEncryptedValue(rawSessionToken);
     _email = _readMaybeEncryptedString(_keyEmail);
     _displayName = _readMaybeEncryptedString(_keyDisplayName);
     _userId = prefs.getString(_keyUserId);
@@ -472,6 +484,7 @@ Account locked due to too many failed attempts. """
     await _prefs?.remove(_keyDisplayName);
     await _prefs?.remove(_keyUserId);
     await _syncReminderPreferences();
+    _sessionTokenNeedsMigration = false;
     notifyListeners();
   }
 
@@ -638,6 +651,7 @@ Account locked due to too many failed attempts. """
     if (_programType != null) {
       await _writeEncryptedString(_keyProgramType, _programType!);
     }
+    _sessionTokenNeedsMigration = false;
   }
 
   Future<void> _persistAccounts() async {
@@ -693,6 +707,12 @@ Account locked due to too many failed attempts. """
     } catch (_) {
       return value;
     }
+  }
+
+  bool _looksEncryptedValue(String value) {
+    return RegExp(r'^[A-Za-z0-9+/]+={0,2}:[A-Za-z0-9+/]+={0,2}$').hasMatch(
+      value,
+    );
   }
 
   String _hashPassword(String password, String salt) {
@@ -790,6 +810,7 @@ Account locked due to too many failed attempts. """
     _userId = null;
     _sobrietyDate = null;
     _programType = null;
+    _sessionTokenNeedsMigration = false;
     _notificationsEnabled = true;
     _biometricEnabled = false;
     _aiProxyEnabled = false;

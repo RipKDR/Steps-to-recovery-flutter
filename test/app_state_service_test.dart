@@ -37,11 +37,21 @@ void main() {
     await prefs.setString('program_type', 'AA');
 
     await AppStateService.instance.initialize();
+    await prefs.reload();
 
     expect(AppStateService.instance.isAuthenticated, isTrue);
     expect(AppStateService.instance.currentUserId, 'legacy-user');
     expect(AppStateService.instance.email, 'legacy@example.com');
     expect(AppStateService.instance.sobrietyDate, sobrietyDate);
     expect(AppStateService.instance.programType, 'AA');
+
+    final storedSessionToken = prefs.getString('app_session_token');
+    expect(storedSessionToken, isNotNull);
+    expect(storedSessionToken, isNot(equals('legacy-session-token')));
+    expect(storedSessionToken, contains(':'));
+    expect(
+      EncryptionService().decrypt(storedSessionToken!),
+      'legacy-session-token',
+    );
   });
 }

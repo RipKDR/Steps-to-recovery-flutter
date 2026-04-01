@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'encryption_service.dart';
+
 /// Local preferences service for app settings
 class PreferencesService {
   static final PreferencesService _instance = PreferencesService._internal();
@@ -66,9 +68,9 @@ class PreferencesService {
 
   // Sobriety date
   DateTime? get sobrietyDate {
-    final dateString = _prefs?.getString('sobriety_date');
+    final dateString = _readMaybeEncryptedString('sobriety_date');
     if (dateString == null) return null;
-    return DateTime.parse(dateString);
+    return DateTime.tryParse(dateString);
   }
 
   Future<void> setSobrietyDate(DateTime date) async {
@@ -77,7 +79,7 @@ class PreferencesService {
   }
 
   // Program type
-  String? get programType => _prefs?.getString('program_type');
+  String? get programType => _readMaybeEncryptedString('program_type');
 
   Future<void> setProgramType(String value) async {
     await initialize();
@@ -137,6 +139,24 @@ class PreferencesService {
     final nextValue = (_prefs?.getInt(key) ?? 0) + 1;
     await _prefs?.setInt(key, nextValue);
     return nextValue;
+  }
+
+  String? _readMaybeEncryptedString(String key) {
+    final raw = _prefs?.getString(key);
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+
+    final encryptionService = EncryptionService();
+    if (!encryptionService.isInitialized) {
+      return raw;
+    }
+
+    try {
+      return encryptionService.decrypt(raw);
+    } catch (_) {
+      return raw;
+    }
   }
 
   @visibleForTesting

@@ -323,7 +323,7 @@ void main() {
       expect(stepOne.completionPercentage, 1);
     });
 
-    test('falls back to insecure mode when secure storage initialization fails', () async {
+    test('throws when secure storage initialization fails', () async {
       SharedPreferences.setMockInitialValues(<String, Object>{});
       PreferencesService().resetForTest();
       await EncryptionService().dispose();
@@ -331,9 +331,18 @@ void main() {
       FlutterSecureStoragePlatform.instance = _FailingSecureStoragePlatform();
       final database = DatabaseService();
 
-      await database.initialize();
+      await expectLater(
+        database.initialize(),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains('Secure storage is unavailable'),
+          ),
+        ),
+      );
 
-      expect(database.isInitialized, isTrue);
+      expect(database.isInitialized, isFalse);
       expect(database.isEncryptionSecure, isFalse);
     });
   });
