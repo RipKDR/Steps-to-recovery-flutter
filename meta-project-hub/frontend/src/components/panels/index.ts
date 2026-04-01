@@ -1,4 +1,4 @@
-// Panel components barrel export
+// Panel components barrel export - Complete 32 panels
 
 // Flutter Metrics (6)
 export { CodeHealthPanel } from './code-health-panel';
@@ -23,3 +23,14 @@ export { BacklogPanel } from './backlog-panel';
 export { RoadmapPanel } from './roadmap-panel';
 export { BugTrackerPanel } from './bug-tracker-panel';
 export { FeatureRequestsPanel } from './feature-requests-panel';
+
+// Agent Operations (6)
+export { AgentStatusPanel } from './agent-status-panel';
+export { SessionTrackingPanel } from './session-tracking-panel';
+export { SkillManagementPanel } from './skill-management-panel';
+export { TaskQueuePanel } from './task-queue-panel';
+export { MemoryGraphPanel } from './memory-graph-panel';
+export { AgentEvalsPanel } from './agent-evals-panel';
+
+// Memory & Learning (4) - COMING SOON
+// Security & Compliance (4) - COMING SOON
