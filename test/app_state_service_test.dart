@@ -2,6 +2,10 @@ import 'test_helpers.dart';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+// ignore: depend_on_referenced_packages
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
+// ignore: depend_on_referenced_packages
+import 'package:shared_preferences_platform_interface/types.dart';
 
 import 'package:steps_recovery_flutter/core/services/app_state_service.dart';
 import 'package:steps_recovery_flutter/core/services/database_service.dart';
@@ -54,4 +58,56 @@ void main() {
       'legacy-session-token',
     );
   });
+
+  test('initialize clears isInitializing when database initialization fails',
+      () async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferencesStorePlatform.instance =
+        _FailingSharedPreferencesStorePlatform();
+    PreferencesService().resetForTest();
+    EncryptionService().resetForTest();
+    DatabaseService().resetForTest();
+    AppStateService.instance.resetForTest();
+
+    await expectLater(
+      AppStateService.instance.initialize(),
+      throwsA(isA<StateError>()),
+    );
+
+    expect(AppStateService.instance.isInitializing, isFalse);
+    expect(AppStateService.instance.isReady, isFalse);
+  });
+}
+
+class _FailingSharedPreferencesStorePlatform
+    extends SharedPreferencesStorePlatform {
+  @override
+  bool get isMock => true;
+
+  @override
+  Future<bool> remove(String key) async {
+    throw StateError('SharedPreferences store unavailable');
+  }
+
+  @override
+  Future<bool> setValue(String valueType, String key, Object value) async {
+    throw StateError('SharedPreferences store unavailable');
+  }
+
+  @override
+  Future<bool> clear() async {
+    throw StateError('SharedPreferences store unavailable');
+  }
+
+  @override
+  Future<Map<String, Object>> getAll() async {
+    throw StateError('SharedPreferences store unavailable');
+  }
+
+  @override
+  Future<Map<String, Object>> getAllWithParameters(
+    GetAllParameters parameters,
+  ) async {
+    throw StateError('SharedPreferences store unavailable');
+  }
 }

@@ -25,6 +25,7 @@ Future<PreferencesService> _freshService() async {
   FlutterSecureStoragePlatform.instance = TestFlutterSecureStoragePlatform(
     <String, String>{},
   );
+  await EncryptionService().initialize();
   await svc.initialize();
   return svc;
 }
@@ -166,6 +167,11 @@ void main() {
         final svc = await _freshService();
         final date = DateTime(2023, 6, 15);
         await svc.setSobrietyDate(date);
+        final prefs = await SharedPreferences.getInstance();
+        final raw = prefs.getString('sobriety_date');
+        expect(raw, isNotNull);
+        expect(raw, contains(':'));
+        expect(EncryptionService().decrypt(raw!), date.toIso8601String());
         expect(svc.sobrietyDate, equals(date));
       });
 
@@ -214,6 +220,11 @@ void main() {
       test('setProgramType stores and retrieves the value', () async {
         final svc = await _freshService();
         await svc.setProgramType('AA');
+        final prefs = await SharedPreferences.getInstance();
+        final raw = prefs.getString('program_type');
+        expect(raw, isNotNull);
+        expect(raw, contains(':'));
+        expect(EncryptionService().decrypt(raw!), 'AA');
         expect(svc.programType, equals('AA'));
       });
 

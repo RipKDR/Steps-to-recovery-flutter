@@ -221,32 +221,35 @@ Account locked due to too many failed attempts. """
     }
 
     _initializing = true;
-    _prefs ??= await SharedPreferences.getInstance();
-    await DatabaseService().initialize();
-    _hydrateFromPrefs();
-    if (_sessionTokenNeedsMigration) {
-      await _persistSession();
-      _sessionTokenNeedsMigration = false;
-    }
+    try {
+      _prefs ??= await SharedPreferences.getInstance();
+      await DatabaseService().initialize();
+      _hydrateFromPrefs();
+      if (_sessionTokenNeedsMigration) {
+        await _persistSession();
+        _sessionTokenNeedsMigration = false;
+      }
 
-    if (_signedIn && _userId != null) {
-      await DatabaseService().setActiveUser(_userId);
-      await _ensureCurrentUserProfile();
-    } else {
-      await DatabaseService().setActiveUser(null);
-    }
+      if (_signedIn && _userId != null) {
+        await DatabaseService().setActiveUser(_userId);
+        await _ensureCurrentUserProfile();
+      } else {
+        await DatabaseService().setActiveUser(null);
+      }
 
-    if (_sobrietyDate != null) {
-      unawaited(
-        MilestoneService().checkAndScheduleApproachNotifications(
-          _sobrietyDate!,
-        ),
-      );
-    }
+      if (_sobrietyDate != null) {
+        unawaited(
+          MilestoneService().checkAndScheduleApproachNotifications(
+            _sobrietyDate!,
+          ),
+        );
+      }
 
-    _ready = true;
-    _initializing = false;
-    notifyListeners();
+      _ready = true;
+      notifyListeners();
+    } finally {
+      _initializing = false;
+    }
   }
 
   void _hydrateFromPrefs() {

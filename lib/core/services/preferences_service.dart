@@ -75,7 +75,10 @@ class PreferencesService {
 
   Future<void> setSobrietyDate(DateTime date) async {
     await initialize();
-    await _prefs?.setString('sobriety_date', date.toIso8601String());
+    await _prefs?.setString(
+      'sobriety_date',
+      EncryptionService().encrypt(date.toIso8601String()),
+    );
   }
 
   // Program type
@@ -83,7 +86,10 @@ class PreferencesService {
 
   Future<void> setProgramType(String value) async {
     await initialize();
-    await _prefs?.setString('program_type', value);
+    await _prefs?.setString(
+      'program_type',
+      EncryptionService().encrypt(value),
+    );
   }
 
   // AI proxy enabled
