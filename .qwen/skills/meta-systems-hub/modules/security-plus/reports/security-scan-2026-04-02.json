@@ -1,0 +1,104 @@
+﻿{
+    "Low":  0,
+    "Timestamp":  "2026-04-02 03:15:11",
+    "TotalIssues":  11,
+    "Critical":  6,
+    "High":  5,
+    "Status":  "Critical",
+    "Medium":  0,
+    "ByCategory":  {
+                       "Encryption":  [
+
+                                      ],
+                       "Dependency":  [
+
+                                      ],
+                       "Storage":  [
+                                       {
+                                           "Feature":  "inventory",
+                                           "Recommendation":  "Encrypt sensitive data before storage",
+                                           "Issue":  "Sensitive data stored without encryption",
+                                           "Type":  "Storage",
+                                           "Severity":  "Critical",
+                                           "File":  "C:\\Users\\H\\Steps-to-recovery-flutter\\lib\\features\\inventory\\screens\\inventory_screen.dart"
+                                       },
+                                       {
+                                           "Feature":  "sponsor",
+                                           "Recommendation":  "Encrypt sensitive data before storage",
+                                           "Issue":  "Sensitive data stored without encryption",
+                                           "Type":  "Storage",
+                                           "Severity":  "Critical",
+                                           "File":  "C:\\Users\\H\\Steps-to-recovery-flutter\\lib\\features\\sponsor\\screens\\sponsor_screen.dart"
+                                       }
+                                   ],
+                       "PII":  [
+                                   {
+                                       "Line":  null,
+                                       "PIType":  "Sensitive Variable",
+                                       "Recommendation":  "Remove PII from logs",
+                                       "Issue":  "Sensitive variable logged",
+                                       "Type":  "PII",
+                                       "Severity":  "High",
+                                       "File":  "C:\\Users\\H\\Steps-to-recovery-flutter\\lib\\core\\services\\app_state_service.dart"
+                                   },
+                                   {
+                                       "Line":  null,
+                                       "PIType":  "Sensitive Variable",
+                                       "Recommendation":  "Remove PII from logs",
+                                       "Issue":  "Sensitive variable logged",
+                                       "Type":  "PII",
+                                       "Severity":  "High",
+                                       "File":  "C:\\Users\\H\\Steps-to-recovery-flutter\\lib\\core\\services\\permissions_service.dart"
+                                   },
+                                   {
+                                       "Line":  null,
+                                       "PIType":  "Sensitive Variable",
+                                       "Recommendation":  "Remove PII from logs",
+                                       "Issue":  "Sensitive variable logged",
+                                       "Type":  "PII",
+                                       "Severity":  "High",
+                                       "File":  "C:\\Users\\H\\Steps-to-recovery-flutter\\lib\\core\\services\\sponsor_service.dart"
+                                   },
+                                   {
+                                       "Line":  null,
+                                       "PIType":  "Sensitive Variable",
+                                       "Recommendation":  "Remove PII from logs",
+                                       "Issue":  "Sensitive variable logged",
+                                       "Type":  "PII",
+                                       "Severity":  "High",
+                                       "File":  "C:\\Users\\H\\Steps-to-recovery-flutter\\lib\\core\\services\\voice_recording_service.dart"
+                                   },
+                                   {
+                                       "Line":  null,
+                                       "PIType":  "Sensitive Variable",
+                                       "Recommendation":  "Remove PII from logs",
+                                       "Issue":  "Sensitive variable logged",
+                                       "Type":  "PII",
+                                       "Severity":  "High",
+                                       "File":  "C:\\Users\\H\\Steps-to-recovery-flutter\\lib\\features\\crisis\\screens\\emergency_screen.dart"
+                                   }
+                               ],
+                       "Network":  [
+                                       {
+                                           "Issue":  "Potential hardcoded API key detected",
+                                           "File":  "C:\\Users\\H\\Steps-to-recovery-flutter\\lib\\app_config.dart",
+                                           "Severity":  "Critical"
+                                       },
+                                       {
+                                           "Issue":  "Potential hardcoded API key detected",
+                                           "File":  "C:\\Users\\H\\Steps-to-recovery-flutter\\lib\\firebase_options.dart",
+                                           "Severity":  "Critical"
+                                       },
+                                       {
+                                           "Issue":  "Potential hardcoded API key detected",
+                                           "File":  "C:\\Users\\H\\Steps-to-recovery-flutter\\lib\\core\\services\\ai_service.dart",
+                                           "Severity":  "Critical"
+                                       },
+                                       {
+                                           "Issue":  "Potential hardcoded API key detected",
+                                           "File":  "C:\\Users\\H\\Steps-to-recovery-flutter\\lib\\features\\profile\\screens\\ai_settings_screen.dart",
+                                           "Severity":  "Critical"
+                                       }
+                                   ]
+                   }
+}

@@ -58,6 +58,32 @@ class _FakeSponsorResponder implements SponsorResponder {
 
   @override
   void removeListener(VoidCallback listener) {}
+
+  // Badge system (Phase 7)
+  @override
+  bool get hasPendingMessage => false;
+
+  @override
+  String? get pendingMessagePreview => null;
+
+  @override
+  void clearPendingMessage() {}
+
+  // Feature hooks (Phase 7)
+  @override
+  Future<void> onCheckInCompleted({required int mood, required int craving}) async {}
+
+  @override
+  Future<void> onJournalSaved({required int wordCount}) async {}
+
+  @override
+  Future<void> onMilestoneReached(int days) async {}
+
+  @override
+  Future<void> onChallengeCompleted(String challengeName) async {}
+
+  @override
+  Future<void> onReturnFromSilence(int daysSilent) async {}
 }
 
 void main() {

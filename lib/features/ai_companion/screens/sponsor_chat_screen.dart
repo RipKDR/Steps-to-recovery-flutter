@@ -1,6 +1,7 @@
 // lib/features/ai_companion/screens/sponsor_chat_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/crisis_constants.dart';
 import '../../../core/models/sponsor_models.dart';
 import '../../../core/services/app_state_service.dart';
@@ -206,7 +207,7 @@ class _SponsorChatScreenState extends State<SponsorChatScreen>
                 vertical: AppSpacing.xs,
               ),
               child: TextButton.icon(
-                onPressed: () => context.push('/emergency'),
+                onPressed: () => context.push(AppRoutes.emergency),
                 icon: const Icon(Icons.phone, color: Colors.red),
                 label: const Text(
                   '988 — Call or Text Now',

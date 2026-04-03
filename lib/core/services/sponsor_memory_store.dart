@@ -1,3 +1,4 @@
+// lib/core/services/sponsor_memory_store.dart
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -35,8 +36,8 @@ class SponsorMemoryStore {
   Future<void> digestSession() async {
     if (_data.session.isEmpty) return;
 
-    final extractions =
-        _data.session.take(_maxSessionExtractionsPerDigest).toList();
+    final extractions = _data.session.take(_maxSessionExtractionsPerDigest)
+        .map((m) => m).toList();
 
     var newDigest = [..._data.digest, ...extractions];
     if (newDigest.length > _maxDigest) {
@@ -52,15 +53,13 @@ class SponsorMemoryStore {
     if (_data.digest.isEmpty) return;
 
     final now = DateTime.now();
-    final promoted = _data.digest
-        .map((m) => SponsorMemory(
-              id: m.id,
-              category: m.category,
-              summary: m.summary,
-              createdAt: m.createdAt,
-              distilledAt: now,
-            ))
-        .toList();
+    final promoted = _data.digest.map((m) => SponsorMemory(
+      id: m.id,
+      category: m.category,
+      summary: m.summary,
+      createdAt: m.createdAt,
+      distilledAt: now,
+    )).toList();
 
     var newLongterm = [..._data.longterm, ...promoted];
     if (newLongterm.length > _maxLongTerm) {
@@ -79,6 +78,16 @@ class SponsorMemoryStore {
       longterm: _data.longterm.where((m) => m.id != id).toList(),
     );
     await _write(_data);
+  }
+
+  /// Gets memories relevant for current context.
+  /// Returns: all session + recent digest + all longterm.
+  List<SponsorMemory> getContextMemories() {
+    return [
+      ..._data.session,
+      ..._data.digest,
+      ..._data.longterm,
+    ];
   }
 
   // ── Private ──────────────────────────────────────────────────────────────

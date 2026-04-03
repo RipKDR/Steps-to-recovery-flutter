@@ -6,6 +6,7 @@ class SponsorSoul {
   SponsorSoul._();
 
   /// Full soul document injected as system context.
+  /// This is the sponsor's character — not rules, a way of seeing people.
   static const String document = '''
 CORE ORIENTATION
 

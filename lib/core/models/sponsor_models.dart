@@ -1,10 +1,14 @@
 // lib/core/models/sponsor_models.dart
 import 'dart:convert';
+import 'package:equatable/equatable.dart';
 
+/// Sponsor personality vibe options
 enum SponsorVibe { warm, direct, spiritual, toughLove }
 
+/// Relationship stages with the sponsor
 enum SponsorStage { new_, building, trusted, close, deep }
 
+/// Categories for sponsor memory entries
 enum MemoryCategory {
   lifeContext,
   recoveryPattern,
@@ -13,7 +17,8 @@ enum MemoryCategory {
   hardMoment,
 }
 
-class SponsorIdentity {
+/// Sponsor identity - chosen by user during onboarding
+class SponsorIdentity extends Equatable {
   final String name;
   final SponsorVibe vibe;
   final DateTime createdAt;
@@ -38,11 +43,16 @@ class SponsorIdentity {
       );
 
   String toJsonString() => jsonEncode(toJson());
+  
   factory SponsorIdentity.fromJsonString(String s) =>
       SponsorIdentity.fromJson(jsonDecode(s) as Map<String, dynamic>);
+
+  @override
+  List<Object?> get props => [name, vibe, createdAt];
 }
 
-class SponsorStageData {
+/// Stage data with engagement tracking
+class SponsorStageData extends Equatable {
   final SponsorStage stage;
   final int engagementScore;
   final DateTime lastInteraction;
@@ -54,15 +64,7 @@ class SponsorStageData {
   });
 
   /// Computes the current stage from score and sobriety days.
-  /// Takes the higher of score-based, days-based, and current stage.
-  /// Stage never goes backward.
-  ///
-  /// Thresholds:
-  ///   new_:     score 0-15   OR days 0-7
-  ///   building: score 16-40  OR days 8-30
-  ///   trusted:  score 41-80  OR days 31-90
-  ///   close:    score 81-150 OR days 91-364
-  ///   deep:     score 151+   OR days 365+
+  /// Takes the higher of the two. Never goes below [stage].
   SponsorStage computeStage({required int sobrietyDays}) {
     SponsorStage scoreBased;
     if (engagementScore >= 151) {
@@ -90,12 +92,10 @@ class SponsorStageData {
       daysBased = SponsorStage.new_;
     }
 
-    // Take the highest of the three — never go backward
-    return [
-      scoreBased,
-      daysBased,
-      stage,
-    ].reduce((a, b) => a.index > b.index ? a : b);
+    // Take the highest of the three
+    final computed = [scoreBased, daysBased, stage]
+        .reduce((a, b) => a.index > b.index ? a : b);
+    return computed;
   }
 
   SponsorStageData copyWith({
@@ -122,14 +122,19 @@ class SponsorStageData {
       );
 
   String toJsonString() => jsonEncode(toJson());
+  
   factory SponsorStageData.fromJsonString(String s) =>
       SponsorStageData.fromJson(jsonDecode(s) as Map<String, dynamic>);
+
+  @override
+  List<Object?> get props => [stage, engagementScore, lastInteraction];
 }
 
-class SponsorMemory {
+/// Individual memory entry
+class SponsorMemory extends Equatable {
   final String id;
   final MemoryCategory category;
-  final String summary; // max 500 chars, enforced on construction
+  final String summary; // max 500 chars
   final DateTime createdAt;
   final DateTime? distilledAt;
 
@@ -158,10 +163,13 @@ class SponsorMemory {
         ? DateTime.parse(json['distilledAt'] as String)
         : null,
   );
+
+  @override
+  List<Object?> get props => [id, category, summary, createdAt, distilledAt];
 }
 
-/// Container for all 3 memory tiers — serialized to/from sponsor_memory.json
-class SponsorMemoryFile {
+/// Container for all 3 memory tiers — serialised to/from sponsor_memory.json
+class SponsorMemoryFile extends Equatable {
   final List<SponsorMemory> session;
   final List<SponsorMemory> digest;
   final List<SponsorMemory> longterm;
@@ -203,4 +211,9 @@ class SponsorMemoryFile {
     digest: digest ?? this.digest,
     longterm: longterm ?? this.longterm,
   );
+
+  @override
+  List<Object?> get props => [session, digest, longterm];
 }
+
+

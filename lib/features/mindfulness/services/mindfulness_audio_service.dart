@@ -1,7 +1,7 @@
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:steps_recovery_flutter/features/mindfulness/models/mindfulness_models.dart';
+import '../models/mindfulness_models.dart';
 
 /// Audio service for mindfulness playback
 class MindfulnessAudioService extends ChangeNotifier {

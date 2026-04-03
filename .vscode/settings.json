@@ -1,5 +1,5 @@
 {
-    "typescript.enablePromptUseWorkspaceTsdk": true,
+    utypescript.enablePromptUseWorkspaceTsdk": true,
     "typescript.tsc.autoDetect": "off",
     "typescript.validate.enable": true,
     "java.inlayHints.variableTypes.enabled": true,
@@ -12,6 +12,8 @@
     "cSpell.words": [
         "actuals",
         "Adoptium",
+        "aiofiles",
+        "allprojects",
         "apikey",
         "appbundle",
         "Backgrounding",
@@ -25,10 +27,14 @@
         "defusion",
         "dotenvx",
         "encrypter",
+        "errorlevel",
+        "fastapi",
+        "findstr",
         "firebaseapp",
         "firebasestorage",
         "fluttercommunity",
         "Geofencing",
+        "gitpython",
         "gradlew",
         "hcaptcha",
         "hmac",
@@ -56,6 +62,8 @@
         "plpgsql",
         "pooler",
         "prefs",
+        "psutil",
+        "pydantic",
         "SAMHSA",
         "scanlines",
         "scannability",
@@ -63,6 +71,7 @@
         "setx",
         "signups",
         "SIWS",
+        "socketio",
         "Solana",
         "sponsee",
         "SSHC",
@@ -76,6 +85,7 @@
         "TOTP",
         "touchpoint",
         "unawaited",
+        "uvicorn",
         "vonage",
         "Wbem",
         "workmanager",
@@ -83,5 +93,8 @@
         "worktrees",
         "xcworkspace"
     ],
-    "deno.enable": true
+    "deno.enable": true,
+    "python.REPL.enableREPLSmartSend": false,
+    "java.search.scope": "main",
+    "java.format.settings.url": ".vscode/java-formatter.xml"
 }

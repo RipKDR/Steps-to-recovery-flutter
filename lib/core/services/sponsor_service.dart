@@ -12,6 +12,7 @@ export '../models/database_models.dart' show ChatMessage;
 import '../models/sponsor_models.dart';
 import '../services/app_state_service.dart';
 import '../services/connectivity_service.dart';
+import '../services/database_service.dart';
 import '../services/encryption_service.dart';
 import '../services/logger_service.dart';
 import '../services/sponsor_memory_store.dart';
@@ -25,6 +26,12 @@ abstract class SponsorResponder {
   SponsorStage get stage;
   bool get isCloudAvailable;
   List<SponsorMemory> get longTermMemory;
+  
+  // Badge system (Phase 7)
+  bool get hasPendingMessage;
+  String? get pendingMessagePreview;
+  void clearPendingMessage();
+  
   Future<String> respond({
     required String message,
     required String userId,
@@ -35,6 +42,14 @@ abstract class SponsorResponder {
   Future<void> digestSession();
   Future<void> bumpEngagement({int checkInDays, int chatDays, int journalDays});
   Future<void> addSessionMemory(SponsorMemory memory);
+  
+  // Feature hooks (Phase 7)
+  Future<void> onCheckInCompleted({required int mood, required int craving});
+  Future<void> onJournalSaved({required int wordCount});
+  Future<void> onMilestoneReached(int days);
+  Future<void> onChallengeCompleted(String challengeName);
+  Future<void> onReturnFromSilence(int daysSilent);
+  
   void addListener(VoidCallback listener);
   void removeListener(VoidCallback listener);
 }
@@ -58,6 +73,29 @@ class SponsorService extends ChangeNotifier implements SponsorResponder {
   );
   final SponsorMemoryStore _memoryStore = SponsorMemoryStore();
   bool _initialized = false;
+
+  // ── Badge system (Phase 7: Nervous System) ────────────────────────────────
+  bool _hasPendingMessage = false;
+  String? _pendingMessagePreview;
+
+  @override
+  bool get hasPendingMessage => _hasPendingMessage;
+
+  @override
+  String? get pendingMessagePreview => _pendingMessagePreview;
+
+  @override
+  void clearPendingMessage() {
+    _hasPendingMessage = false;
+    _pendingMessagePreview = null;
+    notifyListeners();
+  }
+
+  void _setPendingMessage(String preview) {
+    _hasPendingMessage = true;
+    _pendingMessagePreview = preview;
+    notifyListeners();
+  }
 
   // ── Public getters ────────────────────────────────────────────────────────
 
@@ -160,6 +198,53 @@ class SponsorService extends ChangeNotifier implements SponsorResponder {
     notifyListeners();
   }
 
+  // ── Feature Hooks (Phase 7: Nervous System) ───────────────────────────────
+
+  /// Call after morning or evening check-in is saved.
+  @override
+  Future<void> onCheckInCompleted({required int mood, required int craving}) async {
+    await bumpEngagement(checkInDays: 1);
+    // High craving or very low mood — sponsor notices
+    if (craving >= 8 || mood == 1) {
+      final name = _identity?.name ?? 'Your sponsor';
+      _setPendingMessage('$name noticed your check-in. They\'re here.');
+    }
+  }
+
+  /// Call after a journal entry is saved.
+  @override
+  Future<void> onJournalSaved({required int wordCount}) async {
+    await bumpEngagement(journalDays: 1);
+    // Returning after long silence
+    final signals = await _buildSignals();
+    if (signals.daysSinceJournal >= 5) {
+      final name = _identity?.name ?? 'Your sponsor';
+      _setPendingMessage('$name noticed you journaled. Good to see you back.');
+    }
+  }
+
+  /// Call when a time milestone is reached. Always generates a message.
+  @override
+  Future<void> onMilestoneReached(int days) async {
+    final name = _identity?.name ?? 'Your sponsor';
+    _setPendingMessage('$name has something to say about $days days. Open when ready.');
+  }
+
+  /// Call after a challenge is marked complete.
+  @override
+  Future<void> onChallengeCompleted(String challengeName) async {
+    final name = _identity?.name ?? 'Your sponsor';
+    _setPendingMessage('$name saw you finish "$challengeName". That matters.');
+  }
+
+  /// Call on app resume if last sponsor interaction was >3 days ago.
+  @override
+  Future<void> onReturnFromSilence(int daysSilent) async {
+    if (daysSilent <= 3) return;
+    final name = _identity?.name ?? 'Your sponsor';
+    _setPendingMessage('$name hasn\'t heard from you in $daysSilent days. No pressure.');
+  }
+
   // ── Chat ──────────────────────────────────────────────────────────────────
 
   /// [isOnline] is injectable for testing. Defaults to ConnectivityService.
@@ -182,8 +267,8 @@ class SponsorService extends ChangeNotifier implements SponsorResponder {
       return _genericFallbackResponse(message);
     }
 
-    // Build signals (simplified — real implementation reads DatabaseService)
-    final signals = SponsorSignals.empty();
+    // Build signals from real behavioral data
+    final signals = await _buildSignals();
 
     final systemPrompt = ContextAssembler.build(
       identity: _identity!,
@@ -201,6 +286,100 @@ class SponsorService extends ChangeNotifier implements SponsorResponder {
       conversationHistory: conversationHistory,
     );
   }
+
+  // ── Signal Building (Phase 7: Nervous System) ────────────────────────────
+
+  /// Builds real behavioral signals from DatabaseService.
+  Future<SponsorSignals> _buildSignals() async {
+    try {
+      final db = DatabaseService();
+      final userId = AppStateService.instance.currentUserId;
+      if (userId == null) return SponsorSignals.empty();
+
+      // Last 14 check-ins for trend analysis
+      final checkIns = await db.getCheckIns(userId: userId, limit: 14);
+      final journals = await db.getJournalEntries(limit: 1);
+
+      // Mood trend: compare avg of last 7 vs prior 7
+      final moodTrend = _computeMoodTrend(checkIns);
+
+      // Craving vs baseline: same logic
+      final cravingVsBaseline = _computeCravingTrend(checkIns);
+
+      // Check-in streak: consecutive days ending today
+      final checkInStreak = _computeStreak(checkIns);
+
+      // Days since last journal
+      final daysSinceJournal = journals.isEmpty
+          ? 0
+          : DateTime.now().difference(journals.first.updatedAt).inDays;
+
+      // Days since last sponsor chat (proxy: last interaction timestamp)
+      final daysSinceHumanContact =
+          DateTime.now().difference(_stageData.lastInteraction).inDays;
+
+      return SponsorSignals(
+        moodTrend: moodTrend,
+        cravingVsBaseline: cravingVsBaseline,
+        checkInStreak: checkInStreak,
+        daysSinceJournal: daysSinceJournal,
+        daysSinceHumanContact: daysSinceHumanContact,
+      );
+    } catch (e, st) {
+      LoggerService().error('_buildSignals failed', error: e, stackTrace: st);
+      return SponsorSignals.empty();
+    }
+  }
+
+  String _computeMoodTrend(List<DailyCheckIn> checkIns) {
+    final moods = checkIns
+        .where((c) => c.mood != null)
+        .map((c) => c.mood!)
+        .toList();
+    if (moods.length < 4) return 'no data';
+    final half = moods.length ~/ 2;
+    final recent = moods.take(half).fold(0, (a, b) => a + b) / half;
+    final prior = moods.skip(half).fold(0, (a, b) => a + b) / (moods.length - half);
+    if (recent > prior + 0.5) return 'improving';
+    if (recent < prior - 0.5) return 'declining';
+    return 'stable';
+  }
+
+  String _computeCravingTrend(List<DailyCheckIn> checkIns) {
+    final cravings = checkIns
+        .where((c) => c.craving != null)
+        .map((c) => c.craving!)
+        .toList();
+    if (cravings.length < 4) return 'no data';
+    final half = cravings.length ~/ 2;
+    final recent = cravings.take(half).fold(0, (a, b) => a + b) / half;
+    final prior = cravings.skip(half).fold(0, (a, b) => a + b) / (cravings.length - half);
+    if (recent > prior + 1.0) return 'above';
+    if (recent < prior - 1.0) return 'below';
+    return 'at';
+  }
+
+  int _computeStreak(List<DailyCheckIn> checkIns) {
+    if (checkIns.isEmpty) return 0;
+    final sorted = checkIns.toList()
+      ..sort((a, b) => b.checkInDate.compareTo(a.checkInDate));
+    int streak = 0;
+    DateTime expected = DateTime.now();
+    for (final c in sorted) {
+      final diff = expected.difference(c.checkInDate).inDays;
+      if (diff <= 1) {
+        streak++;
+        expected = c.checkInDate.subtract(const Duration(days: 1));
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
+  /// Test-visible wrapper for _buildSignals.
+  @visibleForTesting
+  Future<SponsorSignals> buildSignalsForTest() => _buildSignals();
 
   // ── Private ───────────────────────────────────────────────────────────────
 
@@ -302,6 +481,13 @@ class SponsorService extends ChangeNotifier implements SponsorResponder {
     final prefs = await SharedPreferences.getInstance();
     final encrypted = EncryptionService().encrypt(_stageData.toJsonString());
     await prefs.setString(_stageKey, encrypted);
+  }
+
+  /// Test-only — allows tests to set badge state directly.
+  @visibleForTesting
+  void setTestPendingMessage(String preview) {
+    _hasPendingMessage = true;
+    _pendingMessagePreview = preview;
   }
 
   /// Dispose resources

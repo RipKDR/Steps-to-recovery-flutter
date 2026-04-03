@@ -1,0 +1,88 @@
+{
+  "version": "1.0.0",
+  "enabled": true,
+  "modules": {
+    "codeHealth": {
+      "enabled": true,
+      "autoFix": true,
+      "autoFixCategories": ["lint", "imports", "unused", "deprecated"],
+      "requireApprovalFor": ["refactor", "architecture"],
+      "preCommitCheck": true,
+      "maxFixesPerRun": 10,
+      "backupBeforeFix": true,
+      "runTestsAfterFix": true,
+      "codeSmellDetection": true,
+      "longMethodThreshold": 50,
+      "godClassThreshold": 300
+    },
+    "securityPlus": {
+      "enabled": true,
+      "prePushCheck": true,
+      "encryptionAudit": true,
+      "piiDetection": true,
+      "rlsCheck": true,
+      "complianceReport": true,
+      "failOnCritical": true,
+      "sensitiveDataPatterns": ["password", "token", "secret", "key", "encryption"],
+      "piiPatterns": ["phone", "email", "address", "ssn", "credit_card"]
+    },
+    "testCoverage": {
+      "enabled": true,
+      "autoGenerate": true,
+      "minCoverage": 80,
+      "generateGoldenTests": true,
+      "updateMocksAutomatically": true,
+      "testTemplate": "flutter_test",
+      "mockPackage": "mockito"
+    }
+  },
+  "integration": {
+    "selfEvolvingAgent": {
+      "enabled": true,
+      "syncLearnings": true,
+      "syncSchedule": "immediate"
+    },
+    "githubActions": {
+      "enabled": true,
+      "readResults": true,
+      "triggerOnPush": false
+    },
+    "dependabot": {
+      "enabled": true,
+      "testUpdatesLocally": true,
+      "autoApproveCompatible": true
+    }
+  },
+  "reporting": {
+    "dailyReport": true,
+    "dailyReportTime": "06:00",
+    "reportLevel": "info",
+    "outputFormat": "console",
+    "saveToFile": true,
+    "reportPath": ".qwen/skills/meta-systems-hub/reports/"
+  },
+  "safety": {
+    "gitStashBeforeFix": true,
+    "rollbackOnTestFailure": true,
+    "auditLog": true,
+    "requireConfirmationFor": ["security", "architecture"],
+    "maxBackupAge": 30,
+    "autoCleanBackup": true
+  },
+  "performance": {
+    "parallelScans": true,
+    "maxConcurrent": 3,
+    "timeout": 300000,
+    "cacheResults": true,
+    "cacheTTL": 3600
+  },
+  "triggers": {
+    "preCommit": true,
+    "prePush": true,
+    "onFileSave": false,
+    "scheduled": {
+      "daily": "06:00",
+      "weekly": "Sunday 02:00"
+    }
+  }
+}

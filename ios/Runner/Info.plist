@@ -68,19 +68,16 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
-		
 		<!-- Microphone permissions for voice recording -->
 		<key>NSMicrophoneUsageDescription</key>
 		<string>This app needs microphone access to record voice notes for your journal entries.</string>
 		<key>NSSpeechRecognitionUsageDescription</key>
 		<string>This app needs speech recognition access to convert your voice to text for journal entries.</string>
-		
 		<!-- Phone dialing for Safe Dial -->
 		<key>LSApplicationQueriesSchemes</key>
 		<array>
 			<string>tel</string>
 		</array>
-		
 		<!-- Location for meeting geofencing (future) -->
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>This app uses your location to find nearby recovery meetings.</string>

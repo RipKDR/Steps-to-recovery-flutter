@@ -25,7 +25,9 @@ void main() {
   setUp(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues({});
-    FlutterSecureStoragePlatform.instance = TestFlutterSecureStoragePlatform({});
+    FlutterSecureStoragePlatform.instance = TestFlutterSecureStoragePlatform(
+      {},
+    );
     tempDir = await Directory.systemTemp.createTemp('intro_test_');
     PathProviderPlatform.instance = FakePathProvider(tempDir.path);
     await EncryptionService().initialize();
@@ -55,7 +57,9 @@ void main() {
     await tester.tap(nameField);
     await tester.enterText(nameField, '');
     await tester.pump();
-    final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton).first);
+    final button = tester.widget<ElevatedButton>(
+      find.byType(ElevatedButton).first,
+    );
     expect(button.onPressed, isNull);
   });
 
@@ -73,14 +77,16 @@ void main() {
     // No crash = pass
   });
 
-  testWidgets('skip creates default identity and calls onComplete', (tester) async {
+  testWidgets('skip creates default identity and calls onComplete', (
+    tester,
+  ) async {
     bool completed = false;
     await tester.pumpWidget(buildScreen(onComplete: () => completed = true));
     await tester.tap(find.text('Skip'));
     await tester.pumpAndSettle();
     expect(completed, isTrue);
     expect(service.hasIdentity, isTrue);
-    expect(service.identity!.name, 'Alex');
+    expect(service.identity!.name, 'Morgan');
   });
 
   testWidgets('submit calls setupIdentity and onComplete', (tester) async {

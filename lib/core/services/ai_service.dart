@@ -1,142 +1,38 @@
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../app_config.dart';
 import '../constants/crisis_constants.dart';
 import '../models/database_models.dart';
 import 'logger_service.dart';
 
-abstract class CompanionResponder {
-  bool get isCloudAvailable;
-
-  Future<String> respond({
-    required String message,
-    required String userId,
-    List<ChatMessage>? conversationHistory,
-    List<String>? recoveryContext,
-  });
-}
-
 /// AI service for chat and memory extraction
 class AiService implements CompanionResponder {
   static final AiService _instance = AiService._internal();
+  final String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
+  final String _apiKey = AppConfig.resolvedGoogleAiApiKey;
+
+  final _logger = LoggerService();
   factory AiService() => _instance;
   AiService._internal();
 
-  final String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
-  final String _apiKey = AppConfig.resolvedGoogleAiApiKey;
-  final _logger = LoggerService();
-
+  @override
+  bool get isCloudAvailable => isEnabled;
   bool get isEnabled =>
       _apiKey.isNotEmpty ||
       AppConfig.aiChatEdgeFunctionUrl.isNotEmpty ||
       AppConfig.hasOpenClaw;
-  bool get _useEdgeFunction => AppConfig.aiChatEdgeFunctionUrl.isNotEmpty;
-  bool get _useOpenClaw =>
-      !_useEdgeFunction && AppConfig.hasOpenClaw;
-  
+
   /// Check if using direct API key (NOT recommended for production)
   bool get _isUsingDirectApiKey =>
       !_useEdgeFunction && !_useOpenClaw && _apiKey.isNotEmpty;
-  
-  @override
-  bool get isCloudAvailable => isEnabled;
 
-  @override
-  Future<String> respond({
-    required String message,
-    required String userId,
-    List<ChatMessage>? conversationHistory,
-    List<String>? recoveryContext,
-  }) {
-    return chat(
-      message: message,
-      userId: userId,
-      conversationHistory: conversationHistory,
-      recoveryContext: recoveryContext,
-    );
-  }
+  bool get _useEdgeFunction => AppConfig.aiChatEdgeFunctionUrl.isNotEmpty;
 
-  /// Send a message to the AI and get a response
-  /// 
-  /// SECURITY: Prefers server-side edge functions to keep API keys off-device.
-  /// Direct Google AI API calls are only for local development.
-  Future<String> chat({
-    required String message,
-    required String userId,
-    List<ChatMessage>? conversationHistory,
-    List<String>? recoveryContext,
-  }) async {
-    if (!isEnabled) {
-      return 'AI companion is not configured. Please add your API key in settings.';
-    }
-
-    // Warn if using direct API key (should only happen in development)
-    if (_isUsingDirectApiKey && !kDebugMode) {
-      _logger.error(
-        'SECURITY WARNING: Using direct Google AI API key in production. '
-        'This exposes the API key in the client binary. '
-        'Please configure Supabase edge functions or OpenClaw gateway instead.',
-      );
-    }
-
-    try {
-      if (_useEdgeFunction) {
-        return await _chatViaEdgeFunction(
-          message: message,
-          conversationHistory: conversationHistory,
-          recoveryContext: recoveryContext,
-        );
-      }
-
-      if (_useOpenClaw) {
-        return await _chatViaOpenClaw(
-          message: message,
-          conversationHistory: conversationHistory,
-          recoveryContext: recoveryContext,
-        );
-      }
-
-      // Direct API call - only for development
-      if (kDebugMode) {
-        _logger.debug('Using direct Google AI API (development mode only)');
-      }
-      
-      final prompt = buildChatPrompt(
-        message: message,
-        conversationHistory: conversationHistory,
-        recoveryContext: recoveryContext,
-      );
-
-      final response = await http.post(
-        Uri.parse('$_baseUrl/models/gemini-pro:generateContent?key=$_apiKey'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'contents': [
-            {
-              'parts': [
-                {'text': prompt},
-              ],
-            },
-          ],
-          'generationConfig': {'temperature': 0.7, 'maxOutputTokens': 1024},
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['candidates']?[0]?['content']?['parts']?[0]?['text'] ??
-            'I\'m here for you. Tell me more about how you\'re feeling.';
-      } else {
-        _logger.error('AI API error', error: '${response.statusCode} - ${response.body}');
-        return 'I\'m having trouble connecting right now. Please know that I\'m here for you when I\'m back online.';
-      }
-    } catch (e, stackTrace) {
-      _logger.error('AI service error', error: e, stackTrace: stackTrace);
-      return 'Something went wrong. Please try again later.';
-    }
-  }
+  bool get _useOpenClaw => !_useEdgeFunction && AppConfig.hasOpenClaw;
 
   @visibleForTesting
   String buildChatPrompt({
@@ -183,149 +79,87 @@ class AiService implements CompanionResponder {
     return buffer.toString().trim();
   }
 
-  String _buildConversationContext(List<ChatMessage>? history) {
-    if (history == null || history.isEmpty) {
-      return 'No prior conversation provided.';
-    }
-
-    final recentMessages = history.length > 8
-        ? history.sublist(history.length - 8)
-        : history;
-    final buffer = StringBuffer();
-
-    for (final msg in recentMessages) {
-      buffer.writeln('${msg.isUser ? "User" : "Assistant"}: ${msg.content}');
-    }
-
-    return buffer.toString().trim();
-  }
-
-  String _buildRecoveryContext(List<String>? recoveryContext) {
-    if (recoveryContext == null || recoveryContext.isEmpty) {
-      return 'No extra recovery context provided.';
-    }
-
-    return recoveryContext
-        .where((item) => item.trim().isNotEmpty)
-        .map((item) => '- ${item.trim()}')
-        .join('\n');
-  }
-
-  /// Route chat directly through OpenClaw gateway (dev / no-Supabase path).
-  /// In production, prefer the edge function so the token stays off-device.
-  Future<String> _chatViaOpenClaw({
+  /// Send a message to the AI and get a response
+  ///
+  /// SECURITY: Prefers server-side edge functions to keep API keys off-device.
+  /// Direct Google AI API calls are only for local development.
+  Future<String> chat({
     required String message,
+    required String userId,
     List<ChatMessage>? conversationHistory,
     List<String>? recoveryContext,
   }) async {
-    String systemContent =
-        'You are a recovery companion for a privacy-first 12-step app. '
-        'Be warm, calm, practical, and non-judgmental.\n\n'
-        'Safety rules:\n'
-        '- Do not claim to be a therapist, sponsor, clinician, or emergency service.\n'
-        '- If the user suggests imminent self-harm or unsafe relapse risk, direct them to emergency or crisis support immediately.\n'
-        '- Prefer concrete next steps: sponsor contact, meetings, breathing, journaling.\n\n'
-        'Response contract:\n'
-        '- Start with one sentence of empathy.\n'
-        '- Give 2-4 concrete next steps.\n'
-        '- Keep the answer under 170 words.';
-
-    if (recoveryContext != null && recoveryContext.isNotEmpty) {
-      systemContent +=
-          '\n\nRecovery context:\n${recoveryContext.map((c) => '- $c').join('\n')}';
+    if (!isEnabled) {
+      return 'AI companion is not configured. Please add your API key in settings.';
     }
 
-    final messages = <Map<String, String>>[
-      {'role': 'system', 'content': systemContent},
-    ];
-
-    final recent = conversationHistory != null && conversationHistory.length > 8
-        ? conversationHistory.sublist(conversationHistory.length - 8)
-        : conversationHistory ?? [];
-    for (final msg in recent) {
-      messages.add({
-        'role': msg.isUser ? 'user' : 'assistant',
-        'content': msg.content,
-      });
+    // Warn if using direct API key (should only happen in development)
+    if (_isUsingDirectApiKey && !kDebugMode) {
+      _logger.error(
+        'SECURITY WARNING: Using direct Google AI API key in production. '
+        'This exposes the API key in the client binary. '
+        'Please configure Supabase edge functions or OpenClaw gateway instead.',
+      );
     }
-    messages.add({'role': 'user', 'content': message.trim()});
 
     try {
+      if (_useEdgeFunction) {
+        return await _chatViaEdgeFunction(
+          message: message,
+          conversationHistory: conversationHistory,
+          recoveryContext: recoveryContext,
+        );
+      }
+
+      if (_useOpenClaw) {
+        return await _chatViaOpenClaw(
+          message: message,
+          conversationHistory: conversationHistory,
+          recoveryContext: recoveryContext,
+        );
+      }
+
+      // Direct API call - only for development
+      if (kDebugMode) {
+        _logger.debug('Using direct Google AI API (development mode only)');
+      }
+
+      final prompt = buildChatPrompt(
+        message: message,
+        conversationHistory: conversationHistory,
+        recoveryContext: recoveryContext,
+      );
+
       final response = await http.post(
-        Uri.parse('${AppConfig.openclawGatewayUrl}/v1/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${AppConfig.openclawGatewayToken}',
-          'x-openclaw-agent-id': 'main',
-        },
+        Uri.parse('$_baseUrl/models/gemini-pro:generateContent?key=$_apiKey'),
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'model': 'openclaw',
-          'messages': messages,
-          'temperature': 0.7,
-          'max_tokens': 1024,
+          'contents': [
+            {
+              'parts': [
+                {'text': prompt},
+              ],
+            },
+          ],
+          'generationConfig': {'temperature': 0.7, 'maxOutputTokens': 1024},
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['choices']?[0]?['message']?['content'] ??
-            "I'm here for you. Tell me more about how you're feeling.";
+        return data['candidates']?[0]?['content']?['parts']?[0]?['text'] ??
+            'I\'m here for you. Tell me more about how you\'re feeling.';
+      } else {
+        _logger.error(
+          'AI API error',
+          error: '${response.statusCode} - ${response.body}',
+        );
+        return 'I\'m having trouble connecting right now. Please know that I\'m here for you when I\'m back online.';
       }
-      _logger.error('OpenClaw error', error: '${response.statusCode} - ${response.body}');
     } catch (e, stackTrace) {
-      _logger.error('OpenClaw connection error', error: e, stackTrace: stackTrace);
+      _logger.error('AI service error', error: e, stackTrace: stackTrace);
+      return 'Something went wrong. Please try again later.';
     }
-
-    return "I'm having trouble connecting right now. Please know that I'm here for you when I'm back online.";
-  }
-
-  /// Route chat through Supabase Edge Function (API key stays server-side).
-  Future<String> _chatViaEdgeFunction({
-    required String message,
-    List<ChatMessage>? conversationHistory,
-    List<String>? recoveryContext,
-  }) async {
-    final history = conversationHistory
-            ?.map((m) => {
-                  'role': m.isUser ? 'User' : 'Assistant',
-                  'content': m.content,
-                })
-            .toList() ??
-        [];
-
-    final headers = <String, String>{
-      'Content-Type': 'application/json',
-    };
-
-    // Add Supabase auth token if available
-    try {
-      final token =
-          Supabase.instance.client.auth.currentSession?.accessToken;
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
-    } catch (_) {
-      // Supabase not initialized — send without auth
-    }
-
-    final response = await http.post(
-      Uri.parse(AppConfig.aiChatEdgeFunctionUrl),
-      headers: headers,
-      body: jsonEncode({
-        'message': message.trim(),
-        'conversationHistory': history,
-        'recoveryContext': recoveryContext ?? [],
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['response'] as String? ??
-          'I\'m here for you. Tell me more about how you\'re feeling.';
-    }
-
-    _logger.error('Edge function error', error: '${response.statusCode} - ${response.body}');
-    return 'I\'m having trouble connecting right now. Please know that I\'m here for you when I\'m back online.';
   }
 
   /// Detect if a message indicates crisis
@@ -358,6 +192,42 @@ class AiService implements CompanionResponder {
     }
 
     return memories;
+  }
+
+  /// Get coping strategies for cravings
+  Future<String> getCopingStrategies({required int cravingLevel}) async {
+    final strategies = [
+      'Take 10 deep breaths. Focus on breathing in slowly through your nose, out through your mouth.',
+      'Call your sponsor or a trusted friend in recovery.',
+      'Go for a walk. Physical movement can help reset your mind.',
+      'Remember: cravings are like waves. They build, peak, and pass. This will pass.',
+      'Play the tape forward. What happens after you use? Is it worth it?',
+      'Attend a meeting today. You don\'t have to do this alone.',
+      'Write down what you\'re feeling. Sometimes putting it on paper helps.',
+      'Wait 15 minutes. Do something else. The urge will weaken.',
+    ];
+
+    if (cravingLevel >= 8) {
+      return '''
+This is a strong craving. Here are immediate steps:
+
+1. ${strategies[0]}
+2. ${strategies[1]}
+3. ${strategies[4]}
+
+Remember: You don't have to use today. Just get through this moment.
+''';
+    }
+
+    return '''
+Here are some strategies that might help:
+
+• ${strategies[cravingLevel % strategies.length]}
+• ${strategies[(cravingLevel + 1) % strategies.length]}
+• ${strategies[(cravingLevel + 2) % strategies.length]}
+
+You've handled cravings before. You can do it again.
+''';
   }
 
   /// Get step work guidance
@@ -406,39 +276,184 @@ Keep the response focused and practical.
     return 'Take your time with Step $stepNumber. Consider discussing with your sponsor.';
   }
 
-  /// Get coping strategies for cravings
-  Future<String> getCopingStrategies({required int cravingLevel}) async {
-    final strategies = [
-      'Take 10 deep breaths. Focus on breathing in slowly through your nose, out through your mouth.',
-      'Call your sponsor or a trusted friend in recovery.',
-      'Go for a walk. Physical movement can help reset your mind.',
-      'Remember: cravings are like waves. They build, peak, and pass. This will pass.',
-      'Play the tape forward. What happens after you use? Is it worth it?',
-      'Attend a meeting today. You don\'t have to do this alone.',
-      'Write down what you\'re feeling. Sometimes putting it on paper helps.',
-      'Wait 15 minutes. Do something else. The urge will weaken.',
-    ];
+  @override
+  Future<String> respond({
+    required String message,
+    required String userId,
+    List<ChatMessage>? conversationHistory,
+    List<String>? recoveryContext,
+  }) {
+    return chat(
+      message: message,
+      userId: userId,
+      conversationHistory: conversationHistory,
+      recoveryContext: recoveryContext,
+    );
+  }
 
-    if (cravingLevel >= 8) {
-      return '''
-This is a strong craving. Here are immediate steps:
-
-1. ${strategies[0]}
-2. ${strategies[1]}
-3. ${strategies[4]}
-
-Remember: You don't have to use today. Just get through this moment.
-''';
+  String _buildConversationContext(List<ChatMessage>? history) {
+    if (history == null || history.isEmpty) {
+      return 'No prior conversation provided.';
     }
 
-    return '''
-Here are some strategies that might help:
+    final recentMessages = history.length > 8
+        ? history.sublist(history.length - 8)
+        : history;
+    final buffer = StringBuffer();
 
-• ${strategies[cravingLevel % strategies.length]}
-• ${strategies[(cravingLevel + 1) % strategies.length]}
-• ${strategies[(cravingLevel + 2) % strategies.length]}
+    for (final msg in recentMessages) {
+      buffer.writeln('${msg.isUser ? "User" : "Assistant"}: ${msg.content}');
+    }
 
-You've handled cravings before. You can do it again.
-''';
+    return buffer.toString().trim();
   }
+
+  String _buildRecoveryContext(List<String>? recoveryContext) {
+    if (recoveryContext == null || recoveryContext.isEmpty) {
+      return 'No extra recovery context provided.';
+    }
+
+    return recoveryContext
+        .where((item) => item.trim().isNotEmpty)
+        .map((item) => '- ${item.trim()}')
+        .join('\n');
+  }
+
+  /// Route chat through Supabase Edge Function (API key stays server-side).
+  Future<String> _chatViaEdgeFunction({
+    required String message,
+    List<ChatMessage>? conversationHistory,
+    List<String>? recoveryContext,
+  }) async {
+    final history =
+        conversationHistory
+            ?.map(
+              (m) => {
+                'role': m.isUser ? 'User' : 'Assistant',
+                'content': m.content,
+              },
+            )
+            .toList() ??
+        [];
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+
+    // Add Supabase auth token if available
+    try {
+      final token = Supabase.instance.client.auth.currentSession?.accessToken;
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+    } catch (_) {
+      // Supabase not initialized — send without auth
+    }
+
+    final response = await http.post(
+      Uri.parse(AppConfig.aiChatEdgeFunctionUrl),
+      headers: headers,
+      body: jsonEncode({
+        'message': message.trim(),
+        'conversationHistory': history,
+        'recoveryContext': recoveryContext ?? [],
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['response'] as String? ??
+          'I\'m here for you. Tell me more about how you\'re feeling.';
+    }
+
+    _logger.error(
+      'Edge function error',
+      error: '${response.statusCode} - ${response.body}',
+    );
+    return 'I\'m having trouble connecting right now. Please know that I\'m here for you when I\'m back online.';
+  }
+
+  /// Route chat directly through OpenClaw gateway (dev / no-Supabase path).
+  /// In production, prefer the edge function so the token stays off-device.
+  Future<String> _chatViaOpenClaw({
+    required String message,
+    List<ChatMessage>? conversationHistory,
+    List<String>? recoveryContext,
+  }) async {
+    String systemContent =
+        'You are a recovery companion for a privacy-first 12-step app. '
+        'Be warm, calm, practical, and non-judgmental.\n\n'
+        'Safety rules:\n'
+        '- Do not claim to be a therapist, sponsor, clinician, or emergency service.\n'
+        '- If the user suggests imminent self-harm or unsafe relapse risk, direct them to emergency or crisis support immediately.\n'
+        '- Prefer concrete next steps: sponsor contact, meetings, breathing, journaling.\n\n'
+        'Response contract:\n'
+        '- Start with one sentence of empathy.\n'
+        '- Give 2-4 concrete next steps.\n'
+        '- Keep the answer under 170 words.';
+
+    if (recoveryContext != null && recoveryContext.isNotEmpty) {
+      systemContent +=
+          '\n\nRecovery context:\n${recoveryContext.map((c) => '- $c').join('\n')}';
+    }
+
+    final messages = <Map<String, String>>[
+      {'role': 'system', 'content': systemContent},
+    ];
+
+    final recent = conversationHistory != null && conversationHistory.length > 8
+        ? conversationHistory.sublist(conversationHistory.length - 8)
+        : conversationHistory ?? [];
+    for (final msg in recent) {
+      messages.add({
+        'role': msg.isUser ? 'user' : 'assistant',
+        'content': msg.content,
+      });
+    }
+    messages.add({'role': 'user', 'content': message.trim()});
+
+    try {
+      final response = await http.post(
+        Uri.parse(AppConfig.openClawChatCompletionsUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${AppConfig.openclawGatewayToken}',
+          'x-openclaw-agent-id': 'main',
+        },
+        body: jsonEncode({
+          'model': 'openclaw',
+          'messages': messages,
+          'temperature': 0.7,
+          'max_tokens': 1024,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['choices']?[0]?['message']?['content'] ??
+            "I'm here for you. Tell me more about how you're feeling.";
+      }
+      _logger.error(
+        'OpenClaw error',
+        error: '${response.statusCode} - ${response.body}',
+      );
+    } catch (e, stackTrace) {
+      _logger.error(
+        'OpenClaw connection error',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return "I'm having trouble connecting right now. Please know that I'm here for you when I'm back online.";
+  }
+}
+
+abstract class CompanionResponder {
+  bool get isCloudAvailable;
+
+  Future<String> respond({
+    required String message,
+    required String userId,
+    List<ChatMessage>? conversationHistory,
+    List<String>? recoveryContext,
+  });
 }

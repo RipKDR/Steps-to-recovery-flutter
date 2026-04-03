@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/models/database_models.dart';
 import '../../../core/services/database_service.dart';
+import '../../../core/services/sponsor_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -41,6 +42,24 @@ class _JournalEditorScreenState extends State<JournalEditorScreen> {
     'Meeting',
     'Craving',
   ];
+
+  /// Sponsor prompt based on day of year rotation.
+  String get _sponsorPrompt {
+    final sponsor = SponsorService.instance;
+    if (!sponsor.hasIdentity) return '';
+    // Rotate through prompts — simple index based on day of year
+    final day = DateTime.now().dayOfYear;
+    const prompts = [
+      "What's weighing heaviest right now?",
+      "What did you do today that you're glad you did?",
+      "What are you not saying out loud to anyone?",
+      "Where did you feel most like yourself today?",
+      "What would you tell someone else in your position?",
+      "What are you grateful for that you haven't named yet?",
+      "What's one thing you noticed about yourself this week?",
+    ];
+    return prompts[day % prompts.length];
+  }
 
   @override
   void initState() {
@@ -99,6 +118,11 @@ class _JournalEditorScreenState extends State<JournalEditorScreen> {
           createdAt: _existingEntry?.createdAt ?? DateTime.now(),
           updatedAt: DateTime.now(),
         ),
+      );
+
+      // Notify sponsor service about journal save
+      await SponsorService.instance.onJournalSaved(
+        wordCount: content.split(' ').length,
       );
 
       if (mounted) {
@@ -180,6 +204,53 @@ class _JournalEditorScreenState extends State<JournalEditorScreen> {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.xl),
+                // Sponsor prompt chip — only shown on new entries
+                if (widget.mode == CreateEditMode.create) ...[
+                  Builder(builder: (context) {
+                    final prompt = _sponsorPrompt;
+                    if (prompt.isEmpty) return const SizedBox.shrink();
+                    final name = SponsorService.instance.identity?.name ?? 'Your sponsor';
+                    return GestureDetector(
+                      onTap: () {
+                        if (_contentController.text.isEmpty) {
+                          _contentController.text = '$prompt\n\n';
+                          _contentController.selection = TextSelection.fromPosition(
+                            TextPosition(offset: _contentController.text.length),
+                          );
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: AppColors.primaryAmber.withAlpha(80)),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.forum_outlined,
+                                size: 14, color: AppColors.primaryAmber.withAlpha(180)),
+                            const SizedBox(width: AppSpacing.xs),
+                            Expanded(
+                              child: Text(
+                                '$name asks: $prompt',
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            Icon(Icons.touch_app_outlined,
+                                size: 14, color: AppColors.textSecondary.withAlpha(120)),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: AppSpacing.md),
+                ],
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -334,4 +405,10 @@ class _TagChip extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Extension to get day of year from DateTime.
+extension _DateTimeDayOfYear on DateTime {
+  /// Returns the day of year (1-365/366).
+  int get dayOfYear => difference(DateTime(year, 1, 1)).inDays + 1;
 }

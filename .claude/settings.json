@@ -6,47 +6,47 @@
     "sentry"
   ],
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Edit|Write|MultiEdit|Read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python .claude/hooks/pre_tool_guard.py",
-            "statusMessage": "Checking protected paths..."
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python .claude/hooks/pre_tool_guard.py",
-            "statusMessage": "Checking command policy..."
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write|MultiEdit",
         "hooks": [
           {
-            "type": "command",
             "command": "python .claude/hooks/post_tool_actions.py",
-            "statusMessage": "Running post-edit automation..."
+            "statusMessage": "Running post-edit automation...",
+            "type": "command"
           }
-        ]
+        ],
+        "matcher": "Edit|Write|MultiEdit"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "python .claude/hooks/pre_tool_guard.py",
+            "statusMessage": "Checking protected paths...",
+            "type": "command"
+          }
+        ],
+        "matcher": "Edit|Write|MultiEdit|Read"
+      },
+      {
+        "hooks": [
+          {
+            "command": "python .claude/hooks/pre_tool_guard.py",
+            "statusMessage": "Checking command policy...",
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash"
       }
     ],
     "Stop": [
       {
         "hooks": [
           {
-            "type": "command",
             "command": "python .claude/hooks/stop_reminder.py",
-            "statusMessage": "Checking release gate..."
+            "statusMessage": "Checking release gate...",
+            "type": "command"
           }
         ]
       }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/recovery_content.dart';
+import '../../../core/services/sponsor_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -178,7 +179,26 @@ class _DailyReadingScreenState extends State<DailyReadingScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.xxl),
-            
+
+            // Sponsor reflection prompt
+            Builder(builder: (context) {
+              final sponsor = SponsorService.instance;
+              if (!sponsor.hasIdentity) return const SizedBox.shrink();
+              final name = sponsor.identity!.name;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.forum_outlined, size: 16),
+                  label: Text('What would $name ask you about this?'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primaryAmber,
+                    side: const BorderSide(color: AppColors.primaryAmber),
+                  ),
+                  onPressed: () => context.push('/home/companion-chat'),
+                ),
+              );
+            }),
+
             // Reflection prompt
             Text(
               'Reflection',

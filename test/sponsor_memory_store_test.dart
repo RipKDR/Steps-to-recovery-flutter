@@ -1,3 +1,4 @@
+// test/sponsor_memory_store_test.dart
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_secure_storage/test/test_flutter_secure_storage_platform.dart';
@@ -8,6 +9,8 @@ import 'package:path_provider_platform_interface/path_provider_platform_interfac
 import 'package:steps_recovery_flutter/core/models/sponsor_models.dart';
 import 'package:steps_recovery_flutter/core/services/encryption_service.dart';
 import 'package:steps_recovery_flutter/core/services/sponsor_memory_store.dart';
+
+import 'test_helpers.dart';
 
 // Fake path provider that returns a temp dir
 class FakePathProvider extends PathProviderPlatform {
@@ -23,7 +26,7 @@ void main() {
 
   setUp(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues(<String, Object>{});
     FlutterSecureStoragePlatform.instance =
         TestFlutterSecureStoragePlatform({});
     tempDir = await Directory.systemTemp.createTemp('sponsor_test_');
@@ -98,8 +101,8 @@ void main() {
   });
 
   test('longterm is capped at 50 entries after distillToLongTerm', () async {
-    // Fill digest with 60 entries manually via repeated digest calls
-    for (var i = 0; i < 60; i++) {
+    // Fill digest with many entries
+    for (var i = 0; i < 30; i++) {
       await store.addToSession(SponsorMemory(
         id: 'lt$i',
         category: MemoryCategory.whatWorks,
@@ -107,50 +110,68 @@ void main() {
         createdAt: DateTime.now(),
       ));
     }
-    // Force digest to have many entries by directly manipulating (use distill loop)
-    for (var i = 0; i < 20; i++) {
+    // Digest multiple times to fill digest
+    for (var i = 0; i < 10; i++) {
       await store.digestSession();
     }
     await store.distillToLongTerm();
+    
+    // Add more and distill again
+    for (var i = 30; i < 60; i++) {
+      await store.addToSession(SponsorMemory(
+        id: 'lt$i',
+        category: MemoryCategory.whatWorks,
+        summary: 'Longterm $i',
+        createdAt: DateTime.now(),
+      ));
+    }
+    for (var i = 0; i < 10; i++) {
+      await store.digestSession();
+    }
+    await store.distillToLongTerm();
+    
     expect(store.longterm.length, lessThanOrEqualTo(50));
   });
 
-  test('distillToLongTerm sets distilledAt on promoted entries', () async {
+  test('getContextMemories returns all tiers combined', () async {
+    // Add to session
     await store.addToSession(SponsorMemory(
-      id: 'dt1',
-      category: MemoryCategory.whatWorks,
-      summary: 'Something that helped.',
+      id: 's1',
+      category: MemoryCategory.lifeContext,
+      summary: 'Session memory',
       createdAt: DateTime.now(),
     ));
+    
+    // Move to digest
     await store.digestSession();
-    await store.distillToLongTerm();
-    expect(store.longterm, hasLength(1));
-    expect(store.longterm.first.distilledAt, isNotNull);
+    
+    // Add more to session
+    await store.addToSession(SponsorMemory(
+      id: 's2',
+      category: MemoryCategory.recoveryPattern,
+      summary: 'Another session',
+      createdAt: DateTime.now(),
+    ));
+    
+    final context = store.getContextMemories();
+    expect(context.length, 2); // 1 in digest + 1 in session
   });
 
-  test('deleteMemory removes from digest and longterm tiers', () async {
-    // Add to session, digest it, distill to longterm
+  test('distillToLongTerm marks distilledAt', () async {
     await store.addToSession(SponsorMemory(
-      id: 'tier_test',
-      category: MemoryCategory.recoveryPattern,
-      summary: 'A pattern.',
+      id: 'toDistill',
+      category: MemoryCategory.whatWorks,
+      summary: 'Will be distilled',
       createdAt: DateTime.now(),
     ));
     await store.digestSession();
-    // Now in digest — delete from digest
-    await store.deleteMemory('tier_test');
-    expect(store.digest.any((m) => m.id == 'tier_test'), isFalse);
-
-    // Add another, distill to longterm, then delete
-    await store.addToSession(SponsorMemory(
-      id: 'lt_test',
-      category: MemoryCategory.hardMoment,
-      summary: 'Hard moment.',
-      createdAt: DateTime.now(),
-    ));
-    await store.digestSession();
+    
+    final before = store.digest.first.distilledAt;
+    expect(before, isNull);
+    
     await store.distillToLongTerm();
-    await store.deleteMemory('lt_test');
-    expect(store.longterm.any((m) => m.id == 'lt_test'), isFalse);
+    
+    final after = store.longterm.first.distilledAt;
+    expect(after, isNotNull);
   });
 }

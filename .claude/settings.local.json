@@ -1,3 +1,28 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(./tool/flutterw.ps1 analyze:*)",
+      "Bash(powershell -Command \"& ''''./tool/flutterw.ps1'''' analyze\")",
+      "Bash(powershell -Command \"& ''''./tool/flutterw.ps1'''' -FlutterArgs analyze\")",
+      "Bash(powershell -Command \"& ''''./tool/flutterw.ps1'''' analyze 2>&1\")",
+      "Bash(\"/c/src/flutter/bin/flutter\" analyze:*)",
+      "Bash(\"/c/src/flutter/bin/flutter\" test:*)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(npx skills:*)",
+      "Bash(gh auth:*)",
+      "Bash(grep -r project-hub /c/Users/H/Steps-to-recovery-flutter/*.md /c/Users/H/Steps-to-recovery-flutter/*.json)",
+      "Bash(grep -r meta-project-hub /c/Users/H/Steps-to-recovery-flutter/lib --include=*.dart)",
+      "Bash(grep -r \"localhost:8000\\\\|meta.project\" /c/Users/H/Steps-to-recovery-flutter/lib --include=*.dart)",
+      "Bash(grep -r \"project.hub\\\\|meta-project-hub\\\\|project-hub\" /c/Users/H/Steps-to-recovery-flutter/*.md)",
+      "Bash(cp -r /c/Users/H/Steps-to-recovery-flutter/project-hub /t/DEV/project-hub)",
+      "Bash(cp -r /c/Users/H/Steps-to-recovery-flutter/meta-project-hub /t/DEV/meta-project-hub)",
+      "Bash(cp:*)",
+      "Bash(git rm:*)"
+    ],
+    "additionalDirectories": [
+      "T:/DEV"
+    ]
+  },
   "enableAllProjectMcpServers": true
 }

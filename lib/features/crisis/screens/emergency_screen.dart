@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -109,7 +110,7 @@ class EmergencyScreen extends StatelessWidget {
                 description: '5-4-3-2-1 technique, breathing, body scan',
                 icon: Icons.self_improvement,
                 onTap: () {
-                  context.push('/grounding-exercises');
+                  context.push(AppRoutes.groundingExercises);
                 },
               ),
               const SizedBox(height: AppSpacing.md),
@@ -119,7 +120,7 @@ class EmergencyScreen extends StatelessWidget {
                 description: '5-minute intervention when craving hits',
                 icon: Icons.timer,
                 onTap: () {
-                  context.push('/before-you-use');
+                  context.push(AppRoutes.beforeYouUse);
                 },
               ),
               const SizedBox(height: AppSpacing.md),
@@ -129,7 +130,7 @@ class EmergencyScreen extends StatelessWidget {
                 description: 'Guided breathing exercise',
                 icon: Icons.waves,
                 onTap: () {
-                  context.push('/home/craving-surf');
+                  context.push(AppRoutes.cravingSurf);
                 },
               ),
               const SizedBox(height: AppSpacing.md),
@@ -139,7 +140,7 @@ class EmergencyScreen extends StatelessWidget {
                 description: 'Manage risky contacts',
                 icon: Icons.dangerous,
                 onTap: () {
-                  context.push('/home/danger-zone');
+                  context.push(AppRoutes.dangerZone);
                 },
               ),
             ],

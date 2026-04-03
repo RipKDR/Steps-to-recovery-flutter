@@ -17,6 +17,7 @@ class MindfulnessLibraryScreen extends StatefulWidget {
 class _MindfulnessLibraryScreenState extends State<MindfulnessLibraryScreen> {
   MindfulnessCategory? _selectedCategory;
   bool _showPlayer = false;
+  bool _audioReady = false;
 
   final List<MindfulnessTrack> _tracks = [
     const MindfulnessTrack(
@@ -101,6 +102,14 @@ class _MindfulnessLibraryScreenState extends State<MindfulnessLibraryScreen> {
       mindfulnessCategory: MindfulnessCategory.anxiety,
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    MindfulnessAudioService().initialize().then((_) {
+      if (mounted) setState(() => _audioReady = true);
+    });
+  }
 
   List<MindfulnessTrack> get _filteredTracks {
     if (_selectedCategory == null) return _tracks;
@@ -201,6 +210,15 @@ class _MindfulnessLibraryScreenState extends State<MindfulnessLibraryScreen> {
   }
 
   Future<void> _playTrack(MindfulnessTrack track) async {
+    final isPlaceholder = track.audioUrl.contains('example.com');
+    if (!_audioReady || isPlaceholder) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('This track isn\'t available yet.')),
+        );
+      }
+      return;
+    }
     try {
       await MindfulnessAudioService().setTrack(track);
       await MindfulnessAudioService().play();

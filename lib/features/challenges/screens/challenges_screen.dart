@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:uuid/uuid.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/recovery_content.dart';
 import '../../../core/models/database_models.dart';
@@ -20,12 +21,76 @@ class ChallengesScreen extends StatefulWidget {
 }
 
 class _ChallengesScreenState extends State<ChallengesScreen> {
-  late final Future<List<Challenge>> _challengeFuture;
+  late Future<List<Challenge>> _challengeFuture;
 
   @override
   void initState() {
     super.initState();
     _challengeFuture = DatabaseService().getChallenges();
+  }
+
+  Future<void> _startChallengeFromTemplate(
+    ChallengeTemplateContent template,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceCard,
+        title: Text(
+          'Start "${template.title}"?',
+          style: AppTypography.titleMedium,
+        ),
+        content: Text(
+          'This will add a ${template.duration}-day challenge to your active list.',
+          style: AppTypography.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Start'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final user = await DatabaseService().getCurrentUser();
+    if (!mounted) return;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not start challenge — no user found.'),
+        ),
+      );
+      return;
+    }
+
+    final now = DateTime.now();
+    await DatabaseService().saveChallenge(
+      Challenge(
+        id: const Uuid().v4(),
+        userId: user.id,
+        title: template.title,
+        description: template.description,
+        durationDays: template.duration,
+        startDate: now,
+        endDate: now.add(Duration(days: template.duration)),
+        isActive: true,
+        createdAt: now,
+      ),
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _challengeFuture = DatabaseService().getChallenges();
+    });
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('${template.title} started!')));
   }
 
   @override
@@ -44,17 +109,16 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
 
           final challenges = snapshot.data ?? const <Challenge>[];
           final active = challenges.where((item) => item.isActive).toList();
-          final completed = challenges.where((item) => item.isCompleted).toList();
+          final completed = challenges
+              .where((item) => item.isCompleted)
+              .toList();
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Active Challenges',
-                  style: AppTypography.headlineSmall,
-                ),
+                Text('Active Challenges', style: AppTypography.headlineSmall),
                 const SizedBox(height: AppSpacing.md),
                 if (active.isEmpty)
                   const EmptyState(
@@ -68,7 +132,9 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                     children: active
                         .map(
                           (challenge) => Padding(
-                            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                            padding: const EdgeInsets.only(
+                              bottom: AppSpacing.md,
+                            ),
                             child: _ChallengeCard(
                               title: challenge.title,
                               description: challenge.description,
@@ -82,10 +148,12 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                                     '${challenge.title} challenge in my recovery. '
                                     'One day at a time. '
                                     '${AppStoreLinks.shareUrl}';
-                                await SharePlus.instance.share(ShareParams(
-                                  text: shareText,
-                                  subject: 'Recovery Challenge',
-                                ));
+                                await SharePlus.instance.share(
+                                  ShareParams(
+                                    text: shareText,
+                                    subject: 'Recovery Challenge',
+                                  ),
+                                );
                               },
                             ),
                           ),
@@ -93,22 +161,19 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                         .toList(),
                   ),
                 const SizedBox(height: AppSpacing.xl),
-                Text(
-                  'Starter Templates',
-                  style: AppTypography.headlineSmall,
-                ),
+                Text('Starter Templates', style: AppTypography.headlineSmall),
                 const SizedBox(height: AppSpacing.md),
                 ...challengeTemplates.map(
                   (template) => Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                    child: _TemplateCard(template: template),
+                    child: _TemplateCard(
+                      template: template,
+                      onStart: () => _startChallengeFromTemplate(template),
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                Text(
-                  'Completed',
-                  style: AppTypography.headlineSmall,
-                ),
+                Text('Completed', style: AppTypography.headlineSmall),
                 const SizedBox(height: AppSpacing.md),
                 if (completed.isEmpty)
                   const EmptyState(
@@ -122,21 +187,22 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                     children: completed
                         .map(
                           (challenge) => Padding(
-                            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                            padding: const EdgeInsets.only(
+                              bottom: AppSpacing.md,
+                            ),
                             child: _CompletedChallengeCard(
                               title: challenge.title,
                               description: challenge.description,
-                              completedDate: challenge.endDate != null ? AppUtils.formatDate(challenge.endDate!) : 'completed',
+                              completedDate: challenge.endDate != null
+                                  ? AppUtils.formatDate(challenge.endDate!)
+                                  : 'completed',
                             ),
                           ),
                         )
                         .toList(),
                   ),
                 const SizedBox(height: AppSpacing.xl),
-                Text(
-                  'When It Gets Hard',
-                  style: AppTypography.headlineSmall,
-                ),
+                Text('When It Gets Hard', style: AppTypography.headlineSmall),
                 const SizedBox(height: AppSpacing.md),
                 ...copingStrategies.map(
                   (strategy) => Padding(
@@ -145,10 +211,7 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                Text(
-                  'Crisis Resources',
-                  style: AppTypography.headlineSmall,
-                ),
+                Text('Crisis Resources', style: AppTypography.headlineSmall),
                 const SizedBox(height: AppSpacing.md),
                 ...crisisResources.map(
                   (resource) => Padding(
@@ -217,7 +280,8 @@ class _ChallengeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: '$title challenge, ${(progress * 100).round()}% complete, $daysLeft days left',
+      label:
+          '$title challenge, ${(progress * 100).round()}% complete, $daysLeft days left',
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -270,114 +334,119 @@ class _ChallengeCard extends StatelessWidget {
                         onPressed: onShare,
                       ),
                     ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-              child: LinearProgressIndicator(
-                value: progress,
-                backgroundColor: AppColors.surfaceInteractive,
-                valueColor: const AlwaysStoppedAnimation<Color>(
-                  AppColors.primaryAmber,
-                ),
-                minHeight: 8,
+                ],
               ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${(progress * 100).round()}% complete',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textMuted,
+              const SizedBox(height: AppSpacing.lg),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  backgroundColor: AppColors.surfaceInteractive,
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppColors.primaryAmber,
                   ),
+                  minHeight: 8,
                 ),
-                Text(
-                  '$daysLeft days left',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.primaryAmber,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              reward,
-              style: AppTypography.labelSmall.copyWith(
-                color: AppColors.success,
               ),
-            ),
-          ],
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${(progress * 100).round()}% complete',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                  Text(
+                    '$daysLeft days left',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.primaryAmber,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                reward,
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.success,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }
 
 class _TemplateCard extends StatelessWidget {
   final ChallengeTemplateContent template;
+  final VoidCallback onStart;
 
-  const _TemplateCard({required this.template});
+  const _TemplateCard({required this.template, required this.onStart});
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceInteractive,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: InkWell(
+        onTap: onStart,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceInteractive,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    ),
+                    child: const Icon(
+                      Icons.playlist_add_check,
+                      color: AppColors.primaryAmber,
+                      size: AppSpacing.iconLg,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.playlist_add_check,
-                    color: AppColors.primaryAmber,
-                    size: AppSpacing.iconLg,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.lg),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(template.title, style: AppTypography.titleMedium),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        template.difficulty,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textMuted,
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(template.title, style: AppTypography.titleMedium),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          template.difficulty,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textMuted,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              template.description,
-              style: AppTypography.bodyMedium.copyWith(height: 1.5),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.sm,
-              children: [
-                _InfoChip(label: '${template.target} target'),
-                _InfoChip(label: '${template.duration} days'),
-                _InfoChip(label: template.reward),
-              ],
-            ),
-          ],
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                template.description,
+                style: AppTypography.bodyMedium.copyWith(height: 1.5),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  _InfoChip(label: '${template.target} target'),
+                  _InfoChip(label: '${template.duration} days'),
+                  _InfoChip(label: template.reward),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -438,9 +507,7 @@ class _CompletedChallengeCard extends StatelessWidget {
             ),
             Text(
               completedDate,
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.success,
-              ),
+              style: AppTypography.bodySmall.copyWith(color: AppColors.success),
             ),
           ],
         ),
@@ -465,11 +532,13 @@ class _StrategyCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.spa, color: AppColors.primaryAmber, size: AppSpacing.iconSm),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(text, style: AppTypography.bodyMedium),
+          const Icon(
+            Icons.spa,
+            color: AppColors.primaryAmber,
+            size: AppSpacing.iconSm,
           ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(child: Text(text, style: AppTypography.bodyMedium)),
         ],
       ),
     );
@@ -511,7 +580,9 @@ class _CrisisResourceCard extends StatelessWidget {
           Text(
             resource.phone,
             style: AppTypography.labelMedium.copyWith(
-              color: resource.isEmergency ? AppColors.danger : AppColors.primaryAmber,
+              color: resource.isEmergency
+                  ? AppColors.danger
+                  : AppColors.primaryAmber,
             ),
           ),
         ],

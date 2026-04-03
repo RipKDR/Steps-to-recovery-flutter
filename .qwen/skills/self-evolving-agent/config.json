@@ -1,0 +1,79 @@
+﻿{
+    "version":  "2.0.0",
+    "autoLearn":  true,
+    "autoUpdateSkills":  true,
+    "autoUpdateAgents":  true,
+    "autoFetchDocs":  true,
+    "docFetchSchedule":  "daily",
+    "backupBeforeUpdate":  true,
+    "gitCommitChanges":  true,
+    "logLevel":  "info",
+    "maxLearningEntries":  1000,
+    "archiveAfterDays":  30,
+    "memorySync":  {
+                       "enabled":  true,
+                       "syncInterval":  "immediate",
+                       "targetDirs":  [
+                                          ".remember/logs/autonomous/",
+                                          ".remember/memory/"
+                                      ]
+                   },
+    "triggers":  {
+                     "afterResponse":  true,
+                     "afterError":  true,
+                     "afterUserFeedback":  true,
+                     "scheduled":  {
+                                       "daily":  "06:00",
+                                       "weekly":  "Sunday 02:00"
+                                   }
+                 },
+    "sources":  {
+                    "flutter":  {
+                                    "enabled":  true,
+                                    "url":  "https://api.flutter.dev/flutter/",
+                                    "cacheTTL":  24
+                                },
+                    "dart":  {
+                                 "enabled":  true,
+                                 "url":  "https://dart.dev/guides",
+                                 "cacheTTL":  24
+                             },
+                    "pubdev":  {
+                                   "enabled":  true,
+                                   "url":  "https://pub.dev/",
+                                   "cacheTTL":  24
+                               },
+                    "qwen":  {
+                                 "enabled":  true,
+                                 "path":  ".qwen/",
+                                 "cacheTTL":  48
+                             }
+                },
+    "validation":  {
+                       "preIntegration":  true,
+                       "postIntegration":  true,
+                       "strictMode":  false
+                   },
+    "rollback":  {
+                     "autoRollback":  true,
+                     "maxRollbackDepth":  5,
+                     "preserveLearnings":  true
+                 },
+    "metaSystemsHub":  {
+                           "IntegratedAt":  "2026-04-02 02:59:00",
+                           "Triggers":  {
+                                            "DailyReport":  true,
+                                            "OnSecurityIssue":  true,
+                                            "OnAutoFix":  true,
+                                            "OnScanComplete":  true
+                                        },
+                           "SyncReports":  true,
+                           "Paths":  {
+                                         "Hub":  ".qwen\\skills\\meta-systems-hub",
+                                         "Logs":  ".qwen\\skills\\meta-systems-hub\\logs",
+                                         "Reports":  ".qwen\\skills\\meta-systems-hub\\reports"
+                                     },
+                           "SyncLearnings":  true,
+                           "Enabled":  true
+                       }
+}

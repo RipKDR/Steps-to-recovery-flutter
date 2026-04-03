@@ -174,11 +174,15 @@ class NotificationChannels {
 class AppRoutes {
   AppRoutes._();
 
+  // Bootstrap
+  static const String bootstrap = '/bootstrap';
+
   // Auth
   static const String onboarding = '/onboarding';
   static const String login = '/login';
   static const String signup = '/signup';
   static const String forgotPassword = '/forgot-password';
+  static const String sponsorIntro = '/sponsor-intro';
 
   // Main tabs
   static const String home = '/home';
@@ -186,18 +190,22 @@ class AppRoutes {
   static const String steps = '/steps';
   static const String meetings = '/meetings';
   static const String profile = '/profile';
+  static const String mindfulness = '/mindfulness';
 
   // Home stack
-  static const String morningIntention = '/morning-intention';
-  static const String eveningPulse = '/evening-pulse';
-  static const String emergency = '/emergency';
-  static const String dailyReading = '/daily-reading';
-  static const String progress = '/progress';
-  static const String cravingSurf = '/craving-surf';
-  static const String gratitude = '/gratitude';
-  static const String inventory = '/inventory';
-  static const String safetyPlan = '/safety-plan';
-  static const String companionChat = '/companion-chat';
+  static const String morningIntention = '/home/morning-intention';
+  static const String eveningPulse = '/home/evening-pulse';
+  static const String emergency = '/home/emergency';
+  static const String dailyReading = '/home/daily-reading';
+  static const String progress = '/home/progress';
+  static const String cravingSurf = '/home/craving-surf';
+  static const String gratitude = '/home/gratitude';
+  static const String inventory = '/home/inventory';
+  static const String safetyPlan = '/home/safety-plan';
+  static const String companionChat = '/home/companion-chat';
+  static const String dangerZone = '/home/danger-zone';
+  static const String beforeYouUse = '/home/before-you-use';
+  static const String groundingExercises = '/home/grounding-exercises';
 
   // Journal stack
   static const String journalEditor = '/journal/editor';
@@ -209,6 +217,7 @@ class AppRoutes {
   // Meetings stack
   static const String meetingDetail = '/meetings/detail';
   static const String favoriteMeetings = '/meetings/favorites';
+  static const String meetingsStats = '/meetings/stats';
 
   // Profile stack
   static const String sponsor = '/profile/sponsor';
@@ -216,8 +225,6 @@ class AppRoutes {
   static const String aiSettings = '/profile/ai-settings';
   static const String securitySettings = '/profile/security';
 
-  // Emergency
-  static const String beforeYouUse = '/before-you-use';
-  static const String dangerZone = '/danger-zone';
+  // Legacy/experimental
   static const String safeDialIntervention = '/safe-dial';
 }

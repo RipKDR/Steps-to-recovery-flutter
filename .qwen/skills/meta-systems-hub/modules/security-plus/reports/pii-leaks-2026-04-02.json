@@ -1,0 +1,39 @@
+{
+  "TotalLeaks": 4,
+  "Issues": [
+    {
+      "Severity": "Medium",
+      "File": "C:\\Users\\H\\Steps-to-recovery-flutter\\lib\\core\\services\\app_state_service.dart",
+      "Type": "SensitiveLog",
+      "Issue": "Sensitive variable 'email' logged"
+    },
+    {
+      "Severity": "Medium",
+      "File": "C:\\Users\\H\\Steps-to-recovery-flutter\\lib\\core\\services\\permissions_service.dart",
+      "Type": "SensitiveLog",
+      "Issue": "Sensitive variable 'phone' logged"
+    },
+    {
+      "Severity": "Medium",
+      "File": "C:\\Users\\H\\Steps-to-recovery-flutter\\lib\\core\\services\\sponsor_service.dart",
+      "Type": "SensitiveLog",
+      "Issue": "Sensitive variable 'token' logged"
+    },
+    {
+      "Severity": "Medium",
+      "File": "C:\\Users\\H\\Steps-to-recovery-flutter\\lib\\features\\crisis\\screens\\emergency_screen.dart",
+      "Type": "SensitiveLog",
+      "Issue": "Sensitive variable 'phone' logged"
+    }
+  ],
+  "Status": "Leaks Detected",
+  "Timestamp": "2026-04-02 03:51:11",
+  "ByType": {
+    "Address": 0,
+    "Email": 0,
+    "Phone": 0,
+    "SSN": 0,
+    "CreditCard": 0,
+    "SensitiveLog": 4
+  }
+}

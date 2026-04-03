@@ -29,9 +29,7 @@ class ProfileScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(AppSpacing.xxl),
                 decoration: const BoxDecoration(
                   color: AppColors.surfaceCard,
-                  border: Border(
-                    bottom: BorderSide(color: AppColors.border),
-                  ),
+                  border: Border(bottom: BorderSide(color: AppColors.border)),
                 ),
                 child: Column(
                   children: [
@@ -135,31 +133,51 @@ class ProfileScreen extends StatelessWidget {
                   _SettingsTile(
                     icon: Icons.help,
                     title: 'Help & FAQ',
-                    onTap: () {},
+                    onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Coming soon — check back in a future update.',
+                        ),
+                      ),
+                    ),
                   ),
                   _SettingsTile(
                     icon: Icons.privacy_tip,
                     title: 'Privacy Policy',
-                    onTap: () {},
+                    onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Coming soon — check back in a future update.',
+                        ),
+                      ),
+                    ),
                   ),
                   _SettingsTile(
                     icon: Icons.description,
                     title: 'Terms of Service',
-                    onTap: () {},
+                    onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Coming soon — check back in a future update.',
+                        ),
+                      ),
+                    ),
                   ),
                   _SettingsTile(
                     icon: Icons.group_add_outlined,
                     title: 'Invite Someone to Recovery',
                     subtitle: 'Share the app with someone who might need it',
                     onTap: () async {
-                      await SharePlus.instance.share(ShareParams(
-                        text:
-                            'I use Steps to Recovery to stay accountable in my '
-                            'sobriety. It\'s private, works offline, and '
-                            'completely free. '
-                            '${AppStoreLinks.shareUrl}',
-                        subject: 'A recovery app worth trying',
-                      ));
+                      await SharePlus.instance.share(
+                        ShareParams(
+                          text:
+                              'I use Steps to Recovery to stay accountable in my '
+                              'sobriety. It\'s private, works offline, and '
+                              'completely free. '
+                              '${AppStoreLinks.shareUrl}',
+                          subject: 'A recovery app worth trying',
+                        ),
+                      );
                     },
                   ),
                 ],
@@ -197,10 +215,7 @@ class _SettingsSection extends StatelessWidget {
   final String title;
   final List<Widget> children;
 
-  const _SettingsSection({
-    required this.title,
-    required this.children,
-  });
+  const _SettingsSection({required this.title, required this.children});
 
   @override
   Widget build(BuildContext context) {
@@ -223,9 +238,7 @@ class _SettingsSection extends StatelessWidget {
         ),
         Container(
           color: AppColors.surfaceCard,
-          child: Column(
-            children: children,
-          ),
+          child: Column(children: children),
         ),
       ],
     );
@@ -248,14 +261,8 @@ class _SettingsTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(
-        icon,
-        color: AppColors.primaryAmber,
-      ),
-      title: Text(
-        title,
-        style: AppTypography.bodyMedium,
-      ),
+      leading: Icon(icon, color: AppColors.primaryAmber),
+      title: Text(title, style: AppTypography.bodyMedium),
       subtitle: subtitle != null
           ? Text(
               subtitle!,
@@ -264,10 +271,7 @@ class _SettingsTile extends StatelessWidget {
               ),
             )
           : null,
-      trailing: const Icon(
-        Icons.chevron_right,
-        color: AppColors.textMuted,
-      ),
+      trailing: const Icon(Icons.chevron_right, color: AppColors.textMuted),
       onTap: onTap,
     );
   }

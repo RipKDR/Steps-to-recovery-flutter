@@ -49,7 +49,7 @@ class _SponsorIntroScreenState extends State<SponsorIntroScreen> {
   }
 
   Future<void> _skip() async {
-    await _service.setupIdentity('Alex', SponsorVibe.warm);
+    await _service.setupIdentity('Morgan', SponsorVibe.warm);
     widget.onComplete();
   }
 
@@ -73,8 +73,8 @@ class _SponsorIntroScreenState extends State<SponsorIntroScreen> {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        AppColors.primaryAmber.withValues(alpha:0.12),
-                        AppColors.primaryAmber.withValues(alpha:0.04),
+                        AppColors.primaryAmber.withValues(alpha: 0.12),
+                        AppColors.primaryAmber.withValues(alpha: 0.04),
                         Colors.transparent,
                       ],
                     ),
@@ -106,10 +106,7 @@ class _SponsorIntroScreenState extends State<SponsorIntroScreen> {
                 children: [
                   const SizedBox(height: 140),
 
-                  Text(
-                    'One more thing.',
-                    style: AppTypography.headlineLarge,
-                  ),
+                  Text('One more thing.', style: AppTypography.headlineLarge),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
                     'You have a sponsor waiting.',
@@ -135,21 +132,30 @@ class _SponsorIntroScreenState extends State<SponsorIntroScreen> {
                       decoration: InputDecoration(
                         hintText: 'Rex',
                         hintStyle: AppTypography.bodyLarge.copyWith(
-                          color: AppColors.textSecondary.withValues(alpha:0.4),
+                          color: AppColors.textSecondary.withValues(alpha: 0.4),
                         ),
                         filled: true,
                         fillColor: AppColors.surfaceCard,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusMd,
+                          ),
                           borderSide: const BorderSide(color: AppColors.border),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusMd,
+                          ),
                           borderSide: const BorderSide(color: AppColors.border),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                          borderSide: const BorderSide(color: AppColors.primaryAmber, width: 1.5),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusMd,
+                          ),
+                          borderSide: const BorderSide(
+                            color: AppColors.primaryAmber,
+                            width: 1.5,
+                          ),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.lg,
@@ -181,7 +187,9 @@ class _SponsorIntroScreenState extends State<SponsorIntroScreen> {
                             vertical: AppSpacing.sm,
                           ),
                           decoration: BoxDecoration(
-                            color: selected ? AppColors.primaryAmber : Colors.transparent,
+                            color: selected
+                                ? AppColors.primaryAmber
+                                : Colors.transparent,
                             border: Border.all(
                               color: selected
                                   ? AppColors.primaryAmber
@@ -191,9 +199,11 @@ class _SponsorIntroScreenState extends State<SponsorIntroScreen> {
                             boxShadow: selected
                                 ? [
                                     BoxShadow(
-                                      color: AppColors.primaryAmber.withValues(alpha:0.25),
+                                      color: AppColors.primaryAmber.withValues(
+                                        alpha: 0.25,
+                                      ),
                                       blurRadius: 12,
-                                    )
+                                    ),
                                   ]
                                 : null,
                           ),
@@ -203,7 +213,9 @@ class _SponsorIntroScreenState extends State<SponsorIntroScreen> {
                               color: selected
                                   ? AppColors.background
                                   : AppColors.textSecondary,
-                              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                              fontWeight: selected
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
                             ),
                           ),
                         ),
@@ -223,14 +235,21 @@ class _SponsorIntroScreenState extends State<SponsorIntroScreen> {
                           onPressed: enabled ? _submit : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryAmber,
-                            disabledBackgroundColor: AppColors.primaryAmber.withValues(alpha:0.3),
-                            padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                            disabledBackgroundColor: AppColors.primaryAmber
+                                .withValues(alpha: 0.3),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.lg,
+                            ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusMd,
+                              ),
                             ),
                           ),
                           child: Text(
-                            name.isEmpty ? 'Meet them \u2192' : 'Meet $name \u2192',
+                            name.isEmpty
+                                ? 'Meet them \u2192'
+                                : 'Meet $name \u2192',
                             style: AppTypography.labelLarge.copyWith(
                               color: AppColors.background,
                             ),

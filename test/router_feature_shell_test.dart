@@ -34,6 +34,21 @@ void main() {
 
       expect(find.text('Evening Pulse'), findsOneWidget);
 
+      AppRouter.router.go(AppRoutes.emergency);
+      await _pumpShell(tester);
+
+      expect(find.text('Emergency'), findsOneWidget);
+
+      AppRouter.router.go(AppRoutes.groundingExercises);
+      await _pumpShell(tester);
+
+      expect(find.text('Grounding Exercises'), findsOneWidget);
+
+      AppRouter.router.go(AppRoutes.beforeYouUse);
+      await _pumpShell(tester);
+
+      expect(find.text('Before You Use'), findsOneWidget);
+
       AppRouter.router.go(AppRoutes.home);
       await _pumpShell(tester);
 

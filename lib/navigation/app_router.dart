@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:steps_recovery_flutter/features/steps/screens/steps_overview_screen.dart';
+import '../features/steps/screens/steps_overview_screen.dart';
 
 import '../core/constants/app_constants.dart';
+import '../core/models/database_models.dart';
 import '../core/services/app_state_service.dart';
+import '../core/services/database_service.dart';
+import '../core/theme/app_spacing.dart';
+import '../core/theme/app_typography.dart';
 import '../core/services/logger_service.dart';
 import '../core/services/sponsor_service.dart';
 import '../core/theme/app_colors.dart';
@@ -47,27 +51,27 @@ class AppRouter {
   AppRouter._();
 
   static final GoRouter router = GoRouter(
-    initialLocation: '/bootstrap',
+    initialLocation: AppRoutes.bootstrap,
     redirect: (context, state) {
       try {
         final service = AppStateService.instance;
         final sponsor = SponsorService.instance;
         final location = state.uri.path;
-        final isBootstrap = location == '/bootstrap';
+        final isBootstrap = location == AppRoutes.bootstrap;
         final isAuthRoute =
             location == AppRoutes.onboarding ||
             location == AppRoutes.login ||
             location == AppRoutes.signup;
-        final isSponsorIntro = location == '/sponsor-intro';
+        final isSponsorIntro = location == AppRoutes.sponsorIntro;
 
         if (!service.isReady) {
-          return isBootstrap ? null : '/bootstrap';
+          return isBootstrap ? null : AppRoutes.bootstrap;
         }
 
         if (isBootstrap) {
           if (!service.onboardingComplete) return AppRoutes.onboarding;
           if (!service.isAuthenticated) return AppRoutes.login;
-          if (!sponsor.hasIdentity) return '/sponsor-intro';
+          if (!sponsor.hasIdentity) return AppRoutes.sponsorIntro;
           return AppRoutes.home;
         }
 
@@ -98,7 +102,7 @@ class AppRouter {
         );
 
         // Return safe fallback - bootstrap will re-evaluate
-        return '/bootstrap';
+        return AppRoutes.bootstrap;
       }
     },
     refreshListenable: Listenable.merge([
@@ -107,7 +111,7 @@ class AppRouter {
     ]),
     routes: [
       GoRoute(
-        path: '/bootstrap',
+        path: AppRoutes.bootstrap,
         name: 'bootstrap',
         builder: (context, state) => const _BootstrapScreen(),
       ),
@@ -136,7 +140,7 @@ class AppRouter {
 
       // NEW: Sponsor intro (post-auth gate — outside ShellRoute)
       GoRoute(
-        path: '/sponsor-intro',
+        path: AppRoutes.sponsorIntro,
         name: 'sponsorIntro',
         builder: (context, state) =>
             SponsorIntroScreen(onComplete: () => context.go(AppRoutes.home)),
@@ -144,7 +148,7 @@ class AppRouter {
 
       // Mindfulness Library (top-level)
       GoRoute(
-        path: '/mindfulness',
+        path: AppRoutes.mindfulness,
         name: 'mindfulness',
         builder: (context, state) => const MindfulnessLibraryScreen(),
       ),
@@ -386,8 +390,22 @@ class _BootstrapScreenState extends State<_BootstrapScreen> {
   }
 }
 
-class _FavoriteMeetingsScreen extends StatelessWidget {
+class _FavoriteMeetingsScreen extends StatefulWidget {
   const _FavoriteMeetingsScreen();
+
+  @override
+  State<_FavoriteMeetingsScreen> createState() =>
+      _FavoriteMeetingsScreenState();
+}
+
+class _FavoriteMeetingsScreenState extends State<_FavoriteMeetingsScreen> {
+  late Future<List<Meeting>> _favoritesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _favoritesFuture = DatabaseService().getMeetings(isFavorite: true);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -396,12 +414,60 @@ class _FavoriteMeetingsScreen extends StatelessWidget {
         title: const Text('Favorite Meetings'),
         backgroundColor: AppColors.background,
       ),
-      body: EmptyState(
-        icon: Icons.favorite_border,
-        title: 'No favorites yet',
-        message: 'Star meetings from the Meetings tab to build this list.',
-        actionLabel: 'Browse meetings',
-        onAction: () => context.go(AppRoutes.meetings),
+      body: FutureBuilder<List<Meeting>>(
+        future: _favoritesFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primaryAmber),
+            );
+          }
+
+          final favorites = snapshot.data ?? const <Meeting>[];
+          if (favorites.isEmpty) {
+            return EmptyState(
+              icon: Icons.favorite_border,
+              title: 'No favorites yet',
+              message:
+                  'Star meetings from the Meetings tab to build this list.',
+              actionLabel: 'Browse meetings',
+              onAction: () => context.go(AppRoutes.meetings),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            itemCount: favorites.length,
+            itemBuilder: (context, index) {
+              final meeting = favorites[index];
+              return Card(
+                margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.favorite,
+                    color: AppColors.primaryAmber,
+                  ),
+                  title: Text(meeting.name, style: AppTypography.titleSmall),
+                  subtitle: Text(
+                    meeting.location,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                  trailing: Text(
+                    meeting.meetingType,
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  onTap: () => context.push(
+                    '${AppRoutes.meetingDetail}?meetingId=${Uri.encodeComponent(meeting.id)}',
+                  ),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
