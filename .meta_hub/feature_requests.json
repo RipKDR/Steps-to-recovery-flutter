@@ -1,0 +1,44 @@
+{
+  "requests": [
+    {
+      "id": "fr-001",
+      "title": "Dark mode toggle",
+      "description": "Add a light/dark theme toggle to the dashboard header",
+      "status": "open",
+      "priority": "medium",
+      "requested_by": "ui-team",
+      "created_at": "2026-03-20T10:00:00Z",
+      "upvotes": 5
+    },
+    {
+      "id": "fr-002",
+      "title": "Export dashboard to PDF",
+      "description": "Allow users to export the current dashboard view as a PDF report for stakeholder sharing",
+      "status": "planned",
+      "priority": "low",
+      "requested_by": "product-team",
+      "created_at": "2026-03-25T14:00:00Z",
+      "upvotes": 3
+    },
+    {
+      "id": "fr-003",
+      "title": "Per-panel drill-down pages",
+      "description": "Click on any panel to navigate to a dedicated full-page view with more detail",
+      "status": "open",
+      "priority": "high",
+      "requested_by": "ux-team",
+      "created_at": "2026-04-01T09:00:00Z",
+      "upvotes": 8
+    },
+    {
+      "id": "fr-004",
+      "title": "Multi-project support",
+      "description": "Allow the hub to monitor multiple Flutter projects simultaneously, with a project switcher",
+      "status": "open",
+      "priority": "high",
+      "requested_by": "engineering-lead",
+      "created_at": "2026-04-04T16:00:00Z",
+      "upvotes": 12
+    }
+  ]
+}

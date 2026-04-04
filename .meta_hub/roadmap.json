@@ -1,0 +1,71 @@
+{
+  "milestones": [
+    {
+      "id": "m1",
+      "title": "Core Dashboard v1",
+      "description": "Basic dashboard with Flutter, Meta-Systems, and Agent panels",
+      "status": "completed",
+      "target_date": "2026-03-15",
+      "completed_date": "2026-03-10",
+      "owner": "backend-team"
+    },
+    {
+      "id": "m2",
+      "title": "Command Center Integration",
+      "description": "Full command center with job execution, worktree isolation, and GitHub integration",
+      "status": "completed",
+      "target_date": "2026-03-30",
+      "completed_date": "2026-03-28",
+      "owner": "backend-team"
+    },
+    {
+      "id": "m3",
+      "title": "Real-Time WebSocket Updates",
+      "description": "Live dashboard updates via WebSocket broadcasting",
+      "status": "completed",
+      "target_date": "2026-04-05",
+      "completed_date": "2026-04-03",
+      "owner": "fullstack-team"
+    },
+    {
+      "id": "m4",
+      "title": "Source Adapter Wiring",
+      "description": "Wire up Roadmap, Bug Tracker, Feature Requests, and Agent Evals panels with real data",
+      "status": "in_progress",
+      "target_date": "2026-04-10",
+      "owner": "fullstack-team"
+    },
+    {
+      "id": "m5",
+      "title": "Usage & Budget Tracking",
+      "description": "DB-backed usage analytics and budget monitoring",
+      "status": "in_progress",
+      "target_date": "2026-04-15",
+      "owner": "backend-team"
+    },
+    {
+      "id": "m6",
+      "title": "Governance & Policy Engine",
+      "description": "Policy-based action evaluation and compliance checking",
+      "status": "planned",
+      "target_date": "2026-04-20",
+      "owner": "backend-team"
+    },
+    {
+      "id": "m7",
+      "title": "Testing Infrastructure",
+      "description": "Comprehensive unit and integration tests for all services and routes",
+      "status": "planned",
+      "target_date": "2026-04-25",
+      "owner": "qa-team"
+    },
+    {
+      "id": "m8",
+      "title": "Production Deployment",
+      "description": "Docker containerization, CI/CD pipeline, and production deployment",
+      "status": "planned",
+      "target_date": "2026-05-01",
+      "owner": "devops-team"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "bugs": [
+    {
+      "id": "bug-001",
+      "title": "Task Queue panel shows placeholder when no tasks configured",
+      "description": "The task queue panel renders 'Not Wired' even when backend has task data available",
+      "status": "open",
+      "severity": "medium",
+      "reporter": "dashboard-user",
+      "created_at": "2026-04-02T10:00:00Z"
+    },
+    {
+      "id": "bug-002",
+      "title": "Memory data lost on server restart",
+      "description": "MemoryService is purely in-memory. All semantic, episodic, and working memory is lost when the backend restarts",
+      "status": "open",
+      "severity": "high",
+      "reporter": "agent-team",
+      "created_at": "2026-04-03T14:30:00Z"
+    },
+    {
+      "id": "bug-003",
+      "title": "Duplicate return statement in tasks/create endpoint",
+      "description": "The POST /v1/tasks/create endpoint has two identical return statements, the second is dead code",
+      "status": "in_progress",
+      "severity": "low",
+      "reporter": "code-review",
+      "created_at": "2026-04-04T09:00:00Z"
+    },
+    {
+      "id": "bug-004",
+      "title": "No rate limiting on API endpoints",
+      "description": "All API endpoints are unauthenticated (except auth-protected ones) and have no rate limiting, making them vulnerable to abuse",
+      "status": "open",
+      "severity": "critical",
+      "reporter": "security-audit",
+      "created_at": "2026-04-05T08:00:00Z"
+    },
+    {
+      "id": "bug-005",
+      "title": "WebSocket reconnects don't resubscribe to channels",
+      "description": "After a WebSocket disconnect and reconnect, the client doesn't automatically resubscribe to previous channels",
+      "status": "open",
+      "severity": "high",
+      "reporter": "frontend-user",
+      "created_at": "2026-04-05T11:00:00Z"
+    }
+  ]
+}

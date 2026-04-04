@@ -1,0 +1,25 @@
+# BMAD Method v6 - Project Configuration
+# Generated: 2026-04-05T03:46:41.5652050+10:00
+# Project: Steps to Recovery
+
+bmad_version: "6.0.0"
+
+project_name: "Steps to Recovery"
+project_type: "mobile-app"
+project_level: 3
+
+output_folder: "docs"
+stories_folder: "docs/stories"
+
+communication_language: "English"
+document_output_language: "English"
+
+agent_overrides_folder: "bmad/agent-overrides"
+
+project_description: "Privacy-first recovery companion for 12-step programs built with Flutter."
+tech_stack:
+  - "Flutter 3.41.6"
+  - "Dart 3.11.4"
+  - "go_router"
+  - "shared_preferences"
+  - "supabase_flutter"

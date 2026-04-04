@@ -56,5 +56,11 @@ app.*.map.json
 /.worktrees/
 /.claude/worktrees/
 
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+*.env
+
 #Ignore vscode AI rules
 .github/instructions/codacy.instructions.md
