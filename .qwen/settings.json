@@ -21,7 +21,12 @@
       "Bash(curl *)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(t:)",
+      "Bash(git init)",
+      "Bash(gh *)",
+      "Bash(.\\start-hub.bat)",
+      "Bash(.\\.qwen\\skills\\meta-systems-hub\\scripts\\run-all-scans.ps1)"
     ]
   },
   "$version": 3

@@ -18,7 +18,25 @@
       "Bash(cp -r /c/Users/H/Steps-to-recovery-flutter/project-hub /t/DEV/project-hub)",
       "Bash(cp -r /c/Users/H/Steps-to-recovery-flutter/meta-project-hub /t/DEV/meta-project-hub)",
       "Bash(cp:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(git -C /t/DEV/meta-project-hub log --oneline -5)",
+      "Bash(git -C /c/Users/H/Steps-to-recovery-flutter show HEAD --stat)",
+      "Bash(git:*)",
+      "Bash(python -m pytest tests/test_snapshot_perf.py -v -s)",
+      "Bash(python -c \"import sys; print\\(sys.executable\\)\")",
+      "Bash(python -c \"import pytest; print\\(pytest.__version__\\)\")",
+      "Bash(C:/Python313/python.exe -c \"import pytest; print\\(pytest.__version__\\)\")",
+      "Bash(\"/c/Users/H/AppData/Local/Python/bin/python.exe\" -c \"import pytest; print\\(pytest.__version__\\)\")",
+      "Bash(\"/c/Users/H/AppData/Local/Python/bin/pip.exe\" install:*)",
+      "Bash(\"/c/Users/H/AppData/Local/Python/bin/python.exe\" -m pytest \"T:/DEV/meta-project-hub/backend/tests/test_snapshot_perf.py\" -v -s 2>&1)",
+      "Bash(\"/c/Users/H/AppData/Local/Python/bin/python.exe\" -m pytest tests/test_snapshot_perf.py -v -s)",
+      "Bash(python -m pytest tests/test_snapshot_perf.py -v)",
+      "Bash(python -m unittest tests.test_snapshot_perf.SnapshotPerfTests -v)",
+      "Bash(python -m pytest --version)",
+      "Bash(py -m pytest --version)",
+      "Bash(py -m pytest tests/test_snapshot_perf.py -v)",
+      "Bash(py -m pytest tests/test_snapshot_perf.py::SnapshotPerfTests::test_parallel_round1_produces_all_sections -v)",
+      "Bash(python -m pytest tests/ -v)"
     ],
     "additionalDirectories": [
       "T:/DEV"
