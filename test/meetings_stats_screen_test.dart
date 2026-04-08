@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:steps_recovery_flutter/core/theme/app_colors.dart';
 import 'package:steps_recovery_flutter/features/meetings/screens/meetings_stats_screen.dart';
+import 'package:steps_recovery_flutter/features/meetings/services/meetings_service.dart';
 
 import 'test_helpers.dart';
 
@@ -145,6 +146,77 @@ void main() {
       // Verify app bar uses background color
       final appBar = tester.widget<AppBar>(find.byType(AppBar));
       expect(appBar.backgroundColor, equals(AppColors.background));
+    });
+  });
+
+  group('StatCard', () {
+    testWidgets('displays all properties', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: StatCard(
+              title: 'Test Stat',
+              value: '42',
+              icon: Icons.star,
+              color: Colors.blue,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Test Stat'), findsOneWidget);
+      expect(find.text('42'), findsOneWidget);
+      expect(find.byIcon(Icons.star), findsOneWidget);
+    });
+  });
+
+  group('AchievementCard', () {
+    testWidgets('displays unlocked achievement correctly', (WidgetTester tester) async {
+      const achievement = MeetingAchievement(
+        id: 'test',
+        title: 'Test Achievement',
+        description: 'Test Description',
+        icon: Icons.event,
+        progress: 100,
+        total: 100,
+        unlocked: true,
+      );
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: AchievementCard(achievement: achievement),
+          ),
+        ),
+      );
+
+      expect(find.text('Test Achievement'), findsOneWidget);
+      expect(find.text('Test Description'), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle), findsOneWidget);
+    });
+
+    testWidgets('displays locked achievement with progress', (WidgetTester tester) async {
+      const achievement = MeetingAchievement(
+        id: 'test',
+        title: 'Test Achievement',
+        description: 'Test Description',
+        icon: Icons.event,
+        progress: 50,
+        total: 100,
+        unlocked: false,
+      );
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: AchievementCard(achievement: achievement),
+          ),
+        ),
+      );
+
+      expect(find.text('Test Achievement'), findsOneWidget);
+      expect(find.byType(LinearProgressIndicator), findsOneWidget);
+      expect(find.text('50/100'), findsOneWidget);
     });
   });
 }

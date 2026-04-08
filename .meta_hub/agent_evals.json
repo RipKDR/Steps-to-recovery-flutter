@@ -1,0 +1,93 @@
+{
+  "evaluations": [
+    {
+      "id": "eval-001",
+      "agent_id": "flutter",
+      "agent_name": "Flutter",
+      "success_rate": 95.0,
+      "quality_score": 9.2,
+      "tasks_completed": 42,
+      "tasks_failed": 2,
+      "avg_response_time": "3.2s",
+      "evaluated_at": "2026-04-05T08:00:00Z",
+      "notes": "Consistently high quality Flutter development output"
+    },
+    {
+      "id": "eval-002",
+      "agent_id": "meta-project-hub",
+      "agent_name": "Meta Project Hub",
+      "success_rate": 92.0,
+      "quality_score": 8.5,
+      "tasks_completed": 25,
+      "tasks_failed": 2,
+      "avg_response_time": "4.1s",
+      "evaluated_at": "2026-04-05T07:30:00Z",
+      "notes": "Good dashboard and orchestration capabilities"
+    },
+    {
+      "id": "eval-003",
+      "agent_id": "self-improving-agent",
+      "agent_name": "Self Improving Agent",
+      "success_rate": 88.0,
+      "quality_score": 7.8,
+      "tasks_completed": 18,
+      "tasks_failed": 3,
+      "avg_response_time": "5.0s",
+      "evaluated_at": "2026-04-04T22:00:00Z",
+      "notes": "Learning patterns effectively, improving over time"
+    },
+    {
+      "id": "eval-004",
+      "agent_id": "prompt-engineering-expert",
+      "agent_name": "Prompt Engineering Expert",
+      "success_rate": 96.0,
+      "quality_score": 9.0,
+      "tasks_completed": 30,
+      "tasks_failed": 1,
+      "avg_response_time": "2.8s",
+      "evaluated_at": "2026-04-04T18:00:00Z",
+      "notes": "Excellent prompt optimization results"
+    },
+    {
+      "id": "eval-005",
+      "agent_id": "meta-systems-hub",
+      "agent_name": "Meta Systems Hub",
+      "success_rate": 90.0,
+      "quality_score": 8.0,
+      "tasks_completed": 15,
+      "tasks_failed": 2,
+      "avg_response_time": "3.5s",
+      "evaluated_at": "2026-04-04T16:00:00Z",
+      "notes": "PowerShell automation scripts running reliably"
+    },
+    {
+      "id": "eval-006",
+      "agent_id": "self-evolving-agent",
+      "agent_name": "Self Evolving Agent",
+      "success_rate": 94.0,
+      "quality_score": 8.8,
+      "tasks_completed": 22,
+      "tasks_failed": 1,
+      "avg_response_time": "4.5s",
+      "evaluated_at": "2026-04-05T06:00:00Z",
+      "notes": "AARM cycle producing measurable improvements"
+    },
+    {
+      "eval_id": "eval_test-agent_20260405141110",
+      "agent_id": "test-agent",
+      "sessions_analyzed": 1,
+      "successful_sessions": 1,
+      "failed_sessions": 0,
+      "success_rate": 100.0,
+      "avg_duration_seconds": 600.0,
+      "total_tokens_used": 5000,
+      "total_cost": 0.05,
+      "token_efficiency": 95.0,
+      "cost_efficiency": 100.0,
+      "quality_score": 98.5,
+      "grade": "A",
+      "evaluated_at": "2026-04-05T14:11:10.630773+00:00",
+      "status": "completed"
+    }
+  ]
+}

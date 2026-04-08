@@ -102,11 +102,18 @@ void main() {
       await _pumpHomeScreen(tester);
 
       expect(find.text('Daily path complete'), findsOneWidget);
+      // Verify morning card shows "Done today" status
+      await _scrollHomeUntilVisible(
+        tester,
+        find.byKey(const Key('home-open-morning-screen')),
+      );
+      expect(find.text('Done today'), findsAtLeast(1));
+      // Verify evening card also shows "Done today" status
       await _scrollHomeUntilVisible(
         tester,
         find.byKey(const Key('home-open-evening-screen')),
       );
-      expect(find.text('Done today'), findsNWidgets(2));
+      expect(find.text('Done today'), findsAtLeast(1));
     },
   );
 

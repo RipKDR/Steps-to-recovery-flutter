@@ -1,3 +1,4 @@
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -7,102 +8,24 @@ import 'package:steps_recovery_flutter/features/mindfulness/services/mindfulness
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  // Mock platform channels for just_audio and audio_session
   setUpAll(() {
-    // Mock just_audio platform channel
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-      const MethodChannel('com.ryanheise.just_audio'),
-      (MethodCall methodCall) async {
-        switch (methodCall.method) {
-          case 'init':
-            return null;
-          case 'dispose':
-            return null;
-          case 'setUrl':
-          case 'setAsset':
-            return {'duration': 60000}; // 60 seconds in milliseconds
-          case 'play':
-            return null;
-          case 'pause':
-            return null;
-          case 'stop':
-            return null;
-          case 'seek':
-            return null;
-          case 'setVolume':
-            return null;
-          case 'setSpeed':
-            return null;
-          case 'concatenatingAdd':
-          case 'concatenatingRemoveAt':
-          case 'concatenatingInsertAll':
-          case 'concatenatingClear':
-          case 'concatenatingMove':
-            return null;
-          case 'setShuffleMode':
-          case 'setLoopMode':
-          case 'setAutomaticallyWaitsToMinimizeStalling':
-            return null;
-          case 'audioEffectSetEnabled':
-          case 'androidLoudnessEnhancerSetTargetGain':
-            return null;
-          case 'setAndroidAudioAttributes':
-            return null;
-          case 'setPitch':
-            return null;
-          case 'skipSilence':
-            return null;
-          default:
-            return null;
-        }
-      },
-    );
-
-    // Mock audio_session platform channel
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-      const MethodChannel('com.ryanheise.audio_session'),
-      (MethodCall methodCall) async {
-        switch (methodCall.method) {
-          case 'getConfiguration':
-            return <String, dynamic>{};
-          case 'setConfiguration':
-            return null;
-          case 'setActive':
-            return true;
-          case 'getDevices':
-            return <Map<String, dynamic>>[];
-          default:
-            return null;
-        }
-      },
-    );
+    _setupPlatformMocks();
   });
 
   tearDownAll(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-      const MethodChannel('com.ryanheise.just_audio'),
-      null,
-    );
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-      const MethodChannel('com.ryanheise.audio_session'),
-      null,
-    );
+    _cleanupPlatformMocks();
   });
 
   group('MindfulnessAudioService', () {
     late MindfulnessAudioService service;
 
     setUp(() {
+      MindfulnessAudioService.resetInstance();
       service = MindfulnessAudioService();
     });
 
-    tearDown(() async {
-      // Clean up but don't dispose the singleton between tests
-      // as other tests might rely on it
+    tearDown(() {
+      MindfulnessAudioService.resetInstance();
     });
 
     group('Singleton', () {
@@ -159,8 +82,6 @@ void main() {
       });
 
       test('isPlaying returns false when loading', () {
-        // Simulate loading state by setting track (will trigger loading)
-        // Note: We can't fully test this without async, but we can verify the getter works
         expect(service.isPlaying, equals(service.state == MindfulnessPlayerState.playing));
       });
 
@@ -169,24 +90,16 @@ void main() {
       });
 
       test('isLoading returns true when state is loading', () {
-        // Manually set the state to loading via reflection pattern (not possible directly)
-        // Instead, verify the getter logic is correct
         expect(service.isLoading, equals(service.state == MindfulnessPlayerState.loading));
       });
 
       test('isPlaying getter reflects state changes', () {
-        // Initially not playing
         expect(service.isPlaying, isFalse);
-        
-        // Verify getter returns correct value based on state
         expect(service.isPlaying, equals(service.state == MindfulnessPlayerState.playing));
       });
 
       test('isLoading getter reflects state changes', () {
-        // Initially not loading
         expect(service.isLoading, isFalse);
-        
-        // Verify getter returns correct value based on state
         expect(service.isLoading, equals(service.state == MindfulnessPlayerState.loading));
       });
     });
@@ -198,7 +111,6 @@ void main() {
           notifyCount++;
         });
 
-        // setTrack changes state and notifies listeners
         final track = const MindfulnessTrack(
           id: 'test-track',
           title: 'Test Track',
@@ -213,7 +125,6 @@ void main() {
 
         await service.setTrack(track);
         
-        // Should have been notified at least once (loading state and then idle)
         expect(notifyCount, greaterThanOrEqualTo(1));
       });
 
@@ -339,10 +250,7 @@ void main() {
 
     group('State Transitions', () {
       test('play does nothing when no track is set', () async {
-        // Ensure no track is set
         await service.reset();
-        
-        // play() should return early when currentTrack is null
         await service.play();
         expect(service.state, equals(MindfulnessPlayerState.idle));
       });
@@ -354,18 +262,127 @@ void main() {
 
       test('seek does not throw', () async {
         await service.seek(const Duration(seconds: 30));
-        // Should complete without throwing
       });
 
       test('skipForward does not throw', () async {
         await service.skipForward(15);
-        // Should complete without throwing
       });
 
       test('skipBackward does not throw', () async {
         await service.skipBackward(15);
-        // Should complete without throwing
       });
     });
   });
+}
+
+// ============================================================================
+// PLATFORM MOCKING
+// ============================================================================
+
+final _mockedJustAudioChannels = <String>{};
+
+/// Sets up comprehensive platform mocks for just_audio and audio_session
+void _setupPlatformMocks() {
+  final binaryMessenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+  
+  // Mock the base just_audio channel
+  _mockJustAudioChannel(binaryMessenger, 'com.ryanheise.just_audio.methods');
+  
+  // Pre-mock many potential dynamic channels with various UUID patterns
+  // This ensures channels are mocked before they're used
+  for (int i = 0; i < 20; i++) {
+    final dynamicChannel = 'com.ryanheise.just_audio.methods.player-$i';
+    _mockJustAudioChannel(binaryMessenger, dynamicChannel);
+  }
+  
+  // Mock audio_session
+  binaryMessenger.setMockMethodCallHandler(
+    const MethodChannel('com.ryanheise.audio_session'),
+    (MethodCall methodCall) async {
+      switch (methodCall.method) {
+        case 'getConfiguration':
+          return <String, dynamic>{};
+        case 'setConfiguration':
+          return null;
+        case 'setActive':
+          return true;
+        case 'getDevices':
+          return <Map<String, dynamic>>[];
+        default:
+          return null;
+      }
+    },
+  );
+}
+
+/// Mocks a just_audio channel with a handler that responds to all methods
+void _mockJustAudioChannel(TestDefaultBinaryMessenger binaryMessenger, String channelName) {
+  if (_mockedJustAudioChannels.contains(channelName)) return;
+  _mockedJustAudioChannels.add(channelName);
+  
+  binaryMessenger.setMockMessageHandler(channelName, (ByteData? message) async {
+    if (message == null) return null;
+    
+    final methodCall = const StandardMethodCodec().decodeMethodCall(message);
+    
+    // If this is the base channel and init is called, also mock the dynamic channel
+    if (channelName == 'com.ryanheise.just_audio.methods' && methodCall.method == 'init') {
+      if (methodCall.arguments is Map && (methodCall.arguments as Map).containsKey('id')) {
+        final playerId = (methodCall.arguments as Map)['id'] as String;
+        final dynamicChannel = 'com.ryanheise.just_audio.methods.$playerId';
+        _mockJustAudioChannel(binaryMessenger, dynamicChannel);
+      }
+    }
+    
+    return _createJustAudioResponse(methodCall);
+  });
+}
+
+/// Creates appropriate responses for just_audio method calls
+ByteData? _createJustAudioResponse(MethodCall methodCall) {
+  switch (methodCall.method) {
+    case 'init':
+    case 'dispose':
+    case 'disposeAllPlayers':
+    case 'play':
+    case 'pause':
+    case 'stop':
+    case 'seek':
+    case 'setVolume':
+    case 'setSpeed':
+    case 'concatenatingAdd':
+    case 'concatenatingRemoveAt':
+    case 'concatenatingInsertAll':
+    case 'concatenatingClear':
+    case 'concatenatingMove':
+    case 'setShuffleMode':
+    case 'setLoopMode':
+    case 'setAutomaticallyWaitsToMinimizeStalling':
+    case 'audioEffectSetEnabled':
+    case 'androidLoudnessEnhancerSetTargetGain':
+    case 'setAndroidAudioAttributes':
+    case 'setPitch':
+    case 'skipSilence':
+      return const StandardMethodCodec().encodeSuccessEnvelope(null);
+    case 'setUrl':
+    case 'setAsset':
+      return const StandardMethodCodec().encodeSuccessEnvelope({'duration': 60000});
+    default:
+      return const StandardMethodCodec().encodeSuccessEnvelope(null);
+  }
+}
+
+/// Cleans up all platform mocks
+void _cleanupPlatformMocks() {
+  final binaryMessenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+  
+  for (final channel in _mockedJustAudioChannels) {
+    binaryMessenger.setMockMessageHandler(channel, null);
+  }
+  _mockedJustAudioChannels.clear();
+  
+  binaryMessenger.setMockMethodCallHandler(
+    const MethodChannel('com.ryanheise.audio_session'),
+    null,
+  );
 }

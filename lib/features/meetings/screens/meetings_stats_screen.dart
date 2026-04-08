@@ -92,21 +92,21 @@ class _MeetingsStatsScreenState extends State<MeetingsStatsScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: _StatCard(
+                        child: StatCard(
                           title: 'This Week',
                           value: data.stats.thisWeek.toString(),
                           icon: Icons.calendar_today,
                           color: AppColors.success,
-                        ),
+                        )
                       ),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
-                        child: _StatCard(
+                        child: StatCard(
                           title: 'This Month',
                           value: data.stats.thisMonth.toString(),
                           icon: Icons.calendar_month,
                           color: AppColors.info,
-                        ),
+                        )
                       ),
                     ],
                   ),
@@ -114,21 +114,21 @@ class _MeetingsStatsScreenState extends State<MeetingsStatsScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: _StatCard(
+                        child: StatCard(
                           title: 'Total',
                           value: data.stats.totalAttended.toString(),
                           icon: Icons.event_repeat,
                           color: AppColors.primaryAmber,
-                        ),
+                        )
                       ),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
-                        child: _StatCard(
+                        child: StatCard(
                           title: 'Streak',
                           value: '${data.stats.longestStreak}d',
                           icon: Icons.local_fire_department,
                           color: AppColors.danger,
-                        ),
+                        )
                       ),
                     ],
                   ),
@@ -186,7 +186,7 @@ class _MeetingsStatsScreenState extends State<MeetingsStatsScreen> {
                     ...data.achievements.map((achievement) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                        child: _AchievementCard(achievement: achievement),
+                        child: AchievementCard(achievement: achievement)
                       );
                     }),
 
@@ -346,13 +346,15 @@ class _MeetingsStatsScreenState extends State<MeetingsStatsScreen> {
   }
 }
 
-class _StatCard extends StatelessWidget {
+/// Stat card widget for displaying meeting statistics
+class StatCard extends StatelessWidget {
   final String title;
   final String value;
   final IconData icon;
   final Color color;
 
-  const _StatCard({
+  const StatCard({
+    super.key,
     required this.title,
     required this.value,
     required this.icon,
@@ -385,10 +387,11 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _AchievementCard extends StatelessWidget {
+/// Achievement card widget for displaying meeting achievements
+class AchievementCard extends StatelessWidget {
   final MeetingAchievement achievement;
 
-  const _AchievementCard({required this.achievement});
+  const AchievementCard({super.key, required this.achievement});
 
   @override
   Widget build(BuildContext context) {

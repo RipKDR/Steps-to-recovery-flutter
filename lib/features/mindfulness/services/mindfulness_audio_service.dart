@@ -5,11 +5,28 @@ import '../models/mindfulness_models.dart';
 
 /// Audio service for mindfulness playback
 class MindfulnessAudioService extends ChangeNotifier {
-  static final MindfulnessAudioService _instance = MindfulnessAudioService._internal();
-  factory MindfulnessAudioService() => _instance;
-  MindfulnessAudioService._internal();
+  static MindfulnessAudioService? _instance;
+  
+  factory MindfulnessAudioService() {
+    _instance ??= MindfulnessAudioService._internal();
+    return _instance!;
+  }
+  
+  /// Factory constructor for testing that allows injecting a custom player
+  factory MindfulnessAudioService.withPlayer(AudioPlayer player) {
+    return MindfulnessAudioService._internal(player: player);
+  }
+  
+  /// Resets the singleton instance for testing
+  static void resetInstance() {
+    _instance?.dispose();
+    _instance = null;
+  }
+  
+  MindfulnessAudioService._internal({AudioPlayer? player}) : _player = player;
 
-  final AudioPlayer _player = AudioPlayer();
+  AudioPlayer? _player;
+  AudioPlayer get _playerInstance => _player ??= AudioPlayer();
   
   MindfulnessTrack? _currentTrack;
   MindfulnessPlayerState _state = MindfulnessPlayerState.idle;
@@ -31,6 +48,9 @@ class MindfulnessAudioService extends ChangeNotifier {
 
   /// Initialize audio service
   Future<void> initialize() async {
+    // Create player instance if needed
+    _player ??= AudioPlayer();
+
     // Configure audio session
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration(
@@ -48,18 +68,18 @@ class MindfulnessAudioService extends ChangeNotifier {
     ));
 
     // Listen to player state changes
-    _player.playerStateStream.listen((state) {
+    _playerInstance.playerStateStream.listen((state) {
       _updateState(state);
     });
 
     // Listen to position updates
-    _player.positionStream.listen((position) {
+    _playerInstance.positionStream.listen((position) {
       _position = position;
       notifyListeners();
     });
 
     // Listen to duration changes
-    _player.durationStream.listen((duration) {
+    _playerInstance.durationStream.listen((duration) {
       if (duration != null) {
         _duration = duration;
         notifyListeners();
@@ -91,9 +111,9 @@ class MindfulnessAudioService extends ChangeNotifier {
     try {
       // Use local asset if available, otherwise use URL
       if (track.localAssetPath != null) {
-        await _player.setAsset(track.localAssetPath!);
+        await _playerInstance.setAsset(track.localAssetPath!);
       } else {
-        await _player.setUrl(track.audioUrl);
+        await _playerInstance.setUrl(track.audioUrl);
       }
       _state = MindfulnessPlayerState.idle;
       notifyListeners();
@@ -109,7 +129,7 @@ class MindfulnessAudioService extends ChangeNotifier {
     if (_currentTrack == null) return;
     
     try {
-      await _player.play();
+      await _playerInstance.play();
       _state = MindfulnessPlayerState.playing;
       notifyListeners();
     } catch (e) {
@@ -121,7 +141,7 @@ class MindfulnessAudioService extends ChangeNotifier {
 
   /// Pause current track
   Future<void> pause() async {
-    await _player.pause();
+    await _playerInstance.pause();
     _state = MindfulnessPlayerState.paused;
     notifyListeners();
   }
@@ -137,7 +157,7 @@ class MindfulnessAudioService extends ChangeNotifier {
 
   /// Stop playback
   Future<void> stop() async {
-    await _player.stop();
+    await _playerInstance.stop();
     _state = MindfulnessPlayerState.idle;
     _position = Duration.zero;
     notifyListeners();
@@ -145,20 +165,20 @@ class MindfulnessAudioService extends ChangeNotifier {
 
   /// Seek to position
   Future<void> seek(Duration position) async {
-    await _player.seek(position);
+    await _playerInstance.seek(position);
   }
 
   /// Set volume (0.0 to 1.0)
   Future<void> setVolume(double volume) async {
     _volume = volume.clamp(0.0, 1.0);
-    await _player.setVolume(_volume);
+    await _playerInstance.setVolume(_volume);
     notifyListeners();
   }
 
   /// Set playback speed (0.5 to 2.0)
   Future<void> setSpeed(double speed) async {
     _speed = speed.clamp(0.5, 2.0);
-    await _player.setSpeed(_speed);
+    await _playerInstance.setSpeed(_speed);
     notifyListeners();
   }
 
@@ -180,8 +200,11 @@ class MindfulnessAudioService extends ChangeNotifier {
 
   /// Reset player
   Future<void> reset() async {
-    await _player.stop();
-    await _player.dispose();
+    if (_player != null) {
+      await _player!.stop();
+      await _player!.dispose();
+      _player = null;
+    }
     _currentTrack = null;
     _state = MindfulnessPlayerState.idle;
     _position = Duration.zero;
@@ -191,7 +214,8 @@ class MindfulnessAudioService extends ChangeNotifier {
 
   @override
   void dispose() {
-    _player.dispose();
+    _player?.dispose();
+    _player = null;
     super.dispose();
   }
 }
