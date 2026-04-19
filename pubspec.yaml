@@ -87,7 +87,7 @@ dependencies:
   flutter_native_splash: ^2.4.7
   flutter_launcher_icons: ^0.14.4
   path_provider_platform_interface: ^2.1.2
-  firebase_core: ^4.6.0
+  firebase_core: ^4.7.0
 
 dev_dependencies:
   flutter_test:
